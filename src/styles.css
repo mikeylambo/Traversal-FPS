@@ -1,0 +1,16 @@
+html, body, #game { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #05070b; }
+body { font-family: Inter, ui-sans-serif, system-ui, sans-serif; color: white; }
+#game { position: fixed; inset: 0; }
+#game-canvas { display: block; width: 100%; height: 100%; outline: none; }
+#hud { position: fixed; inset: 0; z-index: 20; pointer-events: none; text-transform: uppercase; letter-spacing: .08em; }
+#room-label { position: absolute; top: 22px; left: 24px; font-size: 13px; font-weight: 800; opacity: .9; }
+#run-stats { position: absolute; top: 22px; right: 24px; font-size: 12px; font-variant-numeric: tabular-nums; opacity: .72; text-align: right; }
+#anchor-status { position: absolute; left: 50%; bottom: 34px; transform: translateX(-50%); font-size: 12px; font-weight: 900; opacity: .9; }
+#capture-hint { position: absolute; left: 50%; top: 62%; transform: translate(-50%, -50%); padding: 10px 14px; border: 1px solid rgba(255,255,255,.2); background: rgba(5,7,11,.72); font-size: 11px; opacity: 0; transition: opacity .15s ease; }
+#capture-hint.visible { opacity: 1; }
+#crosshair { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -52%); font: 700 24px/1 monospace; text-shadow: 0 0 12px rgba(255,255,255,.8); }
+#ui { position: fixed; inset: 0; z-index: 1000; }
+#ui:has(.slu-screen[data-screen-id="gameplay-placeholder"]) { pointer-events: none; }
+.slu-screen[data-screen-id="gameplay-placeholder"] { display: none !important; }
+body:not(.playing) #hud { opacity: 0; }
+body.playing #hud { opacity: 1; }
