@@ -9,7 +9,7 @@
     "check": "tsc --noEmit"
   },
   "dependencies": {
-    "@slu/web-shell": "https://github.com/mikeylambo/Web-Game-Shell-v1.02/archive/4a7b80a4a50d5bddb0d3ab5aff47657e9703e989.tar.gz",
+    "@slu/web-shell": "github:mikeylambo/Web-Game-Shell-v1.02#4a7b80a4a50d5bddb0d3ab5aff47657e9703e989",
     "three": "^0.180.0"
   },
   "devDependencies": {
