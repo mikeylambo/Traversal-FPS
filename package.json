@@ -1,0 +1,20 @@
+{
+  "name": "traversal-fps",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@slu/web-shell": "github:mikeylambo/Web-Game-Shell-v1.02#4a7b80a4a50d5bddb0d3ab5aff47657e9703e989",
+    "three": "^0.180.0"
+  },
+  "devDependencies": {
+    "@types/three": "^0.180.0",
+    "typescript": "^5.8.3",
+    "vite": "^7.0.0"
+  }
+}
