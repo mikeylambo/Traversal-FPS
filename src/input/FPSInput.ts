@@ -7,6 +7,7 @@ export class FPSInput {
   private warpReleased = false;
   private wheelDelta = 0;
   private resetQueued = false;
+  private tutorialSkipQueued = false;
   private enabled = false;
   private readonly onPointerLock = () => this.updateCaptureHint();
 
@@ -91,11 +92,15 @@ export class FPSInput {
     return value;
   }
 
+  consumeTutorialSkip(): boolean {
+    const value = this.tutorialSkipQueued;
+    this.tutorialSkipQueued = false;
+    return value;
+  }
+
   private readonly onMouseDown = (event: MouseEvent) => {
     if (!this.enabled) return;
     if (event.button === 0) {
-      // Shooting is deliberately NOT gated by pointer lock. The first click both fires
-      // and attempts capture, fixing the failure mode from the original HTML prototype.
       this.fireQueued = true;
       this.capture();
     }
@@ -119,7 +124,6 @@ export class FPSInput {
       this.lookY += event.movementY;
       return;
     }
-    // Fallback aim remains usable in embeds/file previews that reject pointer lock.
     if (event.buttons !== 0) {
       this.lookX += event.movementX;
       this.lookY += event.movementY;
@@ -136,6 +140,7 @@ export class FPSInput {
     if (!this.enabled) return;
     this.keys.add(event.code);
     if (event.code === "KeyR") this.resetQueued = true;
+    if (event.code === "KeyT") this.tutorialSkipQueued = true;
   };
 
   private readonly onKeyUp = (event: KeyboardEvent) => {
