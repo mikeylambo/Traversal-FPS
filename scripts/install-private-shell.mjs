@@ -9,21 +9,18 @@ if (!token) {
 
 const authenticatedBase = `https://x-access-token:${token}@github.com/`;
 
-// npm's GitHub resolver can normalize github: dependencies to SSH. Redirect both
-// common GitHub SSH forms to token-authenticated HTTPS for this build only.
-execFileSync("git", [
-  "config",
-  "--global",
-  `url.${authenticatedBase}.insteadOf`,
-  "ssh://git@github.com/"
-], { stdio: "inherit" });
-
-execFileSync("git", [
-  "config",
-  "--global",
-  `url.${authenticatedBase}.insteadOf`,
-  "git@github.com:"
-], { stdio: "inherit" });
+// npm's GitHub resolver can normalize github: dependencies to either SSH form.
+// Register both rewrites under the same authenticated HTTPS base. `--add` is
+// important here: without it, the second insteadOf value replaces the first.
+for (const sshBase of ["ssh://git@github.com/", "git@github.com:"]) {
+  execFileSync("git", [
+    "config",
+    "--global",
+    "--add",
+    `url.${authenticatedBase}.insteadOf`,
+    sshBase
+  ], { stdio: "inherit" });
+}
 
 execFileSync(process.platform === "win32" ? "npm.cmd" : "npm", ["install"], {
   stdio: "inherit",
