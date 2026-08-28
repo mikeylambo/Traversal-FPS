@@ -22,6 +22,7 @@ type TimedFx = {
 
 const ROOM_ACCENTS = [0x69e7ff, 0xffcf66, 0xff78c8, 0xff9d67, 0xa1ff91];
 const PAR_KILLS = ROOMS.reduce((sum, room) => sum + room.requiredKills, 0);
+const PAR_SHOTS = PAR_KILLS;
 
 export class TraversalGame {
   private readonly renderer: THREE.WebGLRenderer;
@@ -60,6 +61,7 @@ export class TraversalGame {
   private velocityY = 0;
   private lastPhase = "";
   private roomKills = 0;
+  private roomShots = 0;
   private totalKills = 0;
   private shots = 0;
   private targetHits = 0;
@@ -72,6 +74,7 @@ export class TraversalGame {
   private pendingRoomResetAt = 0;
   private warpWasTransiting = false;
   private warpArrivalUntil = 0;
+  private airGraceUntil = 0;
   private fireReadyAt = 0;
   private weaponKick = 0;
   private runComplete = false;
@@ -85,6 +88,11 @@ export class TraversalGame {
   private gradingEnabled = true;
   private exactKills = false;
   private clockFocus = false;
+  private scoreFocus = false;
+  private shotAllowance = Number.POSITIVE_INFINITY;
+  private missPenaltySeconds = 0;
+  private extraKillPenaltySeconds = 0;
+  private airGraceScale = 1;
   private enemySpeedScalar = 1;
   private gravityScalar = 1;
   private goalRadius = 2.3;
@@ -139,14 +147,21 @@ export class TraversalGame {
   private beginRun(): void {
     const mode = this.shell.modes.active();
     const difficulty = this.shell.difficulty.active();
+    const rules = mode?.rules ?? {};
+
     this.modeId = mode?.id ?? "standard";
     this.modeLabel = mode?.label ?? "Standard Run";
     this.difficultyId = difficulty?.id ?? "standard";
     this.difficultyLabel = difficulty?.label ?? "Standard";
-    this.tutorialProminent = Boolean(mode?.rules?.tutorial ?? true);
-    this.gradingEnabled = Boolean(mode?.rules?.grading ?? true);
-    this.exactKills = Boolean(mode?.rules?.exactKills ?? false);
-    this.clockFocus = Boolean(mode?.rules?.clockFocus ?? false);
+    this.tutorialProminent = Boolean(rules.tutorial ?? true);
+    this.gradingEnabled = Boolean(rules.grading ?? true);
+    this.exactKills = Boolean(rules.exactKills ?? false);
+    this.clockFocus = Boolean(rules.clockFocus ?? false);
+    this.scoreFocus = Boolean(rules.scoreFocus ?? false);
+    this.shotAllowance = rules.shotAllowance === undefined ? Number.POSITIVE_INFINITY : Number(rules.shotAllowance);
+    this.missPenaltySeconds = Number(rules.missPenaltySeconds ?? 0);
+    this.extraKillPenaltySeconds = Number(rules.extraKillPenaltySeconds ?? 0);
+    this.airGraceScale = Number(rules.airGraceScale ?? 1);
     this.enemySpeedScalar = Number(difficulty?.multipliers?.enemySpeed ?? 1);
     this.gravityScalar = Number(difficulty?.rules?.gravityScalar ?? 1);
     this.goalRadius = Number(difficulty?.rules?.goalRadius ?? 2.3);
@@ -234,11 +249,13 @@ export class TraversalGame {
     document.body.classList.toggle("warping", transiting);
     if (!transiting) {
       if (this.warpWasTransiting) {
-        this.warpArrivalUntil = now + 180;
+        this.warpArrivalUntil = now + 210;
+        const baseGrace = this.roomIndex === 2 ? 430 : 150;
+        this.airGraceUntil = now + baseGrace * this.airGraceScale;
         this.playWarpArrival();
         this.addArrivalFx(this.camera.position.clone());
       }
-      this.updateMovement(dt);
+      this.updateMovement(dt, now);
     }
     this.warpWasTransiting = transiting;
     document.body.classList.toggle("warp-arrival", now < this.warpArrivalUntil);
@@ -249,17 +266,20 @@ export class TraversalGame {
     this.updateHUD();
   }
 
-  private updateMovement(dt: number): void {
+  private updateMovement(dt: number, now: number): void {
     const move = this.input.movement();
     const forward = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), this.yaw);
     const right = new THREE.Vector3(1, 0, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), this.yaw);
     const horizontal = forward.multiplyScalar(move.z).add(right.multiplyScalar(move.x));
-    const speed = 7.5;
-    this.camera.position.addScaledVector(horizontal, speed * dt);
+    this.camera.position.addScaledVector(horizontal, 7.5 * dt);
 
     const previousY = this.camera.position.y;
-    this.velocityY -= 18 * this.gravityScalar * dt;
-    this.camera.position.y += this.velocityY * dt;
+    if (now >= this.airGraceUntil) {
+      this.velocityY -= 18 * this.gravityScalar * dt;
+      this.camera.position.y += this.velocityY * dt;
+    } else {
+      this.velocityY = 0;
+    }
     this.resolvePlatforms(previousY);
 
     if (this.camera.position.y < -9.5) {
@@ -286,11 +306,20 @@ export class TraversalGame {
 
   private shoot(): void {
     const now = performance.now();
-    if (now < this.fireReadyAt || this.runComplete) return;
+    if (now < this.fireReadyAt || this.runComplete || this.pendingRoomResetAt > 0) return;
     this.fireReadyAt = now + 105;
     this.shots += 1;
+    this.roomShots += 1;
     this.weaponKick = 1;
     this.playShot();
+
+    const room = ROOMS[this.roomIndex];
+    if (Number.isFinite(this.shotAllowance) && this.roomShots > room.requiredKills + this.shotAllowance) {
+      this.warp.reset();
+      this.flashMessage("CLEAN ROUTE FAILED // SHOT BUDGET EXCEEDED", 1400);
+      this.pendingRoomResetAt = now + 1050;
+      return;
+    }
 
     this.raycaster.setFromCamera(new THREE.Vector2(0, 0), this.camera);
     const liveMeshes = this.enemies.filter((enemy) => enemy.alive).map((enemy) => enemy.mesh);
@@ -308,7 +337,7 @@ export class TraversalGame {
 
     this.targetHits += 1;
     if (enemy.spec.kind === "shield" && this.camera.position.x < 2.5) {
-      this.flashMessage("SHIELD REJECT // CHANGE YOUR FIRING ORIGIN", 1200);
+      this.flashMessage("SHIELD REJECT // CHANGE YOUR FIRING ORIGIN", 1800);
       this.playShieldReject();
       this.addImpactFx(hit.point.clone(), 0xffa665);
       return;
@@ -322,19 +351,18 @@ export class TraversalGame {
     this.addKillFx(deathPosition, enemy.spec.kind);
     this.playKill();
 
-    const room = ROOMS[this.roomIndex];
     if (this.exactKills && this.roomKills > room.requiredKills) {
       this.warp.reset();
-      this.flashMessage("CLEAN ROUTE FAILED // EXTRA KILL", 900);
-      this.pendingRoomResetAt = now + 780;
+      this.flashMessage("CLEAN ROUTE FAILED // EXTRA KILL", 1400);
+      this.pendingRoomResetAt = now + 1050;
       return;
     }
 
     this.warp.write(this.camera.position.clone(), deathPosition);
     if (this.roomKills > room.requiredKills) {
-      this.flashMessage("EXTRA KILL // ROUTE EFFICIENCY DOWN", 1250);
+      this.flashMessage("EXTRA KILL // ROUTE EFFICIENCY DOWN", 1800);
     } else {
-      this.flashMessage("VECTOR WRITTEN", 620);
+      this.flashMessage("WARP VECTOR WRITTEN", 1000);
     }
   }
 
@@ -403,8 +431,13 @@ export class TraversalGame {
     this.input.releasePointerLock();
     const elapsed = (performance.now() - this.runStartedAt) / 1000;
     const accuracy = this.shots > 0 ? (this.targetHits / this.shots) * 100 : 0;
-    const extraKills = Math.max(0, this.totalKills - PAR_KILLS);
+    const extraKills = this.extraKills();
+    const extraShots = Math.max(0, this.shots - PAR_SHOTS);
     const routeGrade = this.routeGrade(extraKills);
+    const penalty = this.timePenalty();
+    const adjustedTime = elapsed + penalty;
+    const score = this.runScore(elapsed);
+
     const title = this.modeId === "training"
       ? "Training Complete"
       : this.modeId === "time-trial"
@@ -417,16 +450,36 @@ export class TraversalGame {
       ? `${this.difficultyLabel} · Five rooms cleared`
       : `${this.modeLabel} · ${this.difficultyLabel}`;
 
-    const resultChoices = this.modeId === "training"
-      ? [
-          { id: "result-time", label: `Time // ${this.formatTime(elapsed)}`, description: `${this.warps} warps · ${this.roomRestarts} restarts`, disabled: true },
-          { id: "result-kills", label: `Kills // ${this.totalKills}`, description: `${PAR_KILLS} is the minimum route`, disabled: true }
-        ]
-      : [
-          { id: "result-route", label: `Route Grade // ${this.modeId === "challenge" ? "CLEAN" : routeGrade}`, description: `${this.totalKills} kills · ${PAR_KILLS} minimum · +${extraKills} extra`, disabled: true },
-          { id: "result-time", label: `Time // ${this.formatTime(elapsed)}`, description: `${this.warps} warps · ${this.roomRestarts} restarts`, disabled: true },
-          { id: "result-aim", label: `Target Accuracy // ${accuracy.toFixed(0)}%`, description: `${this.targetHits} target hits / ${this.shots} shots`, disabled: true }
-        ];
+    let resultChoices: Array<{ id: string; label: string; description: string; disabled: boolean }>;
+    if (this.modeId === "training") {
+      resultChoices = [
+        { id: "result-time", label: `Time // ${this.formatTime(elapsed)}`, description: `${this.warps} warps · ${this.roomRestarts} restarts`, disabled: true },
+        { id: "result-shots", label: `Shots Fired // ${this.shots}`, description: `${PAR_SHOTS} theoretical minimum · +${extraShots} over`, disabled: true },
+        { id: "result-kills", label: `Kills // ${this.totalKills}`, description: `${PAR_KILLS} is the minimum route`, disabled: true }
+      ];
+    } else if (this.modeId === "time-trial") {
+      resultChoices = [
+        { id: "result-adjusted", label: `Adjusted Time // ${this.formatTime(adjustedTime)}`, description: `Raw ${this.formatTime(elapsed)} · penalties +${penalty.toFixed(2)}s`, disabled: true },
+        { id: "result-shots", label: `Shots Fired // ${this.shots}`, description: `${this.wastedShots()} non-kill shots · +${extraShots} over theoretical minimum`, disabled: true },
+        { id: "result-route", label: `Route // ${this.totalKills} Kills`, description: `${PAR_KILLS} minimum · +${extraKills} extra`, disabled: true },
+        { id: "result-aim", label: `Target Accuracy // ${accuracy.toFixed(0)}%`, description: `${this.targetHits} target hits / ${this.shots} shots`, disabled: true }
+      ];
+    } else if (this.modeId === "challenge") {
+      resultChoices = [
+        { id: "result-route", label: "Clean Route // PASS", description: `${this.totalKills} kills · exact route requirement met`, disabled: true },
+        { id: "result-shots", label: `Shots Fired // ${this.shots}`, description: `${this.wastedShots()} non-kill shots · one miss allowance per room`, disabled: true },
+        { id: "result-aim", label: `Target Accuracy // ${accuracy.toFixed(0)}%`, description: `${this.targetHits} target hits / ${this.shots} shots`, disabled: true },
+        { id: "result-time", label: `Time // ${this.formatTime(elapsed)}`, description: `${this.warps} warps · ${this.roomRestarts} restarts`, disabled: true }
+      ];
+    } else {
+      resultChoices = [
+        { id: "result-score", label: `Run Score // ${score.toLocaleString()}`, description: "Time + route discipline + shots fired + restarts", disabled: true },
+        { id: "result-route", label: `Route Grade // ${routeGrade}`, description: `${this.totalKills} kills · ${PAR_KILLS} minimum · +${extraKills} extra`, disabled: true },
+        { id: "result-shots", label: `Shots Fired // ${this.shots}`, description: `${PAR_SHOTS} theoretical minimum · +${extraShots} over`, disabled: true },
+        { id: "result-aim", label: `Target Accuracy // ${accuracy.toFixed(0)}%`, description: `${this.targetHits} target hits / ${this.shots} shots`, disabled: true },
+        { id: "result-time", label: `Time // ${this.formatTime(elapsed)}`, description: `${this.warps} warps · ${this.roomRestarts} restarts`, disabled: true }
+      ];
+    }
 
     this.ui.updateScreen("results", {
       title,
@@ -451,6 +504,23 @@ export class TraversalGame {
     return "E";
   }
 
+  private wastedShots(): number {
+    return Math.max(0, this.shots - this.totalKills);
+  }
+
+  private extraKills(): number {
+    return Math.max(0, this.totalKills - PAR_KILLS);
+  }
+
+  private timePenalty(): number {
+    return this.wastedShots() * this.missPenaltySeconds + this.extraKills() * this.extraKillPenaltySeconds;
+  }
+
+  private runScore(elapsed: number): number {
+    const cost = elapsed * 20 + this.extraKills() * 350 + this.wastedShots() * 55 + this.roomRestarts * 250;
+    return Math.max(0, Math.round(12000 - cost));
+  }
+
   private loadRoom(index: number): void {
     const room = ROOMS[index];
     this.clearEffects();
@@ -459,7 +529,9 @@ export class TraversalGame {
     this.enemies.length = 0;
     this.warp.reset();
     this.roomKills = 0;
+    this.roomShots = 0;
     this.velocityY = 0;
+    this.airGraceUntil = 0;
     this.yaw = 0;
     this.pitch = 0;
     this.smoothedLookX = 0;
@@ -475,8 +547,15 @@ export class TraversalGame {
     this.goal.position.set(...room.goal);
     this.goalLight.position.copy(this.goal.position);
     this.goal.visible = true;
-    const shortPrompt = !this.tutorialProminent && index > 0;
-    this.tutorialUntil = performance.now() + (this.modeId === "training" ? 5200 : shortPrompt ? 850 : 2800);
+
+    const duration = this.modeId === "training"
+      ? 10000
+      : this.modeId === "standard"
+        ? 6500
+        : this.modeId === "challenge"
+          ? 3500
+          : 2000;
+    this.tutorialUntil = performance.now() + duration;
     this.flashMessage("", 0);
   }
 
@@ -506,6 +585,7 @@ export class TraversalGame {
 
   private addEnemy(spec: EnemySpec): void {
     const color = spec.kind === "shield" ? 0xffad66 : spec.kind === "drifter" ? 0xff78c8 : 0x7cefff;
+    const radius = spec.radius ?? 0.72;
     const material = new THREE.MeshStandardMaterial({
       color,
       emissive: color,
@@ -513,11 +593,11 @@ export class TraversalGame {
       roughness: 0.22,
       metalness: 0.46
     });
-    const mesh = new THREE.Mesh(new THREE.IcosahedronGeometry(0.72, 2), material);
+    const mesh = new THREE.Mesh(new THREE.IcosahedronGeometry(radius, 2), material);
     mesh.position.set(...spec.position);
 
     const shell = new THREE.Mesh(
-      new THREE.IcosahedronGeometry(0.84, 1),
+      new THREE.IcosahedronGeometry(radius * 1.17, 1),
       new THREE.MeshBasicMaterial({ color, wireframe: true, transparent: true, opacity: 0.26 })
     );
     mesh.add(shell);
@@ -590,10 +670,18 @@ export class TraversalGame {
     if (!roomLabel || !stats || !anchor || !tutorialCard || !tutorialRoom || !tutorialText) return;
 
     const roomNumber = String(this.roomIndex + 1).padStart(2, "0");
-    roomLabel.textContent = `ROOM ${roomNumber}  ·  MIN ${room.requiredKills}  ·  K ${this.roomKills}`;
+    const shotBudget = Number.isFinite(this.shotAllowance) ? ` · SHOT ${this.roomShots}/${room.requiredKills + this.shotAllowance}` : "";
+    roomLabel.textContent = `ROOM ${roomNumber}  ·  MIN ${room.requiredKills}  ·  K ${this.roomKills}${shotBudget}`;
+
     const elapsed = (performance.now() - this.runStartedAt) / 1000;
-    const clock = this.clockFocus ? this.formatTime(elapsed) : `${elapsed.toFixed(2)}s`;
-    stats.textContent = `${this.modeLabel.toUpperCase()}  ·  ${this.difficultyLabel.toUpperCase()}  ·  ${clock}  ·  ${this.totalKills}K  ·  ${this.shots}S  ·  ${this.warps}W`;
+    if (this.clockFocus) {
+      const penalty = this.timePenalty();
+      stats.textContent = `TIME TRIAL  ·  RAW ${this.formatTime(elapsed)}  ·  PEN +${penalty.toFixed(2)}  ·  ADJ ${this.formatTime(elapsed + penalty)}  ·  ${this.shots} SHOTS`;
+    } else if (this.scoreFocus) {
+      stats.textContent = `STANDARD  ·  SCORE ${this.runScore(elapsed).toLocaleString()}  ·  ${this.formatTime(elapsed)}  ·  ${this.totalKills}K  ·  ${this.shots}S  ·  ${this.warps}W`;
+    } else {
+      stats.textContent = `${this.modeLabel.toUpperCase()}  ·  ${this.difficultyLabel.toUpperCase()}  ·  ${this.formatTime(elapsed)}  ·  ${this.totalKills}K  ·  ${this.shots}S  ·  ${this.warps}W`;
+    }
 
     tutorialRoom.textContent = `ROOM ${roomNumber}`;
     tutorialText.textContent = room.lesson;
@@ -601,6 +689,8 @@ export class TraversalGame {
 
     if (performance.now() < this.transientUntil && this.transientMessage) {
       anchor.textContent = this.transientMessage;
+    } else if (performance.now() < this.airGraceUntil && this.roomIndex === 2) {
+      anchor.textContent = "PHASE HANG // REACQUIRE TARGET TWO";
     } else if (this.warp.hasAnchor()) {
       anchor.textContent = this.input.isWarpHeld()
         ? `VECTOR ${this.warp.selectionPercent()}% // WHEEL TO PLACE // RELEASE RMB`
@@ -689,9 +779,10 @@ export class TraversalGame {
   }
 
   private playShot(): void {
-    this.toneSweep(520, 170, 0.072, "sawtooth", 0.055);
-    this.toneSweep(1180, 610, 0.045, "triangle", 0.032, 0.004);
-    this.toneSweep(92, 62, 0.055, "sine", 0.06);
+    this.toneSweep(720, 210, 0.078, "sawtooth", 0.052);
+    this.toneSweep(1640, 760, 0.038, "triangle", 0.028, 0.003);
+    this.toneSweep(96, 58, 0.065, "sine", 0.07);
+    this.noiseBurst(0.045, 0.04, 2100, "highpass");
   }
 
   private playKill(): void {
@@ -701,16 +792,19 @@ export class TraversalGame {
 
   private playShieldReject(): void {
     this.toneSweep(360, 120, 0.11, "square", 0.045);
+    this.noiseBurst(0.04, 0.028, 1500, "bandpass");
   }
 
   private playWarpStart(): void {
-    this.toneSweep(118, 46, 0.17, "sawtooth", 0.075);
-    this.toneSweep(740, 240, 0.13, "triangle", 0.038);
+    this.toneSweep(126, 38, 0.2, "sawtooth", 0.085);
+    this.toneSweep(900, 190, 0.16, "triangle", 0.045);
+    this.noiseBurst(0.18, 0.055, 720, "bandpass");
   }
 
   private playWarpArrival(): void {
-    this.toneSweep(140, 72, 0.12, "sine", 0.075);
-    this.toneSweep(980, 410, 0.09, "triangle", 0.04);
+    this.toneSweep(150, 64, 0.13, "sine", 0.09);
+    this.toneSweep(1320, 430, 0.085, "triangle", 0.045);
+    this.noiseBurst(0.065, 0.07, 2400, "highpass");
   }
 
   private toneSweep(
@@ -739,7 +833,37 @@ export class TraversalGame {
       osc.start(start);
       osc.stop(start + duration + 0.01);
     } catch {
-      // Procedural audio is presentation-only; blocked audio must never affect gameplay.
+      // Audio enhancement must never affect deterministic gameplay.
+    }
+  }
+
+  private noiseBurst(duration: number, volume: number, frequency: number, type: BiquadFilterType): void {
+    try {
+      this.audioContext ??= new AudioContext();
+      const context = this.audioContext;
+      if (context.state === "suspended") void context.resume();
+      const length = Math.max(1, Math.floor(context.sampleRate * duration));
+      const buffer = context.createBuffer(1, length, context.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < length; i += 1) {
+        const envelope = 1 - i / length;
+        data[i] = (Math.random() * 2 - 1) * envelope;
+      }
+      const source = context.createBufferSource();
+      const filter = context.createBiquadFilter();
+      const gain = context.createGain();
+      const shellSettings = this.shell.settings.snapshot();
+      const mix = Math.max(0, Number(shellSettings.masterVolume ?? 1)) * Math.max(0, Number(shellSettings.sfxVolume ?? 0.9));
+      filter.type = type;
+      filter.frequency.value = frequency;
+      filter.Q.value = type === "bandpass" ? 0.9 : 0.45;
+      gain.gain.setValueAtTime(Math.max(0.0001, volume * mix), context.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + duration);
+      source.buffer = buffer;
+      source.connect(filter).connect(gain).connect(context.destination);
+      source.start();
+    } catch {
+      // Audio enhancement must never affect deterministic gameplay.
     }
   }
 
