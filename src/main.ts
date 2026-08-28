@@ -6,22 +6,119 @@ import {
   createThreeStarterAdapter
 } from "@slu/web-shell";
 import { TraversalGame } from "./game/TraversalGame";
+import { TraversalSettingsStore } from "./game/TraversalSettings";
 
 const canvas = document.getElementById("game-canvas") as HTMLCanvasElement | null;
 const uiRoot = document.getElementById("ui");
 if (!canvas || !uiRoot) throw new Error("Traversal FPS boot DOM is incomplete");
 
+const traversalSettings = new TraversalSettingsStore();
 const rendererAdapter = createThreeStarterAdapter(canvas);
 const app = await createGameApp({
   gameId: "traversal-fps",
   gameName: "Traversal FPS",
-  version: "0.1.0",
+  version: "0.2.0",
   renderer: rendererAdapter,
   root: uiRoot,
   assemblies: [
     (shell) => createFPSAssembly({ shell }),
     (shell) => createArcadeAssembly({ shell })
+  ],
+  flow: {
+    settingsExtension: {
+      choices: () => traversalSettings.choices(),
+      handle: (choiceId) => traversalSettings.handle(choiceId)
+    }
+  }
+});
+
+const traversalModes = [
+  {
+    id: "training",
+    label: "Training",
+    description: "Prominent guidance. Learn kill → vector → stop-short → airborne chain without score pressure.",
+    rules: { tutorial: true, grading: false }
+  },
+  {
+    id: "standard",
+    label: "Standard Run",
+    description: "The full five-platform run with route-efficiency grading. Minimum kills matter.",
+    rules: { tutorial: true, grading: true }
+  },
+  {
+    id: "time-trial",
+    label: "Time Trial",
+    description: "Clock-forward routing. Guidance fades quickly; clean movement and low kill count both matter.",
+    leaderboardKey: "time",
+    rules: { tutorial: false, grading: true, clockFocus: true }
+  },
+  {
+    id: "challenge",
+    label: "Challenge // Clean Route",
+    description: "Exceed a room's minimum kill count and that room resets. Solve with intent, not excess.",
+    leaderboardKey: "score",
+    rules: { tutorial: false, grading: true, exactKills: true }
+  }
+] as const;
+
+const traversalDifficulties = [
+  {
+    id: "assist",
+    label: "Assist",
+    description: "Slower moving targets, lighter gravity, and a wider exit capture radius.",
+    multipliers: { enemySpeed: 0.78 },
+    rules: { gravityScalar: 0.85, goalRadius: 2.8 }
+  },
+  {
+    id: "standard",
+    label: "Standard",
+    description: "Intended traversal timing and target motion.",
+    multipliers: { enemySpeed: 1 },
+    rules: { gravityScalar: 1, goalRadius: 2.3 }
+  },
+  {
+    id: "hard",
+    label: "Hard",
+    description: "Faster moving targets, stronger gravity, and tighter exit capture.",
+    multipliers: { enemySpeed: 1.18 },
+    rules: { gravityScalar: 1.08, goalRadius: 2.05 }
+  },
+  {
+    id: "expert",
+    label: "Expert",
+    description: "High target speed, aggressive fall timing, and strict exit placement. No extra enemy health.",
+    multipliers: { enemySpeed: 1.35 },
+    rules: { gravityScalar: 1.18, goalRadius: 1.8 }
+  }
+] as const;
+
+app.shell.modes.register(traversalModes);
+app.shell.difficulty.register(traversalDifficulties);
+
+app.ui.updateScreen("main-menu", {
+  choices: [
+    { id: "play", label: "Play" },
+    { id: "settings", label: "Settings", description: "FPS controls, display, motion, and audio" },
+    { id: "credits", label: "Credits" }
   ]
+});
+
+app.ui.updateScreen("mode-select", {
+  title: "Select Mode",
+  choices: traversalModes.map((mode) => ({
+    id: mode.id,
+    label: mode.label,
+    description: mode.description
+  }))
+});
+
+app.ui.updateScreen("difficulty-select", {
+  title: "Difficulty",
+  choices: traversalDifficulties.map((difficulty) => ({
+    id: difficulty.id,
+    label: difficulty.label,
+    description: difficulty.description
+  }))
 });
 
 app.ui.updateScreen("loadout", {
@@ -29,8 +126,8 @@ app.ui.updateScreen("loadout", {
   choices: [
     {
       id: "continue",
-      label: "Vector Rig",
-      description: "One kill writes one line. Any committed warp consumes it completely."
+      label: "Vector Caster",
+      description: "Precision pulse weapon. No ammo or reload. A kill writes one consumable warp vector."
     }
   ]
 });
@@ -40,17 +137,18 @@ app.ui.updateScreen("stage-select", {
   choices: [
     {
       id: "stage-01",
-      label: "Five-Room Certification Run",
-      description: "Full warp → stop-short → chain → origin → mastery."
+      label: "Platforms 01–05",
+      description: "Five linked traversal problems. Room numbers are the only route labels for now."
     }
   ]
 });
 
-const game = new TraversalGame(canvas, app.shell, app.flow);
+const game = new TraversalGame(canvas, app.shell, app.flow, app.ui, traversalSettings);
 game.start();
 
 console.info("Traversal FPS ready", {
-  shellVersion: "1.0.2",
-  shellCommit: "4a7b80a4a50d5bddb0d3ab5aff47657e9703e989",
+  shellVersion: "1.0.2+settings-extension",
+  shellCommit: "23fc4d54cd72d35af458ec3b613ed4d90f63a9dd",
+  gameVersion: "0.2.0",
   assemblies: app.composer.listAssemblies()
 });
