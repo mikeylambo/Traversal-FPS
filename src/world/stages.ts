@@ -10,6 +10,7 @@ export interface EnemySpec {
   id: string;
   kind: EnemyKind;
   position: Vec3Tuple;
+  radius?: number;
   drift?: { axis: "x" | "y"; amplitude: number; speed: number };
 }
 
@@ -54,18 +55,18 @@ export const ROOMS: RoomSpec[] = [
   {
     id: "room-03",
     title: "CHAIN",
-    lesson: "The second sphere is occluded from below. Warp high, reacquire it in the air, then chain.",
+    lesson: "The wall hides target two from the floor. Warp high, use the brief phase hang to reacquire, then fire again.",
     spawn: [0, 2.2, 6],
     goal: [8, 1.1, -33],
     requiredKills: 2,
     platforms: [
       { center: [0, 0, 5], size: [10, 1, 10] },
-      { center: [4, 3, -18], size: [20, 6, 1] },
+      { center: [3, 2.75, -18], size: [18, 5.5, 1] },
       { center: [8, 0, -31], size: [10, 1, 10] }
     ],
     enemies: [
-      { id: "r3-high", kind: "sentry", position: [0, 7, -11] },
-      { id: "r3-far", kind: "sentry", position: [8, 6, -28] }
+      { id: "r3-high", kind: "sentry", position: [0, 7.5, -11] },
+      { id: "r3-far", kind: "sentry", position: [6, 8, -24], radius: 0.96 }
     ]
   },
   {
