@@ -3,18 +3,34 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#05070b" />
+  <meta name="theme-color" content="#0b1420" />
   <title>Traversal FPS</title>
 </head>
 <body>
   <div id="game">
     <canvas id="game-canvas"></canvas>
+    <div id="warp-fx" aria-hidden="true">
+      <div class="warp-vignette"></div>
+      <div class="warp-streaks"></div>
+    </div>
     <div id="hud" aria-live="polite">
       <div id="room-label"></div>
       <div id="run-stats"></div>
+      <div id="tutorial-card">
+        <span id="tutorial-room"></span>
+        <strong id="tutorial-text"></strong>
+      </div>
       <div id="anchor-status"></div>
       <div id="capture-hint">CLICK TO CAPTURE MOUSE</div>
-      <div id="crosshair">+</div>
+      <div id="reticle" aria-hidden="true">
+        <span class="reticle-ring"></span>
+        <span class="reticle-diamond"></span>
+        <span class="reticle-tick reticle-tick-top"></span>
+        <span class="reticle-tick reticle-tick-right"></span>
+        <span class="reticle-tick reticle-tick-bottom"></span>
+        <span class="reticle-tick reticle-tick-left"></span>
+        <span class="reticle-dot"></span>
+      </div>
     </div>
   </div>
   <div id="ui"></div>
