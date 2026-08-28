@@ -2,47 +2,99 @@ import * as THREE from "three";
 import { FPSInput } from "../input/FPSInput";
 import { WarpSystem } from "../traversal/WarpSystem";
 import { ROOMS, type EnemySpec, type PlatformSpec } from "../world/stages";
+import type { TraversalSettingsStore } from "./TraversalSettings";
 
 type ActiveEnemy = {
   spec: EnemySpec;
-  mesh: THREE.Mesh<THREE.IcosahedronGeometry, THREE.MeshStandardMaterial>;
+  mesh: THREE.Mesh;
   base: THREE.Vector3;
   alive: boolean;
 };
 
+type TimedFx = {
+  object: THREE.Object3D;
+  material: THREE.MeshBasicMaterial | THREE.LineBasicMaterial;
+  born: number;
+  duration: number;
+  baseOpacity: number;
+  grow?: number;
+};
+
+const ROOM_ACCENTS = [0x69e7ff, 0xffcf66, 0xff78c8, 0xff9d67, 0xa1ff91];
+const PAR_KILLS = ROOMS.reduce((sum, room) => sum + room.requiredKills, 0);
+
 export class TraversalGame {
   private readonly renderer: THREE.WebGLRenderer;
   private readonly scene = new THREE.Scene();
-  private readonly camera = new THREE.PerspectiveCamera(88, 1, 0.05, 220);
+  private readonly camera = new THREE.PerspectiveCamera(92, 1, 0.05, 240);
   private readonly clock = new THREE.Clock();
   private readonly input: FPSInput;
   private readonly warp: WarpSystem;
   private readonly roomRoot = new THREE.Group();
   private readonly enemies: ActiveEnemy[] = [];
+  private readonly platformMeshes: THREE.Mesh[] = [];
+  private readonly effects: TimedFx[] = [];
   private readonly raycaster = new THREE.Raycaster();
+  private readonly goalMaterial = new THREE.MeshBasicMaterial({
+    color: 0xb8ff83,
+    transparent: true,
+    opacity: 0.96,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  });
   private readonly goal = new THREE.Mesh(
-    new THREE.TorusGeometry(1.25, 0.09, 12, 36),
-    new THREE.MeshBasicMaterial({ color: 0xb7ff75 })
+    new THREE.TorusGeometry(1.25, 0.095, 12, 40),
+    this.goalMaterial
   );
+  private readonly goalLight = new THREE.PointLight(0xaaff82, 4, 9, 2);
   private readonly weapon = new THREE.Group();
+  private readonly weaponRest = new THREE.Vector3(0.34, -0.29, -0.68);
+  private readonly weaponMuzzle = new THREE.Object3D();
+  private weaponCoreMaterial: THREE.MeshStandardMaterial | null = null;
+
   private roomIndex = 0;
   private yaw = 0;
   private pitch = 0;
+  private smoothedLookX = 0;
+  private smoothedLookY = 0;
   private velocityY = 0;
   private lastPhase = "";
   private roomKills = 0;
   private totalKills = 0;
   private shots = 0;
+  private targetHits = 0;
   private warps = 0;
+  private roomRestarts = 0;
   private runStartedAt = 0;
   private transientMessage = "";
   private transientUntil = 0;
+  private tutorialUntil = 0;
+  private pendingRoomResetAt = 0;
+  private warpWasTransiting = false;
+  private warpArrivalUntil = 0;
+  private fireReadyAt = 0;
+  private weaponKick = 0;
+  private runComplete = false;
   private audioContext: AudioContext | null = null;
+
+  private modeId = "standard";
+  private modeLabel = "Standard Run";
+  private difficultyId = "standard";
+  private difficultyLabel = "Standard";
+  private tutorialProminent = true;
+  private gradingEnabled = true;
+  private exactKills = false;
+  private clockFocus = false;
+  private enemySpeedScalar = 1;
+  private gravityScalar = 1;
+  private goalRadius = 2.3;
 
   constructor(
     private readonly canvas: HTMLCanvasElement,
     private readonly shell: any,
-    private readonly flow: any
+    private readonly flow: any,
+    private readonly ui: any,
+    private readonly gameSettings: TraversalSettingsStore
   ) {
     const captureHint = document.getElementById("capture-hint");
     if (!captureHint) throw new Error("Missing capture hint");
@@ -51,16 +103,20 @@ export class TraversalGame {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.15;
+    this.renderer.toneMappingExposure = 1.36;
 
-    this.scene.background = new THREE.Color(0x05070b);
-    this.scene.fog = new THREE.FogExp2(0x05070b, 0.018);
-    this.scene.add(this.camera, this.roomRoot, this.goal);
-    this.scene.add(new THREE.HemisphereLight(0xb9eaff, 0x10131a, 1.6));
-    const key = new THREE.DirectionalLight(0xffffff, 2.3);
-    key.position.set(8, 16, 7);
+    this.scene.background = new THREE.Color(0x0b1420);
+    this.scene.fog = new THREE.FogExp2(0x0b1420, 0.012);
+    this.scene.add(this.camera, this.roomRoot, this.goal, this.goalLight);
+    this.scene.add(new THREE.HemisphereLight(0xd7f4ff, 0x182337, 2.35));
+    const key = new THREE.DirectionalLight(0xffffff, 2.8);
+    key.position.set(8, 18, 7);
     this.scene.add(key);
+    const fill = new THREE.DirectionalLight(0x72c9ff, 1.25);
+    fill.position.set(-10, 8, -6);
+    this.scene.add(fill);
 
+    this.raycaster.far = 180;
     this.buildWeapon();
     this.warp = new WarpSystem(this.scene);
     this.goal.visible = false;
@@ -81,10 +137,27 @@ export class TraversalGame {
   }
 
   private beginRun(): void {
+    const mode = this.shell.modes.active();
+    const difficulty = this.shell.difficulty.active();
+    this.modeId = mode?.id ?? "standard";
+    this.modeLabel = mode?.label ?? "Standard Run";
+    this.difficultyId = difficulty?.id ?? "standard";
+    this.difficultyLabel = difficulty?.label ?? "Standard";
+    this.tutorialProminent = Boolean(mode?.rules?.tutorial ?? true);
+    this.gradingEnabled = Boolean(mode?.rules?.grading ?? true);
+    this.exactKills = Boolean(mode?.rules?.exactKills ?? false);
+    this.clockFocus = Boolean(mode?.rules?.clockFocus ?? false);
+    this.enemySpeedScalar = Number(difficulty?.multipliers?.enemySpeed ?? 1);
+    this.gravityScalar = Number(difficulty?.rules?.gravityScalar ?? 1);
+    this.goalRadius = Number(difficulty?.rules?.goalRadius ?? 2.3);
+
     this.roomIndex = 0;
     this.totalKills = 0;
     this.shots = 0;
+    this.targetHits = 0;
     this.warps = 0;
+    this.roomRestarts = 0;
+    this.runComplete = false;
     this.runStartedAt = performance.now();
     this.loadRoom(0);
     this.syncPhase("playing");
@@ -97,7 +170,9 @@ export class TraversalGame {
     if (phase !== this.lastPhase) this.syncPhase(phase);
 
     if (phase === "playing") this.update(dt);
-    this.goal.rotation.y += dt * 1.5;
+    this.goal.rotation.y += dt * 1.55;
+    this.goal.rotation.x = Math.sin(performance.now() * 0.0012) * 0.08;
+    this.updateEffects();
     this.renderer.render(this.scene, this.camera);
   }
 
@@ -106,32 +181,70 @@ export class TraversalGame {
     const playing = phase === "playing";
     document.body.classList.toggle("playing", playing);
     this.input.setEnabled(playing);
-    if (!playing) this.input.releasePointerLock();
+    if (!playing) {
+      this.input.releasePointerLock();
+      document.body.classList.remove("target-hot", "target-blocked", "warp-preview", "warping", "warp-arrival", "anchor-ready");
+    }
   }
 
   private update(dt: number): void {
+    const now = performance.now();
+    if (this.pendingRoomResetAt > 0) {
+      if (now >= this.pendingRoomResetAt) {
+        this.roomRestarts += 1;
+        this.loadRoom(this.roomIndex);
+      } else {
+        this.updateHUD();
+      }
+      return;
+    }
+
     if (this.input.consumeReset()) {
+      this.roomRestarts += 1;
       this.loadRoom(this.roomIndex);
       return;
     }
 
-    const look = this.input.consumeLook();
-    this.yaw -= look.x * 0.0021;
-    this.pitch = THREE.MathUtils.clamp(this.pitch - look.y * 0.0021, -1.48, 1.48);
+    const rawLook = this.input.consumeLook();
+    const smoothing = THREE.MathUtils.clamp(this.gameSettings.value.aimSmoothing, 0, 0.8);
+    this.smoothedLookX = rawLook.x * (1 - smoothing) + this.smoothedLookX * smoothing;
+    this.smoothedLookY = rawLook.y * (1 - smoothing) + this.smoothedLookY * smoothing;
+    const sensitivity = 0.0021 * this.gameSettings.value.mouseSensitivity;
+    const invert = this.gameSettings.value.invertY ? -1 : 1;
+    this.yaw -= this.smoothedLookX * sensitivity;
+    this.pitch = THREE.MathUtils.clamp(this.pitch - this.smoothedLookY * sensitivity * invert, -1.48, 1.48);
     this.camera.rotation.order = "YXZ";
     this.camera.rotation.set(this.pitch, this.yaw, 0);
 
-    this.updateEnemies(performance.now() * 0.001);
+    this.updateEnemies(now * 0.001);
+    this.updateTargetReticle();
 
     if (this.input.consumeFire()) this.shoot();
-    this.warp.updateSelection(this.input.isWarpHeld(), this.input.consumeWheel());
+    this.warp.updateSelection(this.input.isWarpHeld(), this.input.consumeWheel(), now * 0.001);
+    document.body.classList.toggle("warp-preview", this.input.isWarpHeld() && this.warp.hasAnchor());
+    document.body.classList.toggle("anchor-ready", this.warp.hasAnchor());
+
     if (this.input.consumeWarpRelease() && this.warp.commit(this.camera.position)) {
       this.warps += 1;
       this.velocityY = 0;
-      this.sound(92, 0.11, "sawtooth", 0.12);
+      this.playWarpStart();
     }
 
-    if (!this.warp.updateTransit(dt, this.camera.position)) this.updateMovement(dt);
+    const transiting = this.warp.updateTransit(dt, this.camera.position);
+    document.body.classList.toggle("warping", transiting);
+    if (!transiting) {
+      if (this.warpWasTransiting) {
+        this.warpArrivalUntil = now + 180;
+        this.playWarpArrival();
+        this.addArrivalFx(this.camera.position.clone());
+      }
+      this.updateMovement(dt);
+    }
+    this.warpWasTransiting = transiting;
+    document.body.classList.toggle("warp-arrival", now < this.warpArrivalUntil);
+
+    this.updateCameraPresentation();
+    this.updateWeapon(dt);
     this.checkGoal();
     this.updateHUD();
   }
@@ -145,11 +258,14 @@ export class TraversalGame {
     this.camera.position.addScaledVector(horizontal, speed * dt);
 
     const previousY = this.camera.position.y;
-    this.velocityY -= 18 * dt;
+    this.velocityY -= 18 * this.gravityScalar * dt;
     this.camera.position.y += this.velocityY * dt;
     this.resolvePlatforms(previousY);
 
-    if (this.camera.position.y < -9) this.loadRoom(this.roomIndex);
+    if (this.camera.position.y < -9.5) {
+      this.roomRestarts += 1;
+      this.loadRoom(this.roomIndex);
+    }
   }
 
   private resolvePlatforms(previousY: number): void {
@@ -169,50 +285,112 @@ export class TraversalGame {
   }
 
   private shoot(): void {
+    const now = performance.now();
+    if (now < this.fireReadyAt || this.runComplete) return;
+    this.fireReadyAt = now + 105;
     this.shots += 1;
-    this.weapon.position.z = -0.07;
-    this.sound(132, 0.055, "square", 0.08);
+    this.weaponKick = 1;
+    this.playShot();
+
     this.raycaster.setFromCamera(new THREE.Vector2(0, 0), this.camera);
     const liveMeshes = this.enemies.filter((enemy) => enemy.alive).map((enemy) => enemy.mesh);
-    const hit = this.raycaster.intersectObjects(liveMeshes, false)[0];
+    const hit = this.raycaster.intersectObjects([...liveMeshes, ...this.platformMeshes], false)[0];
+    const direction = new THREE.Vector3(0, 0, -1).applyQuaternion(this.camera.quaternion);
+    const endPoint = hit?.point.clone() ?? this.camera.position.clone().add(direction.multiplyScalar(120));
+    this.addShotTrace(endPoint);
+
     if (!hit) return;
     const enemy = this.enemies.find((candidate) => candidate.mesh === hit.object);
-    if (!enemy) return;
-
-    if (enemy.spec.kind === "shield" && this.camera.position.x < 2.5) {
-      this.flashMessage("SHIELD REJECT // MOVE RIGHT");
-      this.sound(420, 0.08, "triangle", 0.05);
+    if (!enemy) {
+      this.addImpactFx(hit.point.clone(), 0x9edcff);
       return;
     }
 
+    this.targetHits += 1;
+    if (enemy.spec.kind === "shield" && this.camera.position.x < 2.5) {
+      this.flashMessage("SHIELD REJECT // CHANGE YOUR FIRING ORIGIN", 1200);
+      this.playShieldReject();
+      this.addImpactFx(hit.point.clone(), 0xffa665);
+      return;
+    }
+
+    const deathPosition = enemy.mesh.position.clone();
     enemy.alive = false;
     enemy.mesh.visible = false;
     this.roomKills += 1;
     this.totalKills += 1;
-    this.warp.write(this.camera.position.clone(), enemy.mesh.position.clone());
-    this.sound(620, 0.06, "sine", 0.045);
+    this.addKillFx(deathPosition, enemy.spec.kind);
+    this.playKill();
+
+    const room = ROOMS[this.roomIndex];
+    if (this.exactKills && this.roomKills > room.requiredKills) {
+      this.warp.reset();
+      this.flashMessage("CLEAN ROUTE FAILED // EXTRA KILL", 900);
+      this.pendingRoomResetAt = now + 780;
+      return;
+    }
+
+    this.warp.write(this.camera.position.clone(), deathPosition);
+    if (this.roomKills > room.requiredKills) {
+      this.flashMessage("EXTRA KILL // ROUTE EFFICIENCY DOWN", 1250);
+    } else {
+      this.flashMessage("VECTOR WRITTEN", 620);
+    }
+  }
+
+  private updateTargetReticle(): void {
+    this.raycaster.setFromCamera(new THREE.Vector2(0, 0), this.camera);
+    const liveMeshes = this.enemies.filter((enemy) => enemy.alive).map((enemy) => enemy.mesh);
+    const hit = this.raycaster.intersectObjects([...liveMeshes, ...this.platformMeshes], false)[0];
+    const enemy = hit ? this.enemies.find((candidate) => candidate.mesh === hit.object) : undefined;
+    const blockedShield = Boolean(enemy?.spec.kind === "shield" && this.camera.position.x < 2.5);
+    document.body.classList.toggle("target-hot", Boolean(enemy) && !blockedShield);
+    document.body.classList.toggle("target-blocked", blockedShield);
   }
 
   private updateEnemies(time: number): void {
     for (const enemy of this.enemies) {
-      if (!enemy.alive || !enemy.spec.drift) continue;
-      const offset = Math.sin(time * enemy.spec.drift.speed) * enemy.spec.drift.amplitude;
-      enemy.mesh.position.copy(enemy.base);
-      enemy.mesh.position[enemy.spec.drift.axis] += offset;
-      enemy.mesh.rotation.x += 0.01;
-      enemy.mesh.rotation.y += 0.015;
+      if (!enemy.alive) continue;
+      if (enemy.spec.drift) {
+        const offset = Math.sin(time * enemy.spec.drift.speed * this.enemySpeedScalar) * enemy.spec.drift.amplitude;
+        enemy.mesh.position.copy(enemy.base);
+        enemy.mesh.position[enemy.spec.drift.axis] += offset;
+      }
+      enemy.mesh.rotation.x += 0.012 * this.enemySpeedScalar;
+      enemy.mesh.rotation.y += 0.018 * this.enemySpeedScalar;
     }
-    this.weapon.position.z = THREE.MathUtils.lerp(this.weapon.position.z, 0, 0.22);
+  }
+
+  private updateCameraPresentation(): void {
+    const baseFov = this.gameSettings.value.fov;
+    const reducedMotion = Boolean(this.shell.settings.snapshot().reducedMotion);
+    let targetFov = baseFov;
+    if (this.warp.isTransiting()) {
+      const pulse = Math.sin(this.warp.transitProgress() * Math.PI);
+      targetFov += reducedMotion ? 3 : 8 + pulse * 8;
+    } else if (this.input.isWarpHeld() && this.warp.hasAnchor()) {
+      targetFov += reducedMotion ? 0 : 2;
+    }
+    this.camera.fov = THREE.MathUtils.lerp(this.camera.fov, targetFov, 0.22);
+    this.camera.updateProjectionMatrix();
+
+    const shake = Number(this.shell.settings.snapshot().screenShake ?? 1);
+    if (!reducedMotion && this.warp.isTransiting()) {
+      this.camera.rotation.z = Math.sin(performance.now() * 0.04) * 0.006 * shake;
+    } else {
+      this.camera.rotation.z = 0;
+    }
+    document.documentElement.style.setProperty("--reticle-scale", String(this.gameSettings.value.reticleScale));
   }
 
   private checkGoal(): void {
+    if (this.runComplete || this.pendingRoomResetAt > 0) return;
     const room = ROOMS[this.roomIndex];
     if (this.roomKills < room.requiredKills) return;
-    if (this.camera.position.distanceTo(this.goal.position) > 2.3) return;
+    if (this.camera.position.distanceTo(this.goal.position) > this.goalRadius) return;
 
     if (this.roomIndex >= ROOMS.length - 1) {
-      this.input.releasePointerLock();
-      this.flow.showResults();
+      this.finishRun();
       return;
     }
 
@@ -220,15 +398,74 @@ export class TraversalGame {
     this.loadRoom(this.roomIndex);
   }
 
+  private finishRun(): void {
+    this.runComplete = true;
+    this.input.releasePointerLock();
+    const elapsed = (performance.now() - this.runStartedAt) / 1000;
+    const accuracy = this.shots > 0 ? (this.targetHits / this.shots) * 100 : 0;
+    const extraKills = Math.max(0, this.totalKills - PAR_KILLS);
+    const routeGrade = this.routeGrade(extraKills);
+    const title = this.modeId === "training"
+      ? "Training Complete"
+      : this.modeId === "time-trial"
+        ? "Time Trial Complete"
+        : this.modeId === "challenge"
+          ? "Clean Route Complete"
+          : "Run Complete";
+
+    const summary = this.modeId === "training"
+      ? `${this.difficultyLabel} · Five rooms cleared`
+      : `${this.modeLabel} · ${this.difficultyLabel}`;
+
+    const resultChoices = this.modeId === "training"
+      ? [
+          { id: "result-time", label: `Time // ${this.formatTime(elapsed)}`, description: `${this.warps} warps · ${this.roomRestarts} restarts`, disabled: true },
+          { id: "result-kills", label: `Kills // ${this.totalKills}`, description: `${PAR_KILLS} is the minimum route`, disabled: true }
+        ]
+      : [
+          { id: "result-route", label: `Route Grade // ${this.modeId === "challenge" ? "CLEAN" : routeGrade}`, description: `${this.totalKills} kills · ${PAR_KILLS} minimum · +${extraKills} extra`, disabled: true },
+          { id: "result-time", label: `Time // ${this.formatTime(elapsed)}`, description: `${this.warps} warps · ${this.roomRestarts} restarts`, disabled: true },
+          { id: "result-aim", label: `Target Accuracy // ${accuracy.toFixed(0)}%`, description: `${this.targetHits} target hits / ${this.shots} shots`, disabled: true }
+        ];
+
+    this.ui.updateScreen("results", {
+      title,
+      subtitle: summary,
+      choices: [
+        ...resultChoices,
+        { id: "retry", label: "Retry" },
+        { id: "continue", label: "Change Mode" },
+        { id: "menu", label: "Main Menu" }
+      ]
+    });
+    this.flow.showResults();
+  }
+
+  private routeGrade(extraKills: number): string {
+    if (!this.gradingEnabled) return "—";
+    if (extraKills === 0) return "A+";
+    if (extraKills === 1) return "A";
+    if (extraKills === 2) return "B";
+    if (extraKills === 3) return "C";
+    if (extraKills === 4) return "D";
+    return "E";
+  }
+
   private loadRoom(index: number): void {
     const room = ROOMS[index];
+    this.clearEffects();
     this.roomRoot.clear();
+    this.platformMeshes.length = 0;
     this.enemies.length = 0;
     this.warp.reset();
     this.roomKills = 0;
     this.velocityY = 0;
     this.yaw = 0;
     this.pitch = 0;
+    this.smoothedLookX = 0;
+    this.smoothedLookY = 0;
+    this.pendingRoomResetAt = 0;
+    this.warpWasTransiting = false;
     this.camera.position.set(...room.spawn);
     this.camera.rotation.set(0, 0, 0);
 
@@ -236,48 +473,110 @@ export class TraversalGame {
     for (const spec of room.enemies) this.addEnemy(spec);
 
     this.goal.position.set(...room.goal);
+    this.goalLight.position.copy(this.goal.position);
     this.goal.visible = true;
-    this.flashMessage(room.lesson, 2400);
+    const shortPrompt = !this.tutorialProminent && index > 0;
+    this.tutorialUntil = performance.now() + (this.modeId === "training" ? 5200 : shortPrompt ? 850 : 2800);
+    this.flashMessage("", 0);
   }
 
   private addPlatform(spec: PlatformSpec): void {
+    const accent = ROOM_ACCENTS[this.roomIndex % ROOM_ACCENTS.length]!;
     const mesh = new THREE.Mesh(
       new THREE.BoxGeometry(...spec.size),
-      new THREE.MeshStandardMaterial({ color: 0x111824, roughness: 0.78, metalness: 0.18 })
+      new THREE.MeshStandardMaterial({
+        color: 0x26384f,
+        emissive: accent,
+        emissiveIntensity: 0.065,
+        roughness: 0.72,
+        metalness: 0.2
+      })
     );
     mesh.position.set(...spec.center);
     this.roomRoot.add(mesh);
+    this.platformMeshes.push(mesh);
 
     const edges = new THREE.LineSegments(
       new THREE.EdgesGeometry(mesh.geometry),
-      new THREE.LineBasicMaterial({ color: 0x355169, transparent: true, opacity: 0.45 })
+      new THREE.LineBasicMaterial({ color: accent, transparent: true, opacity: 0.58 })
     );
     edges.position.copy(mesh.position);
     this.roomRoot.add(edges);
   }
 
   private addEnemy(spec: EnemySpec): void {
+    const color = spec.kind === "shield" ? 0xffad66 : spec.kind === "drifter" ? 0xff78c8 : 0x7cefff;
     const material = new THREE.MeshStandardMaterial({
-      color: spec.kind === "shield" ? 0xffaa63 : spec.kind === "drifter" ? 0xff6fae : 0x78f7ff,
-      emissive: spec.kind === "shield" ? 0x5a2100 : 0x062f36,
-      emissiveIntensity: 1.35,
-      roughness: 0.28,
-      metalness: 0.42
+      color,
+      emissive: color,
+      emissiveIntensity: 0.42,
+      roughness: 0.22,
+      metalness: 0.46
     });
-    const mesh = new THREE.Mesh(new THREE.IcosahedronGeometry(0.72, 1), material);
+    const mesh = new THREE.Mesh(new THREE.IcosahedronGeometry(0.72, 2), material);
     mesh.position.set(...spec.position);
+
+    const shell = new THREE.Mesh(
+      new THREE.IcosahedronGeometry(0.84, 1),
+      new THREE.MeshBasicMaterial({ color, wireframe: true, transparent: true, opacity: 0.26 })
+    );
+    mesh.add(shell);
     this.roomRoot.add(mesh);
     this.enemies.push({ spec, mesh, base: mesh.position.clone(), alive: true });
   }
 
   private buildWeapon(): void {
-    const body = new THREE.Mesh(
-      new THREE.BoxGeometry(0.22, 0.18, 0.7),
-      new THREE.MeshStandardMaterial({ color: 0xdde6ee, metalness: 0.7, roughness: 0.24 })
+    const shellMaterial = new THREE.MeshStandardMaterial({ color: 0xdfe9f2, metalness: 0.72, roughness: 0.2 });
+    const darkMaterial = new THREE.MeshStandardMaterial({ color: 0x172536, metalness: 0.8, roughness: 0.24 });
+    this.weaponCoreMaterial = new THREE.MeshStandardMaterial({
+      color: 0x9df8ff,
+      emissive: 0x2ee9ff,
+      emissiveIntensity: 2.4,
+      metalness: 0.18,
+      roughness: 0.16
+    });
+
+    const spine = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.15, 0.76), darkMaterial);
+    const upperShell = new THREE.Mesh(new THREE.BoxGeometry(0.23, 0.07, 0.58), shellMaterial);
+    upperShell.position.y = 0.09;
+    upperShell.position.z = -0.08;
+
+    const leftRail = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.065, 0.72), shellMaterial);
+    const rightRail = leftRail.clone();
+    leftRail.position.set(-0.13, 0.01, -0.08);
+    rightRail.position.set(0.13, 0.01, -0.08);
+
+    const core = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.48, 12), this.weaponCoreMaterial);
+    core.rotation.x = Math.PI / 2;
+    core.position.set(0, -0.005, -0.08);
+
+    const muzzle = new THREE.Mesh(
+      new THREE.TorusGeometry(0.105, 0.017, 8, 28),
+      new THREE.MeshBasicMaterial({ color: 0x9df8ff, blending: THREE.AdditiveBlending })
     );
-    body.position.set(0.28, -0.23, -0.62);
-    this.weapon.add(body);
+    muzzle.position.z = -0.48;
+
+    const grip = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.3, 0.16), darkMaterial);
+    grip.position.set(0, -0.2, 0.18);
+    grip.rotation.x = -0.24;
+
+    this.weaponMuzzle.position.set(0, 0, -0.51);
+    this.weapon.add(spine, upperShell, leftRail, rightRail, core, muzzle, grip, this.weaponMuzzle);
+    this.weapon.position.copy(this.weaponRest);
+    this.weapon.rotation.z = -0.035;
     this.camera.add(this.weapon);
+  }
+
+  private updateWeapon(dt: number): void {
+    this.weaponKick *= Math.pow(0.002, dt);
+    this.weapon.position.copy(this.weaponRest);
+    this.weapon.position.z += this.weaponKick * 0.085;
+    this.weapon.position.y -= this.weaponKick * 0.015;
+    this.weapon.rotation.x = this.weaponKick * 0.045;
+    this.weapon.rotation.z = -0.035 - this.weaponKick * 0.018;
+    if (this.weaponCoreMaterial) {
+      this.weaponCoreMaterial.emissiveIntensity = 2.2 + this.weaponKick * 4.5 + (this.warp.hasAnchor() ? 0.75 : 0);
+    }
   }
 
   private updateHUD(): void {
@@ -285,17 +584,29 @@ export class TraversalGame {
     const roomLabel = document.getElementById("room-label");
     const stats = document.getElementById("run-stats");
     const anchor = document.getElementById("anchor-status");
-    if (!roomLabel || !stats || !anchor) return;
-    roomLabel.textContent = `${String(this.roomIndex + 1).padStart(2, "0")} // ${room.title}`;
-    const elapsed = (performance.now() - this.runStartedAt) / 1000;
-    stats.textContent = `${elapsed.toFixed(2)}s  ·  ${this.totalKills} KILLS  ·  ${this.shots} SHOTS  ·  ${this.warps} WARPS`;
+    const tutorialCard = document.getElementById("tutorial-card");
+    const tutorialRoom = document.getElementById("tutorial-room");
+    const tutorialText = document.getElementById("tutorial-text");
+    if (!roomLabel || !stats || !anchor || !tutorialCard || !tutorialRoom || !tutorialText) return;
 
-    if (performance.now() < this.transientUntil) {
+    const roomNumber = String(this.roomIndex + 1).padStart(2, "0");
+    roomLabel.textContent = `ROOM ${roomNumber}  ·  MIN ${room.requiredKills}  ·  K ${this.roomKills}`;
+    const elapsed = (performance.now() - this.runStartedAt) / 1000;
+    const clock = this.clockFocus ? this.formatTime(elapsed) : `${elapsed.toFixed(2)}s`;
+    stats.textContent = `${this.modeLabel.toUpperCase()}  ·  ${this.difficultyLabel.toUpperCase()}  ·  ${clock}  ·  ${this.totalKills}K  ·  ${this.shots}S  ·  ${this.warps}W`;
+
+    tutorialRoom.textContent = `ROOM ${roomNumber}`;
+    tutorialText.textContent = room.lesson;
+    tutorialCard.classList.toggle("visible", performance.now() < this.tutorialUntil);
+
+    if (performance.now() < this.transientUntil && this.transientMessage) {
       anchor.textContent = this.transientMessage;
     } else if (this.warp.hasAnchor()) {
-      anchor.textContent = this.input.isWarpHeld() ? `VECTOR ${this.warp.selectionPercent()}% // RELEASE RMB` : "VECTOR READY // HOLD RMB";
+      anchor.textContent = this.input.isWarpHeld()
+        ? `VECTOR ${this.warp.selectionPercent()}% // WHEEL TO PLACE // RELEASE RMB`
+        : "VECTOR READY // HOLD RMB";
     } else {
-      anchor.textContent = room.lesson;
+      anchor.textContent = "NO VECTOR // KILL A TARGET TO WRITE";
     }
   }
 
@@ -304,21 +615,138 @@ export class TraversalGame {
     this.transientUntil = performance.now() + duration;
   }
 
-  private sound(frequency: number, duration: number, type: OscillatorType, volume: number): void {
+  private addShotTrace(end: THREE.Vector3): void {
+    this.camera.updateMatrixWorld(true);
+    const start = new THREE.Vector3();
+    this.weaponMuzzle.getWorldPosition(start);
+    const geometry = new THREE.BufferGeometry().setFromPoints([start, end]);
+    const material = new THREE.LineBasicMaterial({ color: 0xc9fbff, transparent: true, opacity: 0.92 });
+    const line = new THREE.Line(geometry, material);
+    this.scene.add(line);
+    this.effects.push({ object: line, material, born: performance.now(), duration: 105, baseOpacity: 0.92 });
+  }
+
+  private addImpactFx(position: THREE.Vector3, color: number): void {
+    const material = new THREE.MeshBasicMaterial({ color, wireframe: true, transparent: true, opacity: 0.9 });
+    const mesh = new THREE.Mesh(new THREE.OctahedronGeometry(0.16, 0), material);
+    mesh.position.copy(position);
+    this.scene.add(mesh);
+    this.effects.push({ object: mesh, material, born: performance.now(), duration: 220, baseOpacity: 0.9, grow: 2.2 });
+  }
+
+  private addKillFx(position: THREE.Vector3, kind: EnemySpec["kind"]): void {
+    const color = kind === "shield" ? 0xffa45e : kind === "drifter" ? 0xff72c5 : 0x78f7ff;
+    const material = new THREE.MeshBasicMaterial({ color, wireframe: true, transparent: true, opacity: 1 });
+    const mesh = new THREE.Mesh(new THREE.IcosahedronGeometry(0.78, 1), material);
+    mesh.position.copy(position);
+    this.scene.add(mesh);
+    this.effects.push({ object: mesh, material, born: performance.now(), duration: 360, baseOpacity: 1, grow: 2.5 });
+  }
+
+  private addArrivalFx(position: THREE.Vector3): void {
+    const material = new THREE.MeshBasicMaterial({
+      color: 0x8ff8ff,
+      transparent: true,
+      opacity: 0.9,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      side: THREE.DoubleSide
+    });
+    const mesh = new THREE.Mesh(new THREE.RingGeometry(0.2, 0.28, 40), material);
+    mesh.position.copy(position);
+    mesh.quaternion.copy(this.camera.quaternion);
+    this.scene.add(mesh);
+    this.effects.push({ object: mesh, material, born: performance.now(), duration: 260, baseOpacity: 0.9, grow: 8 });
+  }
+
+  private updateEffects(): void {
+    const now = performance.now();
+    for (let i = this.effects.length - 1; i >= 0; i -= 1) {
+      const fx = this.effects[i]!;
+      const age = (now - fx.born) / fx.duration;
+      if (age >= 1) {
+        this.scene.remove(fx.object);
+        const geometry = (fx.object as THREE.Mesh | THREE.Line).geometry as THREE.BufferGeometry | undefined;
+        geometry?.dispose?.();
+        fx.material.dispose();
+        this.effects.splice(i, 1);
+        continue;
+      }
+      fx.material.opacity = fx.baseOpacity * (1 - age);
+      if (fx.grow) fx.object.scale.setScalar(1 + age * fx.grow);
+      fx.object.rotation.z += 0.018;
+    }
+  }
+
+  private clearEffects(): void {
+    for (const fx of this.effects) {
+      this.scene.remove(fx.object);
+      const geometry = (fx.object as THREE.Mesh | THREE.Line).geometry as THREE.BufferGeometry | undefined;
+      geometry?.dispose?.();
+      fx.material.dispose();
+    }
+    this.effects.length = 0;
+  }
+
+  private playShot(): void {
+    this.toneSweep(520, 170, 0.072, "sawtooth", 0.055);
+    this.toneSweep(1180, 610, 0.045, "triangle", 0.032, 0.004);
+    this.toneSweep(92, 62, 0.055, "sine", 0.06);
+  }
+
+  private playKill(): void {
+    this.toneSweep(430, 820, 0.09, "sine", 0.05);
+    this.toneSweep(690, 1120, 0.075, "triangle", 0.032, 0.018);
+  }
+
+  private playShieldReject(): void {
+    this.toneSweep(360, 120, 0.11, "square", 0.045);
+  }
+
+  private playWarpStart(): void {
+    this.toneSweep(118, 46, 0.17, "sawtooth", 0.075);
+    this.toneSweep(740, 240, 0.13, "triangle", 0.038);
+  }
+
+  private playWarpArrival(): void {
+    this.toneSweep(140, 72, 0.12, "sine", 0.075);
+    this.toneSweep(980, 410, 0.09, "triangle", 0.04);
+  }
+
+  private toneSweep(
+    startFrequency: number,
+    endFrequency: number,
+    duration: number,
+    type: OscillatorType,
+    volume: number,
+    delay = 0
+  ): void {
     try {
       this.audioContext ??= new AudioContext();
-      const osc = this.audioContext.createOscillator();
-      const gain = this.audioContext.createGain();
+      const context = this.audioContext;
+      if (context.state === "suspended") void context.resume();
+      const start = context.currentTime + delay;
+      const osc = context.createOscillator();
+      const gain = context.createGain();
+      const shellSettings = this.shell.settings.snapshot();
+      const mix = Math.max(0, Number(shellSettings.masterVolume ?? 1)) * Math.max(0, Number(shellSettings.sfxVolume ?? 0.9));
       osc.type = type;
-      osc.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
-      gain.gain.setValueAtTime(volume, this.audioContext.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + duration);
-      osc.connect(gain).connect(this.audioContext.destination);
-      osc.start();
-      osc.stop(this.audioContext.currentTime + duration);
+      osc.frequency.setValueAtTime(Math.max(1, startFrequency), start);
+      osc.frequency.exponentialRampToValueAtTime(Math.max(1, endFrequency), start + duration);
+      gain.gain.setValueAtTime(Math.max(0.0001, volume * mix), start);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+      osc.connect(gain).connect(context.destination);
+      osc.start(start);
+      osc.stop(start + duration + 0.01);
     } catch {
-      // Audio is enhancement-only; gameplay must remain deterministic if blocked.
+      // Procedural audio is presentation-only; blocked audio must never affect gameplay.
     }
+  }
+
+  private formatTime(seconds: number): string {
+    const minutes = Math.floor(seconds / 60);
+    const remainder = seconds - minutes * 60;
+    return `${String(minutes).padStart(2, "0")}:${remainder.toFixed(2).padStart(5, "0")}`;
   }
 
   private resize(): void {
