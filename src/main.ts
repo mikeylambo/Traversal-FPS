@@ -17,7 +17,7 @@ const rendererAdapter = createThreeStarterAdapter(canvas);
 const app = await createGameApp({
   gameId: "traversal-fps",
   gameName: "Traversal FPS",
-  version: "0.2.0",
+  version: "0.2.1",
   renderer: rendererAdapter,
   root: uiRoot,
   assemblies: [
@@ -36,28 +36,36 @@ const traversalModes = [
   {
     id: "training",
     label: "Training",
-    description: "Prominent guidance. Learn kill → vector → stop-short → airborne chain without score pressure.",
-    rules: { tutorial: true, grading: false }
+    description: "Learn the Warp Rifle and traversal grammar with long-form guidance and forgiving aerial timing.",
+    rules: { tutorial: true, grading: false, airGraceScale: 1.35 }
   },
   {
     id: "standard",
     label: "Standard Run",
-    description: "The full five-platform run with route-efficiency grading. Minimum kills matter.",
-    rules: { tutorial: true, grading: true }
+    description: "Balanced score run. Time, extra kills, shots fired, and restarts all affect your result.",
+    leaderboardKey: "score",
+    rules: { tutorial: true, grading: true, scoreFocus: true, airGraceScale: 1 }
   },
   {
     id: "time-trial",
     label: "Time Trial",
-    description: "Clock-forward routing. Guidance fades quickly; clean movement and low kill count both matter.",
+    description: "Race the adjusted clock. Wasted shots add +0.20s and extra kills add +0.75s.",
     leaderboardKey: "time",
-    rules: { tutorial: false, grading: true, clockFocus: true }
+    rules: {
+      tutorial: false,
+      grading: false,
+      clockFocus: true,
+      missPenaltySeconds: 0.2,
+      extraKillPenaltySeconds: 0.75,
+      airGraceScale: 0.8
+    }
   },
   {
     id: "challenge",
     label: "Challenge // Clean Route",
-    description: "Exceed a room's minimum kill count and that room resets. Solve with intent, not excess.",
+    description: "Exact kills only, with one missed shot of tolerance per room. Exceed either budget and reset.",
     leaderboardKey: "score",
-    rules: { tutorial: false, grading: true, exactKills: true }
+    rules: { tutorial: false, grading: true, exactKills: true, shotAllowance: 1, airGraceScale: 0.8 }
   }
 ] as const;
 
@@ -126,8 +134,8 @@ app.ui.updateScreen("loadout", {
   choices: [
     {
       id: "continue",
-      label: "Vector Caster",
-      description: "Precision pulse weapon. No ammo or reload. A kill writes one consumable warp vector."
+      label: "Warp Rifle",
+      description: "Zero-spread precision rifle. No ammo or reload. Every kill writes one consumable warp vector."
     }
   ]
 });
@@ -149,6 +157,6 @@ game.start();
 console.info("Traversal FPS ready", {
   shellVersion: "1.0.2+settings-extension",
   shellCommit: "23fc4d54cd72d35af458ec3b613ed4d90f63a9dd",
-  gameVersion: "0.2.0",
+  gameVersion: "0.2.1",
   assemblies: app.composer.listAssemblies()
 });
