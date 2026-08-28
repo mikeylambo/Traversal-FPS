@@ -28,7 +28,7 @@ export const ROOMS: RoomSpec[] = [
   {
     id: "room-01",
     title: "WRITE THE LINE",
-    lesson: "Kill the sentry. RMB spends the vector.",
+    lesson: "Kill the sphere. Hold RMB, then release to spend its vector.",
     spawn: [0, 2.2, 6],
     goal: [0, 1.1, -24],
     requiredKills: 1,
@@ -41,7 +41,7 @@ export const ROOMS: RoomSpec[] = [
   {
     id: "room-02",
     title: "STOP SHORT",
-    lesson: "The target is too far. Hold RMB + wheel; release before the end.",
+    lesson: "The sphere is beyond the landing. Hold RMB + wheel, then release before 100%.",
     spawn: [0, 2.2, 6],
     goal: [0, 1.1, -16],
     requiredKills: 1,
@@ -54,12 +54,13 @@ export const ROOMS: RoomSpec[] = [
   {
     id: "room-03",
     title: "CHAIN",
-    lesson: "Warp high, acquire the second kill before gravity wins.",
+    lesson: "The second sphere is occluded from below. Warp high, reacquire it in the air, then chain.",
     spawn: [0, 2.2, 6],
     goal: [8, 1.1, -33],
     requiredKills: 2,
     platforms: [
       { center: [0, 0, 5], size: [10, 1, 10] },
+      { center: [4, 3, -18], size: [20, 6, 1] },
       { center: [8, 0, -31], size: [10, 1, 10] }
     ],
     enemies: [
@@ -70,7 +71,7 @@ export const ROOMS: RoomSpec[] = [
   {
     id: "room-04",
     title: "ORIGIN MATTERS",
-    lesson: "The shield rejects frontal shots. Move right before taking the kill.",
+    lesson: "The shield rejects frontal shots. Move right before the kill so the written vector starts there.",
     spawn: [-5, 2.2, 6],
     goal: [7, 1.1, -28],
     requiredKills: 1,
@@ -83,7 +84,7 @@ export const ROOMS: RoomSpec[] = [
   {
     id: "room-05",
     title: "FIND THE FASTER ROUTE",
-    lesson: "No prescribed solution. Reach the exit with at least two kills.",
+    lesson: "Reach the exit with at least two kills. Extra kills may help — but they lower route efficiency.",
     spawn: [0, 2.2, 8],
     goal: [0, 1.1, -43],
     requiredKills: 2,
