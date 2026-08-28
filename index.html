@@ -3,36 +3,72 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#0b1420" />
+  <meta name="theme-color" content="#06121f" />
   <title>Traversal FPS</title>
 </head>
 <body>
   <div id="game">
     <canvas id="game-canvas"></canvas>
+
     <div id="warp-fx" aria-hidden="true">
       <div class="warp-vignette"></div>
       <div class="warp-streaks"></div>
     </div>
+
     <div id="hud" aria-live="polite">
-      <div id="room-label"></div>
-      <div id="run-stats"></div>
+      <div class="hud-grid" aria-hidden="true"></div>
+
+      <section id="mission-panel" class="hud-frame hud-frame-left">
+        <span class="hud-eyebrow">TRAVERSAL // VECTOR RIG</span>
+        <strong id="room-label"></strong>
+        <span id="room-objective"></span>
+      </section>
+
+      <section id="metric-panel" class="hud-frame hud-frame-right">
+        <span id="mode-label" class="hud-eyebrow"></span>
+        <strong id="run-primary"></strong>
+        <span id="run-stats"></span>
+      </section>
+
       <div id="tutorial-card">
+        <div class="tutorial-rail" aria-hidden="true"></div>
         <span id="tutorial-room"></span>
         <strong id="tutorial-text"></strong>
+        <span class="tutorial-skip">T // DISMISS</span>
       </div>
-      <div id="anchor-status"></div>
+
+      <div id="vector-console">
+        <div id="anchor-status"></div>
+        <div id="warp-gauge" aria-hidden="true">
+          <div class="warp-gauge-head">
+            <span>WARP VECTOR</span>
+            <strong id="warp-percent">100%</strong>
+          </div>
+          <div class="warp-gauge-track">
+            <span class="warp-gauge-fill" id="warp-fill"></span>
+            <span class="warp-gauge-marker"></span>
+            <i></i><i></i><i></i><i></i><i></i>
+          </div>
+          <div id="warp-hint">HOLD RMB // WHEEL TO PLACE // RELEASE TO COMMIT</div>
+        </div>
+      </div>
+
       <div id="capture-hint">CLICK TO CAPTURE MOUSE</div>
+
       <div id="reticle" aria-hidden="true">
+        <span class="reticle-outer"></span>
         <span class="reticle-ring"></span>
-        <span class="reticle-diamond"></span>
-        <span class="reticle-tick reticle-tick-top"></span>
-        <span class="reticle-tick reticle-tick-right"></span>
-        <span class="reticle-tick reticle-tick-bottom"></span>
-        <span class="reticle-tick reticle-tick-left"></span>
+        <span class="reticle-bracket reticle-bracket-tl"></span>
+        <span class="reticle-bracket reticle-bracket-tr"></span>
+        <span class="reticle-bracket reticle-bracket-bl"></span>
+        <span class="reticle-bracket reticle-bracket-br"></span>
+        <span class="reticle-axis reticle-axis-h"></span>
+        <span class="reticle-axis reticle-axis-v"></span>
         <span class="reticle-dot"></span>
       </div>
     </div>
   </div>
+
   <div id="ui"></div>
   <script type="module" src="/src/main.ts"></script>
 </body>
