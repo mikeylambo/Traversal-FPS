@@ -17,7 +17,7 @@ const rendererAdapter = createThreeStarterAdapter(canvas);
 const app = await createGameApp({
   gameId: "traversal-fps",
   gameName: "Traversal FPS",
-  version: "0.2.2",
+  version: "0.3.0",
   renderer: rendererAdapter,
   root: uiRoot,
   assemblies: [
@@ -158,6 +158,6 @@ game.start();
 console.info("Traversal FPS ready", {
   shellVersion: "1.0.2+settings+mode-replace",
   shellCommit: "d45d5b89b56eb65cf10cc25ef3a89595d63f6b3f",
-  gameVersion: "0.2.2",
+  gameVersion: "0.3.0",
   assemblies: app.composer.listAssemblies()
 });
