@@ -17,7 +17,7 @@ const rendererAdapter = createThreeStarterAdapter(canvas);
 const app = await createGameApp({
   gameId: "traversal-fps",
   gameName: "Traversal FPS",
-  version: "0.2.1",
+  version: "0.2.2",
   renderer: rendererAdapter,
   root: uiRoot,
   assemblies: [
@@ -36,15 +36,15 @@ const traversalModes = [
   {
     id: "training",
     label: "Training",
-    description: "Learn the Warp Rifle and traversal grammar with long-form guidance and forgiving aerial timing.",
-    rules: { tutorial: true, grading: false, airGraceScale: 1.35 }
+    description: "Learn the Warp Rifle and traversal grammar with forgiving aerial timing.",
+    rules: { grading: false, airGraceScale: 1.35 }
   },
   {
     id: "standard",
     label: "Standard Run",
     description: "Balanced score run. Time, extra kills, shots fired, and restarts all affect your result.",
     leaderboardKey: "score",
-    rules: { tutorial: true, grading: true, scoreFocus: true, airGraceScale: 1 }
+    rules: { grading: true, scoreFocus: true, airGraceScale: 1 }
   },
   {
     id: "time-trial",
@@ -52,7 +52,6 @@ const traversalModes = [
     description: "Race the adjusted clock. Wasted shots add +0.20s and extra kills add +0.75s.",
     leaderboardKey: "time",
     rules: {
-      tutorial: false,
       grading: false,
       clockFocus: true,
       missPenaltySeconds: 0.2,
@@ -63,9 +62,9 @@ const traversalModes = [
   {
     id: "challenge",
     label: "Challenge // Clean Route",
-    description: "Exact kills only, with one missed shot of tolerance per room. Exceed either budget and reset.",
+    description: "Exact kills only, with one non-kill shot allowed per room. Exceed either limit and the room resets.",
     leaderboardKey: "score",
-    rules: { tutorial: false, grading: true, exactKills: true, shotAllowance: 1, airGraceScale: 0.8 }
+    rules: { grading: true, exactKills: true, shotAllowance: 1, airGraceScale: 0.8 }
   }
 ] as const;
 
@@ -100,7 +99,9 @@ const traversalDifficulties = [
   }
 ] as const;
 
-app.shell.modes.register(traversalModes);
+// Frames provide reusable systems, but Traversal owns its shipped mode set.
+// Replace inherited generic FPS/Arcade modes so Time Attack/Combat Trial/etc. cannot leak into the game UI.
+app.shell.modes.replace(traversalModes);
 app.shell.difficulty.register(traversalDifficulties);
 
 app.ui.updateScreen("main-menu", {
@@ -155,8 +156,8 @@ const game = new TraversalGame(canvas, app.shell, app.flow, app.ui, traversalSet
 game.start();
 
 console.info("Traversal FPS ready", {
-  shellVersion: "1.0.2+settings-extension",
-  shellCommit: "23fc4d54cd72d35af458ec3b613ed4d90f63a9dd",
-  gameVersion: "0.2.1",
+  shellVersion: "1.0.2+settings+mode-replace",
+  shellCommit: "d45d5b89b56eb65cf10cc25ef3a89595d63f6b3f",
+  gameVersion: "0.2.2",
   assemblies: app.composer.listAssemblies()
 });
