@@ -22,6 +22,12 @@ export function installScopeRuntime(game: object): void {
   let scoped = false;
   let blend = 0;
 
+  const setScoped = (next: boolean) => {
+    scoped = next;
+    document.body.classList.toggle("scope-active", scoped);
+    window.dispatchEvent(new CustomEvent("traversal:scope-change", { detail: { active: scoped } }));
+  };
+
   const overlay = document.createElement("div");
   overlay.id = "scope-overlay";
   overlay.setAttribute("aria-hidden", "true");
@@ -38,12 +44,6 @@ export function installScopeRuntime(game: object): void {
     button.addEventListener("click", () => setScoped(!scoped));
     mobileControls.appendChild(button);
   }
-
-  const setScoped = (next: boolean) => {
-    scoped = next;
-    document.body.classList.toggle("scope-active", scoped);
-    window.dispatchEvent(new CustomEvent("traversal:scope-change", { detail: { active: scoped } }));
-  };
 
   window.addEventListener("traversal:scope-toggle", () => {
     if (!document.body.classList.contains("playing")) return;
