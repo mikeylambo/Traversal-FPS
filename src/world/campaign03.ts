@@ -42,7 +42,7 @@ export const MAP_03_FIELD: RoomSpec[] = [
       { id: "occlusion-high", kind: "sentry", position: [16, 6.7, -61], radius: 0.58 },
       { id: "occlusion-low", kind: "drifter", position: [-5, 3.1, -94], radius: 0.55, drift: { axis: "x", amplitude: 4.5, speed: 0.58 } },
       { id: "occlusion-alt", kind: "drifter", position: [11, 6.1, -105], radius: 0.55, drift: { axis: "y", amplitude: 2.8, speed: 0.72 } },
-      { id: "occlusion-final", kind: "sentry", position: [0, 3.2, -124], radius: 0.6 }
+      { id: "occlusion-final", kind: "sentry", position: [0, 3.2, -140], radius: 0.6 }
     ]
   }
 ];
@@ -111,7 +111,7 @@ export const MAP_03_COURSE: RoomSpec[] = [
     ],
     enemies: [
       { id: "m3-back-perch", kind: "sentry", position: [10, 5.2, -11] },
-      { id: "m3-back-exit", kind: "sentry", position: [-8, 4.2, -30], radius: 0.55 }
+      { id: "m3-back-exit", kind: "sentry", position: [-8, 4.2, -35], radius: 0.55 }
     ]
   },
   {
@@ -134,7 +134,7 @@ export const MAP_03_COURSE: RoomSpec[] = [
     enemies: [
       { id: "m3-final-left", kind: "sentry", position: [-10, 4.2, -16], radius: 0.58 },
       { id: "m3-final-right", kind: "sentry", position: [10, 5.7, -29], radius: 0.52 },
-      { id: "m3-final-drift", kind: "drifter", position: [-3, 6.2, -39], radius: 0.5, drift: { axis: "x", amplitude: 5.5, speed: 0.68 } },
+      { id: "m3-final-drift", kind: "drifter", position: [-3, 6.2, -57], radius: 0.5, drift: { axis: "x", amplitude: 5.5, speed: 0.68 } },
       { id: "m3-final-exit", kind: "sentry", position: [0, 2.8, -45], radius: 0.56 }
     ]
   }
