@@ -3,25 +3,20 @@ import type { ContentRuntime } from "./ContentRuntime";
 
 type RuntimeState = {
   modeId: string;
-  modeLabel: string;
   roomIndex: number;
   loadRoom(index: number): void;
 };
 
-/** Gives each content family an authored entrance so Campaign feels like entering a
- * place while Time Trial/Challenge feel like entering a course or ruleset.
- */
+/** Gives each content family a restrained entrance card. */
 export function installSectorTransitions(game: object, content: ContentRuntime): void {
   const state = game as unknown as RuntimeState;
   const overlay = document.createElement("div");
   overlay.id = "sector-transition";
   overlay.innerHTML = `
-    <div class="sector-transition-grid"></div>
     <div class="sector-transition-line"></div>
     <div class="sector-transition-copy">
       <span id="sector-transition-kicker"></span>
       <strong id="sector-transition-title"></strong>
-      <em id="sector-transition-subtitle"></em>
     </div>
   `;
   document.body.appendChild(overlay);
@@ -43,28 +38,25 @@ function showTransition(
 ): void {
   const kicker = overlay.querySelector<HTMLElement>("#sector-transition-kicker");
   const title = overlay.querySelector<HTMLElement>("#sector-transition-title");
-  const subtitle = overlay.querySelector<HTMLElement>("#sector-transition-subtitle");
-  if (!kicker || !title || !subtitle) return;
+  if (!kicker || !title) return;
 
   const contentId = content.selectedContentId();
   const map = CAMPAIGN_MAPS.find((entry) => entry.id === contentId);
+  const sectorNumber = map?.id.match(/(\d+)/)?.[1]?.padStart(2, "0") ?? "01";
+  const mapTitle = map?.label.replace(/^SECTOR \d+ \/\/ /, "") ?? "THE SPAN";
 
   if (contentId === "training") {
-    kicker.textContent = "TRAINING CONSTRUCT // GRAMMAR COURSE";
+    kicker.textContent = "TRAINING";
     title.textContent = "VECTOR FUNDAMENTALS";
-    subtitle.textContent = "LEARN THE LANGUAGE // THEN ENTER THE FIELD";
   } else if (state.modeId === "standard") {
-    kicker.textContent = "DIMENSIONAL FIELD // SECTOR ENTRY";
-    title.textContent = map?.label.replace(/^SECTOR \d+ \/\/ /, "") ?? contentId.toUpperCase();
-    subtitle.textContent = "FIELD SYNCHRONIZED // READ THE CONSTRUCT";
+    kicker.textContent = `SECTOR ${sectorNumber}`;
+    title.textContent = mapTitle;
   } else if (state.modeId === "time-trial") {
-    kicker.textContent = "TIME TRIAL // COURSE LOCK";
-    title.textContent = map?.label.replace(/^SECTOR \d+ \/\/ /, "") ?? "VECTOR COURSE";
-    subtitle.textContent = "CLOCK ARMED // SPLITS LIVE // ROUTE CLEAN";
+    kicker.textContent = "TIME TRIAL";
+    title.textContent = mapTitle;
   } else {
-    kicker.textContent = "CHALLENGE // CONSTRAINT LOCK";
-    title.textContent = map?.label.replace(/^SECTOR \d+ \/\/ /, "") ?? "CLEAN ROUTE";
-    subtitle.textContent = "SHOT BUDGET ARMED // EXTRA KILLS REJECTED";
+    kicker.textContent = "CHALLENGE";
+    title.textContent = mapTitle;
   }
 
   overlay.dataset.serial = String(serial);
@@ -73,5 +65,5 @@ function showTransition(
   overlay.classList.add("show");
   window.setTimeout(() => {
     if (overlay.dataset.serial === String(serial)) overlay.classList.remove("show");
-  }, 2100);
+  }, 1550);
 }
