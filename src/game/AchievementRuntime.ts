@@ -66,6 +66,8 @@ export function installAchievementRuntime(
       void progression.unlock("map-01-complete");
     } else if (contentId === "map-02") {
       void progression.unlock("map-02-complete");
+    } else if (contentId === "map-03") {
+      void progression.unlock("map-03-complete");
     }
     if (clean) void progression.unlock("clean-run");
     if (modeId === "challenge") void progression.unlock("challenge-clear");
