@@ -8,18 +8,23 @@ import type { TraversalVisualSettings } from "../game/TraversalSettings";
 const surfaceVertex = /* glsl */`
   varying vec3 vWorldPosition;
   varying vec3 vWorldNormal;
+  varying float vViewDepth;
 
   void main() {
     vec4 world = modelMatrix * vec4(position, 1.0);
+    vec4 view = viewMatrix * world;
     vWorldPosition = world.xyz;
     vWorldNormal = normalize(mat3(modelMatrix) * normal);
-    gl_Position = projectionMatrix * viewMatrix * world;
+    vViewDepth = -view.z;
+    gl_Position = projectionMatrix * view;
   }
 `;
 
 const surfaceFragment = /* glsl */`
   uniform vec3 uBase;
   uniform vec3 uAccent;
+  uniform vec3 uFogColor;
+  uniform float uFogDensity;
   uniform float uToonStrength;
   uniform float uRimStrength;
   uniform float uGridStrength;
@@ -29,6 +34,7 @@ const surfaceFragment = /* glsl */`
 
   varying vec3 vWorldPosition;
   varying vec3 vWorldNormal;
+  varying float vViewDepth;
 
   float gridLine(vec2 p, float scale) {
     vec2 coord = p * scale;
@@ -59,30 +65,39 @@ const surfaceFragment = /* glsl */`
 
     vec3 base = uBase * (0.28 + lit * 0.82);
     vec3 energy = uAccent * (rim * 0.55 + grid * 0.72 + micro) * uEnergyStrength;
-    gl_FragColor = vec4(base + energy, 1.0);
+    vec3 color = base + energy;
+    float fogFactor = 1.0 - exp(-uFogDensity * uFogDensity * vViewDepth * vViewDepth);
+    color = mix(color, uFogColor, clamp(fogFactor, 0.0, 1.0));
+    gl_FragColor = vec4(color, 1.0);
   }
 `;
 
 const nodeVertex = /* glsl */`
   varying vec3 vWorldPosition;
   varying vec3 vWorldNormal;
+  varying float vViewDepth;
 
   void main() {
     vec4 world = modelMatrix * vec4(position, 1.0);
+    vec4 view = viewMatrix * world;
     vWorldPosition = world.xyz;
     vWorldNormal = normalize(mat3(modelMatrix) * normal);
-    gl_Position = projectionMatrix * viewMatrix * world;
+    vViewDepth = -view.z;
+    gl_Position = projectionMatrix * view;
   }
 `;
 
 const nodeFragment = /* glsl */`
   uniform vec3 uColor;
+  uniform vec3 uFogColor;
+  uniform float uFogDensity;
   uniform float uRimStrength;
   uniform float uEnergyStrength;
   uniform float uTime;
 
   varying vec3 vWorldPosition;
   varying vec3 vWorldNormal;
+  varying float vViewDepth;
 
   void main() {
     vec3 n = normalize(vWorldNormal);
@@ -93,6 +108,8 @@ const nodeFragment = /* glsl */`
     float lattice = 0.88 + 0.12 * sin((vWorldPosition.x + vWorldPosition.z) * 18.0 + uTime * 2.0);
     vec3 color = uColor * (0.48 + facing * 0.44 + fresnel * uRimStrength * 1.35);
     color += uColor * scan * lattice * 0.36 * uEnergyStrength;
+    float fogFactor = 1.0 - exp(-uFogDensity * uFogDensity * vViewDepth * vViewDepth);
+    color = mix(color, uFogColor, clamp(fogFactor, 0.0, 1.0) * 0.82);
     gl_FragColor = vec4(color, 1.0);
   }
 `;
@@ -103,6 +120,8 @@ type StylizedMaterial = THREE.ShaderMaterial & {
     uRimStrength: { value: number };
     uGridStrength?: { value: number };
     uEnergyStrength: { value: number };
+    uFogDensity: { value: number };
+    uFogColor: { value: THREE.Color };
     uTime: { value: number };
     uRoomFocus?: { value: number };
   };
@@ -133,6 +152,8 @@ export class VectorRendering {
       uniforms: {
         uBase: { value: new THREE.Color(base) },
         uAccent: { value: new THREE.Color(accent) },
+        uFogColor: { value: new THREE.Color(0x071522) },
+        uFogDensity: { value: 0.0105 },
         uToonStrength: { value: 0.72 },
         uRimStrength: { value: 1.15 },
         uGridStrength: { value: 0.42 },
@@ -151,6 +172,8 @@ export class VectorRendering {
       fragmentShader: nodeFragment,
       uniforms: {
         uColor: { value: new THREE.Color(color) },
+        uFogColor: { value: new THREE.Color(0x071522) },
+        uFogDensity: { value: 0.0105 },
         uRimStrength: { value: 1.15 },
         uEnergyStrength: { value: 1.15 },
         uTime: { value: 0 }
@@ -172,6 +195,7 @@ export class VectorRendering {
 
     for (const material of this.materials) {
       material.uniforms.uTime.value = this.time;
+      material.uniforms.uFogDensity.value = visual.fogDensity;
       material.uniforms.uRimStrength.value = visual.rimStrength;
       material.uniforms.uEnergyStrength.value = visual.energyStrength;
       if (material.uniforms.uToonStrength) material.uniforms.uToonStrength.value = visual.toonStrength;
