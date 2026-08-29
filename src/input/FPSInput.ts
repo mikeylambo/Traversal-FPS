@@ -153,7 +153,7 @@ export class FPSInput {
       this.lookY += event.movementY;
       return;
     }
-    if (event.buttons !== 0) {
+    if (event.buttons !== 0 && event.target === this.canvas) {
       this.lookX += event.movementX;
       this.lookY += event.movementY;
     }
