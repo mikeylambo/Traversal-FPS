@@ -56,6 +56,71 @@
   display: none;
 }
 
+/* Brief sector-clear punctuation before the next title card. No copy. */
+#campaign-sector-clear-fx {
+  position: fixed;
+  inset: 0;
+  z-index: 77;
+  pointer-events: none;
+  opacity: 0;
+  overflow: hidden;
+}
+
+#campaign-sector-clear-fx i,
+#campaign-sector-clear-fx b {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: block;
+  pointer-events: none;
+}
+
+#campaign-sector-clear-fx i {
+  width: 1px;
+  height: 1px;
+  border-radius: 999px;
+  transform: translate(-50%, -50%) scale(.15);
+  box-shadow: 0 0 0 1px rgba(184, 252, 255, .72), 0 0 34px 8px rgba(105, 231, 255, .14);
+}
+
+#campaign-sector-clear-fx b {
+  width: min(520px, 66vw);
+  height: 1px;
+  transform: translate(-50%, -50%) scaleX(.06);
+  background: linear-gradient(90deg, transparent, rgba(220, 254, 255, .88), transparent);
+  box-shadow: 0 0 16px rgba(105, 231, 255, .24);
+}
+
+#campaign-sector-clear-fx.pulse {
+  animation: sector-clear-shell .7s ease-out forwards;
+}
+
+#campaign-sector-clear-fx.pulse i {
+  animation: sector-clear-ring .62s cubic-bezier(.15, .75, .2, 1) forwards;
+}
+
+#campaign-sector-clear-fx.pulse b {
+  animation: sector-clear-line .48s cubic-bezier(.15, .75, .2, 1) forwards;
+}
+
+@keyframes sector-clear-shell {
+  0% { opacity: 0; background: rgba(180, 249, 255, 0); }
+  12% { opacity: 1; background: rgba(180, 249, 255, .035); }
+  100% { opacity: 0; background: rgba(180, 249, 255, 0); }
+}
+
+@keyframes sector-clear-ring {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(.15); }
+  18% { opacity: .8; }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(150); }
+}
+
+@keyframes sector-clear-line {
+  0% { opacity: 0; transform: translate(-50%, -50%) scaleX(.06); }
+  24% { opacity: .9; }
+  100% { opacity: 0; transform: translate(-50%, -50%) scaleX(1); }
+}
+
 @keyframes premium-transition-shell {
   0%, 100% { opacity: 0; background: rgba(1, 6, 12, 0); }
   11%, 82% { opacity: 1; background: rgba(1, 6, 12, .78); }
