@@ -3,6 +3,9 @@ export class FPSInput {
   private lookX = 0;
   private lookY = 0;
   private fireQueued = false;
+  private jumpQueued = false;
+  private crouchHeld = false;
+  private touchCrouchLatched = false;
   private warpHeld = false;
   private warpReleased = false;
   private wheelDelta = 0;
@@ -44,9 +47,13 @@ export class FPSInput {
     if (!enabled) {
       this.keys.clear();
       this.warpHeld = false;
+      this.crouchHeld = false;
+      this.touchCrouchLatched = false;
+      this.jumpQueued = false;
       this.touchMoveX = 0;
       this.touchMoveZ = 0;
       this.resetStickVisual();
+      this.syncTouchCrouchVisual();
       this.releasePointerLock();
     }
     this.updateCaptureHint();
@@ -85,6 +92,16 @@ export class FPSInput {
     const value = this.fireQueued;
     this.fireQueued = false;
     return value;
+  }
+
+  consumeJump(): boolean {
+    const value = this.jumpQueued;
+    this.jumpQueued = false;
+    return value;
+  }
+
+  isCrouchHeld(): boolean {
+    return this.crouchHeld || this.touchCrouchLatched;
   }
 
   isWarpHeld(): boolean {
@@ -168,12 +185,23 @@ export class FPSInput {
   private readonly onKeyDown = (event: KeyboardEvent) => {
     if (!this.enabled) return;
     this.keys.add(event.code);
+
+    if (event.code === "Space") {
+      event.preventDefault();
+      if (!event.repeat) this.jumpQueued = true;
+    }
+    if (event.code === "ControlLeft" || event.code === "ControlRight" || event.code === "KeyC") {
+      this.crouchHeld = true;
+    }
     if (event.code === "KeyR") this.resetQueued = true;
     if (event.code === "KeyT") this.tutorialSkipQueued = true;
   };
 
   private readonly onKeyUp = (event: KeyboardEvent) => {
     this.keys.delete(event.code);
+    if (event.code === "ControlLeft" || event.code === "ControlRight" || event.code === "KeyC") {
+      this.crouchHeld = false;
+    }
   };
 
   private bindTouchControls(): void {
@@ -182,11 +210,13 @@ export class FPSInput {
     const look = document.getElementById("look-pad");
     const fire = document.getElementById("mobile-fire");
     const warp = document.getElementById("mobile-warp");
+    const jump = document.getElementById("mobile-jump");
+    const crouch = document.getElementById("mobile-crouch");
     const reset = document.getElementById("mobile-reset");
     const skip = document.getElementById("mobile-skip");
     const pause = document.getElementById("mobile-pause");
     const range = document.getElementById("mobile-range") as HTMLInputElement | null;
-    if (!stick || !knob || !look || !fire || !warp || !reset || !skip || !pause || !range) return;
+    if (!stick || !knob || !look || !fire || !warp || !jump || !crouch || !reset || !skip || !pause || !range) return;
 
     let stickPointer: number | null = null;
     const updateStick = (event: PointerEvent) => {
@@ -256,6 +286,19 @@ export class FPSInput {
       this.fireQueued = true;
     });
 
+    jump.addEventListener("pointerdown", (event) => {
+      if (!this.enabled) return;
+      event.preventDefault();
+      this.jumpQueued = true;
+    });
+
+    crouch.addEventListener("pointerdown", (event) => {
+      if (!this.enabled) return;
+      event.preventDefault();
+      this.touchCrouchLatched = !this.touchCrouchLatched;
+      this.syncTouchCrouchVisual();
+    });
+
     const startWarp = (event: PointerEvent) => {
       if (!this.enabled) return;
       event.preventDefault();
@@ -289,6 +332,10 @@ export class FPSInput {
       event.preventDefault();
       if (this.enabled) this.pauseQueued = true;
     });
+  }
+
+  private syncTouchCrouchVisual(): void {
+    document.getElementById("mobile-crouch")?.classList.toggle("latched", this.touchCrouchLatched);
   }
 
   private resetStickVisual(): void {
