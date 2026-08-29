@@ -25,6 +25,7 @@ import { installCombatFeel } from "./game/CombatFeelRuntime";
 import { installScopeRuntime } from "./game/ScopeRuntime";
 import { installGameplayClarity } from "./game/GameplayClarityRuntime";
 import { installSectorTransitions } from "./game/SectorTransitionRuntime";
+import { installCampaignFlow } from "./game/CampaignFlowRuntime";
 import { installOnboardingRuntime } from "./game/OnboardingRuntime";
 import { installSettingsFocusRetention } from "./game/SettingsFocusRuntime";
 import { TraversalProgression, ACHIEVEMENTS } from "./game/Progression";
@@ -39,7 +40,6 @@ import { PUZZLE_GRAMMAR_V1 } from "./world/puzzleGrammar";
 import { CAMPAIGN_MAPS } from "./world/campaign";
 import { registerCampaign02 } from "./world/registerCampaign02";
 import { registerCampaign03 } from "./world/registerCampaign03";
-import { ROOMS } from "./world/stages";
 
 const canvas = document.getElementById("game-canvas") as HTMLCanvasElement | null;
 const uiRoot = document.getElementById("ui");
@@ -53,7 +53,7 @@ const rendererAdapter = createThreeStarterAdapter(canvas);
 const app = await createGameApp({
   gameId: "traversal-fps",
   gameName: "Traversal FPS",
-  version: "0.10.1",
+  version: "0.11.0",
   renderer: rendererAdapter,
   root: uiRoot,
   assemblies: [
@@ -79,8 +79,7 @@ const traversalModes = [
     id: "standard",
     label: "Campaign",
     description: "Explore the construct.",
-    leaderboardKey: "score",
-    rules: { grading: true, scoreFocus: true, airGraceScale: 1 }
+    rules: { grading: false, scoreFocus: false, airGraceScale: 1 }
   },
   {
     id: "time-trial",
@@ -225,7 +224,7 @@ app.ui.updateScreen("credits", {
     { id: "credit-tech", label: "Technology // Three.js + SLU Web Game Shell", disabled: true },
     { id: "credit-type", label: "Typography // Rajdhani + Sora", disabled: true },
     { id: "credit-tools", label: "Development Assistance // OpenAI + Anthropic", disabled: true },
-    { id: "credit-build", label: "Build // v0.10.1", description: "Feel Certification", disabled: true }
+    { id: "credit-build", label: "Build // v0.11.0", description: "Campaign Flow", disabled: true }
   ]
 });
 
@@ -300,6 +299,7 @@ const game = new TraversalGame(canvas, app.shell, app.flow, app.ui, traversalSet
 enhanceTraversalMovement(game);
 enhanceGrammarRuntime(game, contentRuntime);
 installAchievementRuntime(game, progression, contentRuntime);
+installCampaignFlow(game, contentRuntime);
 enhanceTraversalPresentation(game, traversalSettings);
 removeCircularEnvironment(game);
 installHazardRuntime(game);
@@ -318,7 +318,7 @@ game.start();
 console.info("Traversal FPS ready", {
   shellVersion: "1.0.2+settings+mode-replace",
   shellCommit: "d45d5b89b56eb65cf10cc25ef3a89595d63f6b3f",
-  gameVersion: "0.10.1",
+  gameVersion: "0.11.0",
   renderTarget: "Vector Surface",
   typography: "Rajdhani / Sora",
   starfield: "shader-twinkle",
@@ -326,11 +326,12 @@ console.info("Traversal FPS ready", {
   controller: "left move // right look // RT fire // LT warp // RB shorter // LB longer // L3-B crouch // R3 scope // X reset",
   controllerAim: "horizontal 1-10 // vertical 1-10 // acceleration 0-5 // scope multiplier // right deadzone",
   scope: "R3 / Q / touch toggle // precision look // 36-48 degree FOV",
-  campaignScoring: "route discipline only // no time decay",
-  settingsFocus: "selection retained after value changes",
+  campaignScoring: "no live score // sphere progress + completion stats",
+  campaignFlow: "implemented sectors chain without intermediate menus",
+  settingsFocus: "select row // left-right adjust // selection retained",
   rifleCadenceMs: 320,
   stopShortStepPercent: 4,
-  feelPass: "sharper stick response // selected-vector beam // recoil recovery // haptic hierarchy // simplified campaign HUD",
+  feelPass: "provisionally certified",
   autoStepMeters: 0.38,
   puzzleGrammar: PUZZLE_GRAMMAR_V1.map((entry) => entry.id),
   trainingRooms: 8,
