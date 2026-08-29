@@ -3,6 +3,7 @@ import "./lookdev-mobile.css";
 import "./typography.css";
 import "./movement.css";
 import "./achievements.css";
+import "./editor/editor.css";
 import {
   createArcadeAssembly,
   createFPSAssembly,
@@ -14,10 +15,13 @@ import { TraversalSettingsStore } from "./game/TraversalSettings";
 import { enhanceTraversalMovement } from "./game/MovementPatch";
 import { enhanceGrammarRuntime } from "./game/GrammarRuntimePatch";
 import { installContentRuntime } from "./game/ContentRuntime";
+import { installHazardRuntime } from "./game/HazardRuntime";
 import { TraversalProgression, ACHIEVEMENTS } from "./game/Progression";
 import { achievementChoices, installAchievementRuntime } from "./game/AchievementRuntime";
 import { enhanceTraversalPresentation } from "./render/enhanceTraversalPresentation";
 import { removeCircularEnvironment } from "./render/removeCircularEnvironment";
+import { installCampaignFieldPresentation } from "./render/CampaignFieldPresentation";
+import { installTraversalEditor } from "./editor/TraversalEditor";
 import { PUZZLE_GRAMMAR_V1 } from "./world/puzzleGrammar";
 import { CAMPAIGN_MAPS } from "./world/campaign";
 import { ROOMS } from "./world/stages";
@@ -31,7 +35,7 @@ const rendererAdapter = createThreeStarterAdapter(canvas);
 const app = await createGameApp({
   gameId: "traversal-fps",
   gameName: "Traversal FPS",
-  version: "0.6.0",
+  version: "0.7.0",
   renderer: rendererAdapter,
   root: uiRoot,
   assemblies: [
@@ -50,20 +54,20 @@ const traversalModes = [
   {
     id: "training",
     label: "Training",
-    description: "Eight focused revelations. Learn the Warp Rifle grammar before campaign combinations begin.",
+    description: "Eight focused revelations. Learn the Warp Rifle grammar before the construct opens up.",
     rules: { grading: false, airGraceScale: 1.35 }
   },
   {
     id: "standard",
     label: "Campaign",
-    description: "Authored maps that combine known traversal grammar into full routes.",
+    description: "Explore continuous dimensional sectors where traversal problems live inside the world rather than isolated test rooms.",
     leaderboardKey: "score",
     rules: { grading: true, scoreFocus: true, airGraceScale: 1 }
   },
   {
     id: "time-trial",
     label: "Time Trial",
-    description: "Optimize campaign maps for raw time. Route discipline and wasted shots remain visible as secondary metrics.",
+    description: "Purpose-built course variants: optimize chamber splits and chase the cleanest clock.",
     leaderboardKey: "time",
     rules: {
       grading: false,
@@ -76,7 +80,7 @@ const traversalModes = [
   {
     id: "challenge",
     label: "Challenge // Clean Route",
-    description: "Constraint play: exact kills with one non-kill shot allowed per chamber. More challenge rule sets will build on this base.",
+    description: "Course variants under explicit constraints: exact kills, shot discipline, and route restrictions.",
     leaderboardKey: "score",
     rules: { grading: true, exactKills: true, shotAllowance: 1, airGraceScale: 0.8 }
   }
@@ -193,7 +197,7 @@ app.ui.updateScreen("credits", {
     { id: "credit-tech", label: "Technology // Three.js + SLU Web Game Shell", description: "Web rendering, input, game flow, persistence, and platform systems.", disabled: true },
     { id: "credit-type", label: "Typography // Rajdhani + Sora", description: "Display and interface type system.", disabled: true },
     { id: "credit-tools", label: "Development Assistance // OpenAI + Anthropic", description: "Design synthesis, engineering assistance, and iteration support.", disabled: true },
-    { id: "credit-build", label: "Current Build // v0.6.0", description: "Puzzle Grammar + Campaign Foundations.", disabled: true }
+    { id: "credit-build", label: "Current Build // v0.7.0", description: "Campaign Field Prototype + Vector Lab v0.", disabled: true }
   ]
 });
 
@@ -217,11 +221,15 @@ app.flow.onActivate = (screenId: string, choiceId: string) => {
       });
     } else {
       app.ui.updateScreen("stage-select", {
-        title: choiceId === "standard" ? "Campaign Maps" : choiceId === "time-trial" ? "Time Trial Maps" : "Challenge Maps",
+        title: choiceId === "standard" ? "Campaign Sectors" : choiceId === "time-trial" ? "Time Trial Courses" : "Challenge Courses",
         choices: CAMPAIGN_MAPS.map((map) => ({
           id: map.id,
           label: map.label,
-          description: map.implemented ? map.subtitle : `${map.subtitle} // IN DEVELOPMENT`,
+          description: !map.implemented
+            ? `${map.subtitle} // IN DEVELOPMENT`
+            : choiceId === "standard"
+              ? `${map.subtitle} // CONTINUOUS FIELD`
+              : `${map.subtitle} // ${map.courseRooms.length} CHAMBER COURSE`,
           disabled: !map.implemented
         }))
       });
@@ -250,12 +258,15 @@ enhanceGrammarRuntime(game, contentRuntime);
 installAchievementRuntime(game, progression, contentRuntime);
 enhanceTraversalPresentation(game, traversalSettings);
 removeCircularEnvironment(game);
+installHazardRuntime(game);
+installCampaignFieldPresentation(game, contentRuntime);
+installTraversalEditor(game, contentRuntime);
 game.start();
 
 console.info("Traversal FPS ready", {
   shellVersion: "1.0.2+settings+mode-replace",
   shellCommit: "d45d5b89b56eb65cf10cc25ef3a89595d63f6b3f",
-  gameVersion: "0.6.0",
+  gameVersion: "0.7.0",
   renderTarget: "Vector Surface",
   typography: "Rajdhani / Sora",
   starfield: "shader-twinkle",
@@ -263,8 +274,15 @@ console.info("Traversal FPS ready", {
   autoStepMeters: 0.38,
   puzzleGrammar: PUZZLE_GRAMMAR_V1.map((entry) => entry.id),
   trainingRooms: ROOMS.length,
-  campaignMaps: CAMPAIGN_MAPS.map((map) => ({ id: map.id, implemented: map.implemented })),
+  campaignMaps: CAMPAIGN_MAPS.map((map) => ({
+    id: map.id,
+    implemented: map.implemented,
+    campaignFields: map.campaignRooms.length,
+    courseRooms: map.courseRooms.length
+  })),
   achievements: ACHIEVEMENTS.length,
+  hazards: ["lethal-field", "sweep"],
+  editor: "Vector Lab v0 // F2",
   mobileControls: true,
   vrStatus: "future-compatible target; not current production scope",
   assemblies: app.composer.listAssemblies()
