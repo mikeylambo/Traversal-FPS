@@ -23,9 +23,6 @@ const ADJUSTABLE = new Set([
  * - A / Enter selects an adjustable row.
  * - Left/Right changes its value.
  * - A / Enter confirms, B / Escape cancels edit focus without leaving Settings.
- *
- * The Shell still owns screen navigation and rerendering; this layer only gives
- * Traversal's numeric settings a less awkward interaction model.
  */
 export function installSettingsAdjustmentRuntime(
   flow: FlowLike,
@@ -60,6 +57,7 @@ export function installSettingsAdjustmentRuntime(
 
   const clearEditing = () => {
     editingId = null;
+    previousPadDirection = 0;
     markEditing();
   };
 
@@ -121,6 +119,15 @@ export function installSettingsAdjustmentRuntime(
 
     const pad = activeGamepad();
     if (!pad) {
+      frame = requestAnimationFrame(poll);
+      return;
+    }
+
+    const dpadUp = Boolean(pad.buttons[12]?.pressed);
+    const dpadDown = Boolean(pad.buttons[13]?.pressed);
+    const stickY = pad.axes[1] ?? 0;
+    if (dpadUp || dpadDown || Math.abs(stickY) > 0.72) {
+      clearEditing();
       frame = requestAnimationFrame(poll);
       return;
     }
