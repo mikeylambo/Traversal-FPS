@@ -83,7 +83,7 @@ export const ROOMS: RoomSpec[] = [
     ],
     enemies: [
       { id: "r3-high", kind: "sentry", position: [0, 7.5, -11] },
-      { id: "r3-far", kind: "sentry", position: [6, 8, -24], radius: 0.96 }
+      { id: "r3-far", kind: "sentry", position: [8, 4.2, -31], radius: 0.96 }
     ]
   },
   {
@@ -170,7 +170,7 @@ export const ROOMS: RoomSpec[] = [
     ],
     enemies: [
       { id: "r8-perch", kind: "sentry", position: [8, 4.2, -8] },
-      { id: "r8-behind", kind: "sentry", position: [8, 4.2, -24], radius: 0.9 }
+      { id: "r8-behind", kind: "sentry", position: [8, 4.2, -30], radius: 0.9 }
     ]
   }
 ];
