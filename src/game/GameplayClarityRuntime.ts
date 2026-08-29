@@ -5,6 +5,10 @@ type RuntimeState = {
   roomIndex: number;
   roomKills: number;
   roomShots: number;
+  totalKills: number;
+  shots: number;
+  warps: number;
+  roomRestarts: number;
   shotAllowance: number;
   warp: {
     hasAnchor(): boolean;
@@ -16,9 +20,9 @@ type RuntimeState = {
   updateHUD(): void;
 };
 
-/** Makes the two most important invisible rules legible at a glance:
- * 1) stop-short is choosing a landing point, not merely shortening an effect;
- * 2) Challenge has a hard room-reset shot budget.
+/**
+ * Keeps the signature spatial information large and immediate while stripping
+ * Campaign telemetry down to what matters in the moment.
  */
 export function installGameplayClarity(game: object): void {
   const state = game as unknown as RuntimeState;
@@ -28,19 +32,19 @@ export function installGameplayClarity(game: object): void {
   const stopShort = document.createElement("section");
   stopShort.id = "stop-short-readout";
   stopShort.innerHTML = `
-    <span>VECTOR LANDING</span>
+    <span>LANDING</span>
     <strong id="stop-short-percent">100%</strong>
-    <em id="stop-short-state">FULL ENDPOINT</em>
-    <small id="stop-short-hint">HOLD WARP TO PLACE LANDING</small>
+    <em id="stop-short-state">ENDPOINT</em>
+    <small id="stop-short-hint">HOLD WARP</small>
   `;
   hud.appendChild(stopShort);
 
   const budget = document.createElement("section");
   budget.id = "shot-budget-readout";
   budget.innerHTML = `
-    <span>ROOM RESET BUDGET</span>
+    <span>SHOT BUDGET</span>
     <strong id="shot-budget-count">—</strong>
-    <em id="shot-budget-sub">CHALLENGE ONLY</em>
+    <em id="shot-budget-sub">CHALLENGE</em>
     <div id="shot-budget-pips"></div>
   `;
   hud.appendChild(budget);
@@ -48,10 +52,29 @@ export function installGameplayClarity(game: object): void {
   const originalHUD = state.updateHUD.bind(game);
   state.updateHUD = () => {
     originalHUD();
+    simplifyCampaignHUD(state);
     updateStopShort(state);
     updateShotBudget(state);
     emphasizeTrainingStopShort(state);
   };
+}
+
+function simplifyCampaignHUD(state: RuntimeState): void {
+  if (state.modeId !== "standard") return;
+  const room = ROOMS[state.roomIndex];
+  if (!room) return;
+
+  const roomLabel = document.getElementById("room-label");
+  const roomObjective = document.getElementById("room-objective");
+  const runPrimary = document.getElementById("run-primary");
+  const stats = document.getElementById("run-stats");
+  const mode = document.getElementById("mode-label");
+
+  if (roomLabel) roomLabel.textContent = room.title;
+  if (roomObjective) roomObjective.textContent = `${state.roomKills}/${room.requiredKills} RESOLVED`;
+  if (runPrimary?.textContent) runPrimary.textContent = runPrimary.textContent.replace("ROUTE SCORE ", "ROUTE ");
+  if (stats) stats.textContent = `${state.shots} SHOTS · ${state.warps} WARPS${state.roomRestarts ? ` · ${state.roomRestarts} RESTARTS` : ""}`;
+  if (mode) mode.textContent = "CAMPAIGN";
 }
 
 function updateStopShort(state: RuntimeState): void {
@@ -68,34 +91,31 @@ function updateStopShort(state: RuntimeState): void {
   panel.classList.toggle("visible", trainingStopShort || hasAnchor);
   panel.classList.toggle("placing", hasAnchor && held);
   panel.classList.toggle("short", hasAnchor && percent < 100);
+  panel.style.setProperty("--landing-width", `${percent}%`);
 
   percentEl.textContent = `${percent}%`;
-  stateEl.textContent = !hasAnchor
-    ? "CHOOSE ANY POINT ON THE WRITTEN LINE"
-    : percent < 100
-      ? "STOP SHORT ACTIVE"
-      : "FULL ENDPOINT";
+  stateEl.textContent = percent < 100 ? "STOP SHORT" : "ENDPOINT";
 
   const pad = document.body.classList.contains("gamepad-active");
   hintEl.textContent = !hasAnchor
-    ? "KILL TARGET → WRITE VECTOR"
+    ? "KILL TO WRITE VECTOR"
     : held
       ? pad
-        ? "RB SHORTER // LB LONGER // RELEASE LT"
-        : "WHEEL TO PLACE LANDING // RELEASE RMB"
+        ? "RB SHORTER · LB LONGER · RELEASE LT"
+        : "WHEEL TO PLACE · RELEASE RMB"
       : pad
-        ? "HOLD LT // CHOOSE LANDING // RELEASE"
-        : "HOLD RMB // CHOOSE LANDING // RELEASE";
+        ? "HOLD LT"
+        : "HOLD RMB";
 
   const warpHint = document.getElementById("warp-hint");
   if (warpHint && hasAnchor) {
     warpHint.textContent = held
       ? pad
-        ? "RB SHORTER // LB LONGER // RELEASE LT"
-        : "WHEEL TO PLACE LANDING // RELEASE RMB"
+        ? "RB SHORTER · LB LONGER"
+        : "WHEEL TO PLACE LANDING"
       : pad
-        ? "HOLD LT TO PREVIEW LANDING"
-        : "HOLD RMB TO PREVIEW LANDING";
+        ? "HOLD LT TO PLACE"
+        : "HOLD RMB TO PLACE";
   }
 }
 
@@ -116,8 +136,8 @@ function updateShotBudget(state: RuntimeState): void {
   const misses = Math.max(0, state.roomShots - state.roomKills);
   const missLeft = Math.max(0, Math.floor(state.shotAllowance) - misses);
 
-  count.textContent = `${left} SHOT${left === 1 ? "" : "S"} LEFT`;
-  sub.textContent = `${missLeft} MISS BUFFER // ${room.requiredKills - state.roomKills} KILLS REMAIN`;
+  count.textContent = `${left} SHOT${left === 1 ? "" : "S"}`;
+  sub.textContent = `${missLeft} MISS · ${Math.max(0, room.requiredKills - state.roomKills)} KILLS`;
   panel.classList.toggle("danger", left <= 1);
 
   pips.innerHTML = Array.from({ length: total }, (_, index) =>
@@ -129,6 +149,6 @@ function emphasizeTrainingStopShort(state: RuntimeState): void {
   if (state.modeId !== "training" || state.roomIndex !== 1) return;
   const tutorial = document.getElementById("tutorial-text");
   const objective = document.getElementById("room-objective");
-  if (tutorial) tutorial.textContent = "STOP SHORT: CHOOSE ANY POINT 12–100% ALONG THE VECTOR.";
-  if (objective) objective.textContent = "LAND BEFORE 100%";
+  if (tutorial) tutorial.textContent = "Choose a landing point before the endpoint.";
+  if (objective) objective.textContent = "STOP SHORT";
 }
