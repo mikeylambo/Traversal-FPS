@@ -1,0 +1,43 @@
+#scope-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 32;
+  pointer-events: none;
+  opacity: var(--scope-blend, 0);
+  background: radial-gradient(circle at center, transparent 0 35%, rgba(1, 7, 13, .08) 48%, rgba(1, 7, 13, .5) 100%);
+}
+
+.scope-mark {
+  position: absolute;
+  top: 50%;
+  width: 44px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(220, 251, 255, .72));
+}
+
+.scope-mark-left {
+  left: calc(50% - 76px);
+  transform: translateY(-50%);
+}
+
+.scope-mark-right {
+  right: calc(50% - 76px);
+  transform: translateY(-50%) rotate(180deg);
+}
+
+body.scope-active #reticle {
+  transform: translate(-50%, -50%) scale(calc(var(--reticle-scale, 1) * .72));
+}
+
+body.scope-active #capture-hint {
+  display: none !important;
+}
+
+.mobile-scope {
+  right: max(186px, calc(env(safe-area-inset-right) + 174px));
+}
+
+body.scope-active #mobile-scope {
+  border-color: rgba(220, 251, 255, .72);
+  background: rgba(44, 135, 172, .34);
+}
