@@ -29,6 +29,8 @@ export function installGameplayClarity(game: object): void {
   const hud = document.getElementById("hud");
   if (!hud) return;
 
+  document.querySelector("#mission-panel .hud-eyebrow")?.remove();
+
   const stopShort = document.createElement("section");
   stopShort.id = "stop-short-readout";
   stopShort.innerHTML = `
