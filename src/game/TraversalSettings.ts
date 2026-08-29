@@ -41,11 +41,11 @@ export const DEFAULT_TRAVERSAL_SETTINGS: TraversalSettingsValue = {
   fov: 92,
   aimSmoothing: 0,
   reticleScale: 1,
-  controllerSensitivityX: 5,
+  controllerSensitivityX: 6,
   controllerSensitivityY: 5,
   controllerLookAcceleration: 2,
   controllerScopeSensitivity: 0.6,
-  controllerRightDeadzone: 0.12,
+  controllerRightDeadzone: 0.08,
   visual: { ...DEFAULT_VISUAL_SETTINGS }
 };
 
@@ -67,6 +67,7 @@ const RETICLE_SCALES = [0.8, 1, 1.2, 1.4];
 
 export class TraversalSettingsStore {
   readonly value: TraversalSettingsValue;
+  private adjustmentDirection: -1 | 1 = 1;
 
   constructor() {
     this.value = this.load();
@@ -81,31 +82,31 @@ export class TraversalSettingsStore {
       {
         id: "traversal-sensitivity",
         label: `Mouse Sensitivity: ${this.value.mouseSensitivity.toFixed(2)}x`,
-        description: "Select to cycle sensitivity"
+        description: "Select, then adjust left / right"
       },
       {
         id: "traversal-controller-x",
-        label: `Controller Horizontal Sensitivity: ${this.value.controllerSensitivityX}`,
+        label: `Horizontal Sensitivity: ${this.value.controllerSensitivityX}`,
         description: "1–10"
       },
       {
         id: "traversal-controller-y",
-        label: `Controller Vertical Sensitivity: ${this.value.controllerSensitivityY}`,
+        label: `Vertical Sensitivity: ${this.value.controllerSensitivityY}`,
         description: "1–10"
       },
       {
         id: "traversal-controller-accel",
-        label: `Controller Look Acceleration: ${this.value.controllerLookAcceleration}`,
-        description: "0–5 · higher values turn faster near the stick edge"
+        label: `Look Acceleration: ${this.value.controllerLookAcceleration}`,
+        description: "0–5"
       },
       {
         id: "traversal-controller-scope",
-        label: `Controller Scope Sensitivity: ${this.value.controllerScopeSensitivity.toFixed(2)}x`
+        label: `Scope Sensitivity: ${this.value.controllerScopeSensitivity.toFixed(2)}x`
       },
       {
         id: "traversal-controller-deadzone",
         label: `Right Stick Deadzone: ${Math.round(this.value.controllerRightDeadzone * 100)}%`,
-        description: "Lower feels more immediate; raise if your stick drifts"
+        description: "Raise only if your stick drifts"
       },
       {
         id: "traversal-invert-y",
@@ -113,13 +114,12 @@ export class TraversalSettingsStore {
       },
       {
         id: "traversal-fov",
-        label: `Field of View: ${this.value.fov}°`,
-        description: "Select to cycle 75°–110°"
+        label: `Field of View: ${this.value.fov}°`
       },
       {
         id: "traversal-aim-smoothing",
         label: `Aim Smoothing: ${smoothingLabel}`,
-        description: "Raw input is the default"
+        description: "Raw input is default"
       },
       {
         id: "traversal-reticle-scale",
@@ -127,33 +127,40 @@ export class TraversalSettingsStore {
       },
       {
         id: "traversal-visual-lab",
-        label: "Rendering Lab: Open In-Game",
-        description: "Press V or tap LOOKDEV during gameplay to tune the live shader stack"
+        label: "Rendering Lab",
+        description: "Open in-game look controls"
       }
     ];
   }
 
+  setAdjustmentDirection(direction: -1 | 1): void {
+    this.adjustmentDirection = direction;
+  }
+
   handle(choiceId: string): boolean {
+    const direction = this.adjustmentDirection;
+    this.adjustmentDirection = 1;
+
     if (choiceId === "traversal-sensitivity") {
-      this.value.mouseSensitivity = this.next(SENSITIVITIES, this.value.mouseSensitivity);
+      this.value.mouseSensitivity = this.next(SENSITIVITIES, this.value.mouseSensitivity, direction);
     } else if (choiceId === "traversal-controller-x") {
-      this.value.controllerSensitivityX = this.next(CONTROLLER_SENSITIVITIES, this.value.controllerSensitivityX);
+      this.value.controllerSensitivityX = this.next(CONTROLLER_SENSITIVITIES, this.value.controllerSensitivityX, direction);
     } else if (choiceId === "traversal-controller-y") {
-      this.value.controllerSensitivityY = this.next(CONTROLLER_SENSITIVITIES, this.value.controllerSensitivityY);
+      this.value.controllerSensitivityY = this.next(CONTROLLER_SENSITIVITIES, this.value.controllerSensitivityY, direction);
     } else if (choiceId === "traversal-controller-accel") {
-      this.value.controllerLookAcceleration = this.next(CONTROLLER_ACCELERATION, this.value.controllerLookAcceleration);
+      this.value.controllerLookAcceleration = this.next(CONTROLLER_ACCELERATION, this.value.controllerLookAcceleration, direction);
     } else if (choiceId === "traversal-controller-scope") {
-      this.value.controllerScopeSensitivity = this.next(SCOPE_SENSITIVITIES, this.value.controllerScopeSensitivity);
+      this.value.controllerScopeSensitivity = this.next(SCOPE_SENSITIVITIES, this.value.controllerScopeSensitivity, direction);
     } else if (choiceId === "traversal-controller-deadzone") {
-      this.value.controllerRightDeadzone = this.next(RIGHT_DEADZONES, this.value.controllerRightDeadzone);
+      this.value.controllerRightDeadzone = this.next(RIGHT_DEADZONES, this.value.controllerRightDeadzone, direction);
     } else if (choiceId === "traversal-invert-y") {
       this.value.invertY = !this.value.invertY;
     } else if (choiceId === "traversal-fov") {
-      this.value.fov = this.next(FOVS, this.value.fov);
+      this.value.fov = this.next(FOVS, this.value.fov, direction);
     } else if (choiceId === "traversal-aim-smoothing") {
-      this.value.aimSmoothing = this.next(SMOOTHING, this.value.aimSmoothing);
+      this.value.aimSmoothing = this.next(SMOOTHING, this.value.aimSmoothing, direction);
     } else if (choiceId === "traversal-reticle-scale") {
-      this.value.reticleScale = this.next(RETICLE_SCALES, this.value.reticleScale);
+      this.value.reticleScale = this.next(RETICLE_SCALES, this.value.reticleScale, direction);
     } else if (choiceId === "traversal-visual-lab") {
       window.dispatchEvent(new CustomEvent("traversal:toggle-visual-lab"));
       return true;
@@ -175,9 +182,10 @@ export class TraversalSettingsStore {
     this.save();
   }
 
-  private next(values: number[], current: number): number {
+  private next(values: number[], current: number, direction: -1 | 1): number {
     const exact = values.findIndex((value) => Math.abs(value - current) < 0.001);
-    return values[(exact + 1 + values.length) % values.length]!;
+    const index = exact >= 0 ? exact : 0;
+    return values[(index + direction + values.length) % values.length]!;
   }
 
   private load(): TraversalSettingsValue {
@@ -185,11 +193,27 @@ export class TraversalSettingsStore {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return { ...DEFAULT_TRAVERSAL_SETTINGS, visual: { ...DEFAULT_VISUAL_SETTINGS } };
       const parsed = JSON.parse(raw) as Partial<TraversalSettingsValue>;
-      return {
+      const merged: TraversalSettingsValue = {
         ...DEFAULT_TRAVERSAL_SETTINGS,
         ...parsed,
         visual: { ...DEFAULT_VISUAL_SETTINGS, ...(parsed.visual ?? {}) }
       };
+
+      // v0.10.1 shipped 5/5/2/12% as the untouched controller defaults. If the
+      // saved profile still exactly matches those values, migrate it to the more
+      // responsive first-play profile without disturbing genuinely tuned setups.
+      if (
+        parsed.controllerSensitivityX === 5 &&
+        parsed.controllerSensitivityY === 5 &&
+        parsed.controllerLookAcceleration === 2 &&
+        parsed.controllerRightDeadzone === 0.12
+      ) {
+        merged.controllerSensitivityX = 6;
+        merged.controllerSensitivityY = 5;
+        merged.controllerRightDeadzone = 0.08;
+      }
+
+      return merged;
     } catch {
       return { ...DEFAULT_TRAVERSAL_SETTINGS, visual: { ...DEFAULT_VISUAL_SETTINGS } };
     }
