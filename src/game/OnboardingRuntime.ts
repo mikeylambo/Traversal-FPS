@@ -37,15 +37,12 @@ type RuntimeState = {
   checkGoal(): void;
 };
 
-type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
-const STEP_COUNT = 7;
+const STEP_COUNT = 8;
 const ADVANCE_GAP_MS = 150;
 
-/**
- * Controls onboarding is deliberately separate from Puzzle Grammar v1. It teaches
- * the physical interface, then hands the player directly into the eight grammar rooms.
- */
+/** Controls onboarding teaches the physical interface, then hands the player to grammar. */
 export function installOnboardingRuntime(game: object, content: ContentRuntime): void {
   const state = game as unknown as RuntimeState;
   const input = state.input;
@@ -81,31 +78,36 @@ export function installOnboardingRuntime(game: object, content: ContentRuntime):
     return held;
   };
 
+  window.addEventListener("traversal:scope-change", (event) => {
+    const detail = (event as CustomEvent<{ active?: boolean }>).detail;
+    if (active() && step === 3 && detail?.active) advance(4);
+  });
+
   const originalFire = input.consumeFire.bind(input);
   input.consumeFire = () => {
     const fired = originalFire();
     if (!active()) return fired;
-    return step >= 3 ? fired : false;
+    return step >= 4 ? fired : false;
   };
 
   const originalWarpHeld = input.isWarpHeld.bind(input);
   input.isWarpHeld = () => {
     const held = originalWarpHeld();
-    if (active() && step === 4 && held && state.warp.hasAnchor()) advance(5);
+    if (active() && step === 5 && held && state.warp.hasAnchor()) advance(6);
     return held;
   };
 
   const originalWheel = input.consumeWheel.bind(input);
   input.consumeWheel = () => {
     const delta = originalWheel();
-    if (active() && step === 5 && delta !== 0) advance(6);
+    if (active() && step === 6 && delta !== 0) advance(7);
     return delta;
   };
 
   const originalFraction = input.consumeWarpFraction.bind(input);
   input.consumeWarpFraction = () => {
     const value = originalFraction();
-    if (active() && step === 5 && value !== null && value < 0.95) advance(6);
+    if (active() && step === 6 && value !== null && value < 0.95) advance(7);
     return value;
   };
 
@@ -113,24 +115,24 @@ export function installOnboardingRuntime(game: object, content: ContentRuntime):
   state.shoot = () => {
     const killsBefore = state.totalKills;
     originalShoot();
-    if (active() && step === 3 && state.totalKills > killsBefore) advance(4);
+    if (active() && step === 4 && state.totalKills > killsBefore) advance(5);
   };
 
   const originalCommit = state.warp.commit.bind(state.warp);
   state.warp.commit = (position: THREE.Vector3) => {
     if (active()) {
       const percent = state.warp.selectionPercent();
-      if (step < 5) return false;
+      if (step < 6) return false;
       if (percent >= 95) {
-        step = 5;
+        step = 6;
         return false;
       }
-      if (step === 5) step = 6;
+      if (step === 6) step = 7;
     }
 
     const committed = originalCommit(position);
-    if (active() && committed && step >= 6) {
-      step = 7;
+    if (active() && committed && step >= 7) {
+      step = 8;
       nextAdvanceAt = performance.now();
     }
     return committed;
@@ -163,7 +165,7 @@ export function installOnboardingRuntime(game: object, content: ContentRuntime):
     }
 
     const room = ROOMS[state.roomIndex];
-    if (!room || step < 7 || state.roomKills < room.requiredKills) return;
+    if (!room || step < 8 || state.roomKills < room.requiredKills) return;
     if (state.camera.position.distanceTo(state.goal.position) > state.goalRadius) return;
 
     content.enterGrammar();
@@ -189,13 +191,11 @@ function renderPrompt(step: Step): void {
   if (!card || !room || !text) return;
 
   const prompts = controlPrompts();
-  const entry = prompts[step];
-
   card.classList.add("visible");
-  room.textContent = step < 7 ? `CONTROLS ${Math.min(step + 1, STEP_COUNT)}/${STEP_COUNT}` : "CONTROLS COMPLETE";
-  text.textContent = entry;
+  room.textContent = step < 8 ? `CONTROLS ${Math.min(step + 1, STEP_COUNT)}/${STEP_COUNT}` : "CONTROLS COMPLETE";
+  text.textContent = prompts[step];
   if (roomLabel) roomLabel.textContent = "CONTROLS";
-  if (objective) objective.textContent = step < 7 ? "LEARN THE RIG" : "REACH THE EXIT";
+  if (objective) objective.textContent = step < 8 ? "LEARN THE RIG" : "REACH THE EXIT";
   if (mode) mode.textContent = "TRAINING";
 }
 
@@ -208,6 +208,7 @@ function controlPrompts(): string[] {
       "MOVE — LEFT STICK",
       "LOOK — DRAG",
       "CROUCH — CROUCH",
+      "SCOPE — SCOPE",
       "FIRE — FIRE",
       "WARP — HOLD WARP",
       "LANDING — RANGE",
@@ -220,10 +221,11 @@ function controlPrompts(): string[] {
     return [
       "MOVE — LEFT STICK",
       "LOOK — RIGHT STICK",
-      "CROUCH — B",
+      "CROUCH — L3 / B",
+      "SCOPE — R3",
       "FIRE — RT",
       "WARP — HOLD LT",
-      "LANDING — LB / RB",
+      "LANDING — RB SHORTER / LB LONGER",
       "COMMIT — RELEASE LT",
       "REACH THE EXIT"
     ];
@@ -233,6 +235,7 @@ function controlPrompts(): string[] {
     "MOVE — WASD",
     "LOOK — MOUSE",
     "CROUCH — CTRL / C",
+    "SCOPE — Q",
     "FIRE — LMB",
     "WARP — HOLD RMB",
     "LANDING — MOUSE WHEEL",
