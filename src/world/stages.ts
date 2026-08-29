@@ -2,6 +2,7 @@ import type { PuzzleGrammarId } from "./puzzleGrammar";
 
 export type Vec3Tuple = [number, number, number];
 export type EnemyKind = "sentry" | "drifter" | "shield";
+export type HazardKind = "lethal-field" | "sweep";
 
 export interface PlatformSpec {
   center: Vec3Tuple;
@@ -16,6 +17,14 @@ export interface EnemySpec {
   drift?: { axis: "x" | "y"; amplitude: number; speed: number };
 }
 
+export interface HazardSpec {
+  id: string;
+  kind: HazardKind;
+  center: Vec3Tuple;
+  size: Vec3Tuple;
+  drift?: { axis: "x" | "y" | "z"; amplitude: number; speed: number; phase?: number };
+}
+
 export interface RoomSpec {
   id: string;
   title: string;
@@ -26,6 +35,7 @@ export interface RoomSpec {
   requiredKills: number;
   platforms: PlatformSpec[];
   enemies: EnemySpec[];
+  hazards?: HazardSpec[];
 }
 
 export const ROOMS: RoomSpec[] = [
