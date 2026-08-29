@@ -1,17 +1,39 @@
+export interface TraversalVisualSettings {
+  toonStrength: number;
+  rimStrength: number;
+  gridStrength: number;
+  energyStrength: number;
+  fogDensity: number;
+  bloomStrength: number;
+  exposure: number;
+}
+
 export interface TraversalSettingsValue {
   mouseSensitivity: number;
   invertY: boolean;
   fov: number;
   aimSmoothing: number;
   reticleScale: number;
+  visual: TraversalVisualSettings;
 }
+
+export const DEFAULT_VISUAL_SETTINGS: TraversalVisualSettings = {
+  toonStrength: 0.72,
+  rimStrength: 1.15,
+  gridStrength: 0.42,
+  energyStrength: 1.15,
+  fogDensity: 0.0105,
+  bloomStrength: 0.9,
+  exposure: 1.32
+};
 
 export const DEFAULT_TRAVERSAL_SETTINGS: TraversalSettingsValue = {
   mouseSensitivity: 1,
   invertY: false,
   fov: 92,
   aimSmoothing: 0,
-  reticleScale: 1
+  reticleScale: 1,
+  visual: { ...DEFAULT_VISUAL_SETTINGS }
 };
 
 type SettingChoice = {
@@ -20,7 +42,7 @@ type SettingChoice = {
   description?: string;
 };
 
-const STORAGE_KEY = "traversal-fps:fps-settings:v1";
+const STORAGE_KEY = "traversal-fps:fps-settings:v2";
 const SENSITIVITIES = [0.5, 0.7, 0.85, 1, 1.15, 1.35, 1.6, 2];
 const FOVS = [75, 82, 88, 92, 96, 100, 105, 110];
 const SMOOTHING = [0, 0.12, 0.25];
@@ -61,6 +83,11 @@ export class TraversalSettingsStore {
       {
         id: "traversal-reticle-scale",
         label: `Reticle Size: ${Math.round(this.value.reticleScale * 100)}%`
+      },
+      {
+        id: "traversal-visual-lab",
+        label: "Rendering Lab: Open In-Game",
+        description: "Press V or tap LOOKDEV during gameplay to tune the live shader stack"
       }
     ];
   }
@@ -76,12 +103,25 @@ export class TraversalSettingsStore {
       this.value.aimSmoothing = this.next(SMOOTHING, this.value.aimSmoothing);
     } else if (choiceId === "traversal-reticle-scale") {
       this.value.reticleScale = this.next(RETICLE_SCALES, this.value.reticleScale);
+    } else if (choiceId === "traversal-visual-lab") {
+      window.dispatchEvent(new CustomEvent("traversal:toggle-visual-lab"));
+      return true;
     } else {
       return false;
     }
 
     this.save();
     return true;
+  }
+
+  setVisual<K extends keyof TraversalVisualSettings>(key: K, value: TraversalVisualSettings[K]): void {
+    this.value.visual[key] = value;
+    this.save();
+  }
+
+  resetVisual(): void {
+    Object.assign(this.value.visual, DEFAULT_VISUAL_SETTINGS);
+    this.save();
   }
 
   private next(values: number[], current: number): number {
@@ -92,11 +132,15 @@ export class TraversalSettingsStore {
   private load(): TraversalSettingsValue {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return { ...DEFAULT_TRAVERSAL_SETTINGS };
+      if (!raw) return { ...DEFAULT_TRAVERSAL_SETTINGS, visual: { ...DEFAULT_VISUAL_SETTINGS } };
       const parsed = JSON.parse(raw) as Partial<TraversalSettingsValue>;
-      return { ...DEFAULT_TRAVERSAL_SETTINGS, ...parsed };
+      return {
+        ...DEFAULT_TRAVERSAL_SETTINGS,
+        ...parsed,
+        visual: { ...DEFAULT_VISUAL_SETTINGS, ...(parsed.visual ?? {}) }
+      };
     } catch {
-      return { ...DEFAULT_TRAVERSAL_SETTINGS };
+      return { ...DEFAULT_TRAVERSAL_SETTINGS, visual: { ...DEFAULT_VISUAL_SETTINGS } };
     }
   }
 
