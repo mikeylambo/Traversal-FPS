@@ -4,6 +4,7 @@ import "./typography.css";
 import "./movement.css";
 import "./achievements.css";
 import "./feel-pass.css";
+import "./transition-minimal.css";
 import "./editor/editor.css";
 import {
   createArcadeAssembly,
@@ -28,6 +29,7 @@ import { removeCircularEnvironment } from "./render/removeCircularEnvironment";
 import { installCampaignFieldPresentation } from "./render/CampaignFieldPresentation";
 import { installTraversalEditor } from "./editor/TraversalEditor";
 import { installEditorShortcut } from "./editor/EditorShortcutRuntime";
+import { installMapEditorNaming } from "./editor/MapEditorNamingRuntime";
 import { PUZZLE_GRAMMAR_V1 } from "./world/puzzleGrammar";
 import { CAMPAIGN_MAPS } from "./world/campaign";
 import { ROOMS } from "./world/stages";
@@ -41,7 +43,7 @@ const rendererAdapter = createThreeStarterAdapter(canvas);
 const app = await createGameApp({
   gameId: "traversal-fps",
   gameName: "Traversal FPS",
-  version: "0.8.0",
+  version: "0.8.1",
   renderer: rendererAdapter,
   root: uiRoot,
   assemblies: [
@@ -60,20 +62,20 @@ const traversalModes = [
   {
     id: "training",
     label: "Training",
-    description: "Eight focused revelations. Learn the Warp Rifle grammar before the construct opens up.",
+    description: "Learn the Warp Rifle grammar.",
     rules: { grading: false, airGraceScale: 1.35 }
   },
   {
     id: "standard",
     label: "Campaign",
-    description: "Explore continuous dimensional sectors where traversal problems live inside the world rather than isolated test rooms.",
+    description: "Explore the construct.",
     leaderboardKey: "score",
     rules: { grading: true, scoreFocus: true, airGraceScale: 1 }
   },
   {
     id: "time-trial",
     label: "Time Trial",
-    description: "Purpose-built course variants: optimize chamber splits and chase the cleanest clock.",
+    description: "Find the fastest route.",
     leaderboardKey: "time",
     rules: {
       grading: false,
@@ -86,7 +88,7 @@ const traversalModes = [
   {
     id: "challenge",
     label: "Challenge // Clean Route",
-    description: "Course variants under explicit constraints: exact kills, shot discipline, and route restrictions.",
+    description: "Clear the route under constraint.",
     leaderboardKey: "score",
     rules: { grading: true, exactKills: true, shotAllowance: 1, airGraceScale: 0.8 }
   }
@@ -96,28 +98,28 @@ const traversalDifficulties = [
   {
     id: "assist",
     label: "Assist",
-    description: "Slower moving targets, lighter gravity, and a wider exit capture radius.",
+    description: "Slower targets, lighter gravity, wider exits.",
     multipliers: { enemySpeed: 0.78 },
     rules: { gravityScalar: 0.85, goalRadius: 2.8 }
   },
   {
     id: "standard",
     label: "Standard",
-    description: "Intended traversal timing and target motion.",
+    description: "The intended traversal timing.",
     multipliers: { enemySpeed: 1 },
     rules: { gravityScalar: 1, goalRadius: 2.3 }
   },
   {
     id: "hard",
     label: "Hard",
-    description: "Faster moving targets, stronger gravity, and tighter exit capture.",
+    description: "Faster targets, stronger gravity, tighter exits.",
     multipliers: { enemySpeed: 1.18 },
     rules: { gravityScalar: 1.08, goalRadius: 2.05 }
   },
   {
     id: "expert",
     label: "Expert",
-    description: "High target speed, aggressive fall timing, and strict exit placement. No extra enemy health.",
+    description: "Strict timing and placement.",
     multipliers: { enemySpeed: 1.35 },
     rules: { gravityScalar: 1.18, goalRadius: 1.8 }
   }
@@ -150,10 +152,10 @@ progression.onUnlock(() => refreshAchievements());
 
 app.ui.updateScreen("main-menu", {
   choices: [
-    { id: "play", label: "Play", description: "Training // Campaign // Time Trial // Challenge" },
-    { id: "vector-lab", label: "Vector Lab", description: "Build, edit, test, save, and export Traversal spaces." },
-    { id: "achievements", label: "Achievements", description: `${progression.snapshot().achievements.length} / ${ACHIEVEMENTS.length} unlocked` },
-    { id: "settings", label: "Settings", description: "FPS controls, display, motion, audio, and render lookdev" },
+    { id: "play", label: "Play" },
+    { id: "vector-lab", label: "Map Editor", description: "Build and test Traversal spaces." },
+    { id: "achievements", label: "Achievements", description: `${progression.snapshot().achievements.length} / ${ACHIEVEMENTS.length}` },
+    { id: "settings", label: "Settings" },
     { id: "credits", label: "Credits" }
   ]
 });
@@ -177,12 +179,12 @@ app.ui.updateScreen("difficulty-select", {
 });
 
 app.ui.updateScreen("loadout", {
-  title: "Traversal Rig",
+  title: "Warp Rifle",
   choices: [
     {
       id: "continue",
-      label: "Warp Rifle",
-      description: "Run and crouch for local positioning. No jump: every meaningful gap or elevation change belongs to the Warp Rifle."
+      label: "Continue",
+      description: "Run. Crouch. Write a vector. Choose where it ends."
     }
   ]
 });
@@ -192,7 +194,7 @@ app.ui.updateScreen("stage-select", {
   choices: [{
     id: "training",
     label: "GRAMMAR 01–08",
-    description: "Eight focused chambers: learn each core spatial truth before Campaign begins."
+    description: "Eight core traversal lessons."
   }]
 });
 
@@ -200,11 +202,11 @@ app.ui.updateScreen("credits", {
   title: "Credits",
   subtitle: "KILL // WRITE // WARP",
   choices: [
-    { id: "credit-design", label: "Design & Development // Mikey Lambo", description: "Traversal FPS concept, game design, direction, and production.", disabled: true },
-    { id: "credit-tech", label: "Technology // Three.js + SLU Web Game Shell", description: "Web rendering, input, game flow, persistence, and platform systems.", disabled: true },
-    { id: "credit-type", label: "Typography // Rajdhani + Sora", description: "Display and interface type system.", disabled: true },
-    { id: "credit-tools", label: "Development Assistance // OpenAI + Anthropic", description: "Design synthesis, engineering assistance, and iteration support.", disabled: true },
-    { id: "credit-build", label: "Current Build // v0.8.0", description: "Controller + Feel + Stop-Short Clarity + Vector Lab Mode.", disabled: true }
+    { id: "credit-design", label: "Design & Development // Mikey Lambo", disabled: true },
+    { id: "credit-tech", label: "Technology // Three.js + SLU Web Game Shell", disabled: true },
+    { id: "credit-type", label: "Typography // Rajdhani + Sora", disabled: true },
+    { id: "credit-tools", label: "Development Assistance // OpenAI + Anthropic", disabled: true },
+    { id: "credit-build", label: "Build // v0.8.1", description: "Campaign Field Prototype", disabled: true }
   ]
 });
 
@@ -238,20 +240,20 @@ app.flow.onActivate = (screenId: string, choiceId: string) => {
         choices: [{
           id: "training",
           label: "GRAMMAR 01–08",
-          description: "Eight focused chambers: Direct Anchor through Reorientation."
+          description: "Direct Anchor through Reorientation."
         }]
       });
     } else {
       app.ui.updateScreen("stage-select", {
-        title: choiceId === "standard" ? "Campaign Sectors" : choiceId === "time-trial" ? "Time Trial Courses" : "Challenge Courses",
+        title: choiceId === "standard" ? "Campaign" : choiceId === "time-trial" ? "Time Trial" : "Challenge",
         choices: CAMPAIGN_MAPS.map((map) => ({
           id: map.id,
           label: map.label,
           description: !map.implemented
-            ? `${map.subtitle} // IN DEVELOPMENT`
+            ? "In development"
             : choiceId === "standard"
-              ? `${map.subtitle} // CONTINUOUS FIELD`
-              : `${map.subtitle} // ${map.courseRooms.length} CHAMBER COURSE`,
+              ? map.subtitle
+              : `${map.courseRooms.length} chamber course`,
           disabled: !map.implemented
         }))
       });
@@ -283,6 +285,7 @@ removeCircularEnvironment(game);
 installHazardRuntime(game);
 installCampaignFieldPresentation(game, contentRuntime);
 installTraversalEditor(game, contentRuntime);
+installMapEditorNaming();
 installGamepadGameplay(game);
 installCombatFeel(game);
 installGameplayClarity(game);
@@ -293,7 +296,7 @@ game.start();
 console.info("Traversal FPS ready", {
   shellVersion: "1.0.2+settings+mode-replace",
   shellCommit: "d45d5b89b56eb65cf10cc25ef3a89595d63f6b3f",
-  gameVersion: "0.8.0",
+  gameVersion: "0.8.1",
   renderTarget: "Vector Surface",
   typography: "Rajdhani / Sora",
   starfield: "shader-twinkle",
@@ -311,7 +314,7 @@ console.info("Traversal FPS ready", {
   })),
   achievements: ACHIEVEMENTS.length,
   hazards: ["lethal-field", "sweep"],
-  editor: "Vector Lab // main menu // F2 // backquote",
+  editor: "Map Editor // main menu // F2 // backquote",
   mobileControls: true,
   vrStatus: "future-compatible target; not current production scope",
   assemblies: app.composer.listAssemblies()
