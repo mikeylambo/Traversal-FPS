@@ -30,7 +30,7 @@ export function installSectorTransitions(game: object, content: ContentRuntime):
   const originalLoadRoom = state.loadRoom.bind(game);
   state.loadRoom = (index: number) => {
     originalLoadRoom(index);
-    if (index !== 0) return;
+    if (index !== 0 || document.body.classList.contains("vector-lab-launching")) return;
     showTransition(overlay, state, content, ++serial);
   };
 }
