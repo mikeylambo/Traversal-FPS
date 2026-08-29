@@ -6,14 +6,71 @@ export interface CampaignMapDefinition {
   subtitle: string;
   focus: string[];
   implemented: boolean;
-  rooms: RoomSpec[];
+  campaignRooms: RoomSpec[];
+  courseRooms: RoomSpec[];
 }
 
-const MAP_01_ROOMS: RoomSpec[] = [
+const MAP_01_FIELD: RoomSpec[] = [
+  {
+    id: "sector-01-span",
+    title: "THE SPAN",
+    lesson: "Read the construct. Find a route through it.",
+    grammar: [
+      "direct-anchor",
+      "stop-short",
+      "low-profile",
+      "origin-matters",
+      "moving-endpoint",
+      "reorientation",
+      "route-fork"
+    ],
+    spawn: [0, 2.2, 20],
+    goal: [0, 1.1, -102],
+    requiredKills: 5,
+    platforms: [
+      { center: [0, 0, 18], size: [16, 1, 14] },
+      { center: [0, 0, -8], size: [11, 1, 9] },
+
+      { center: [-7, 0, -19], size: [15, 1, 8] },
+      { center: [-7, 2.25, -19], size: [10, 0.7, 6] },
+      { center: [-12.35, 1.4, -19], size: [0.7, 2.8, 6] },
+      { center: [-1.65, 1.4, -19], size: [0.7, 2.8, 6] },
+
+      { center: [-16, 2, -35], size: [8, 1, 8] },
+      { center: [0, 4, -52], size: [8, 1, 8] },
+      { center: [16, 1.5, -65], size: [8, 1, 9] },
+      { center: [4, 0, -83], size: [14, 1, 12] },
+      { center: [0, 0, -101], size: [15, 1, 13] },
+
+      { center: [6, 5, -31], size: [1, 10, 18] },
+      { center: [-5, 6, -58], size: [1, 12, 18] },
+      { center: [9, 5, -78], size: [1, 10, 16] }
+    ],
+    enemies: [
+      { id: "span-entry", kind: "sentry", position: [0, 2.2, -17] },
+      { id: "span-low", kind: "sentry", position: [-16, 4.2, -35] },
+      { id: "span-drift", kind: "drifter", position: [0, 7.2, -55], drift: { axis: "x", amplitude: 14, speed: 0.76 } },
+      { id: "span-right", kind: "sentry", position: [16, 4.2, -65] },
+      { id: "span-alt", kind: "drifter", position: [-10, 6.2, -75], drift: { axis: "y", amplitude: 2.6, speed: 1.05 } },
+      { id: "span-final", kind: "sentry", position: [0, 2.2, -111] }
+    ],
+    hazards: [
+      {
+        id: "span-sweep",
+        kind: "sweep",
+        center: [0, 4.2, -72],
+        size: [0.55, 8.4, 21],
+        drift: { axis: "x", amplitude: 18, speed: 0.48, phase: 0.35 }
+      }
+    ]
+  }
+];
+
+const MAP_01_COURSE: RoomSpec[] = [
   {
     id: "map-01-01",
     title: "VECTOR ENTRY",
-    lesson: "Campaign rules now. Write one clean vector and place the landing before the target.",
+    lesson: "Write one clean vector and place the landing before the target.",
     grammar: ["direct-anchor", "stop-short"],
     spawn: [0, 2.2, 7],
     goal: [0, 1.1, -15],
@@ -104,42 +161,47 @@ const MAP_01_ROOMS: RoomSpec[] = [
 export const CAMPAIGN_MAPS: CampaignMapDefinition[] = [
   {
     id: "map-01",
-    label: "MAP 01 // VECTOR FOUNDATIONS",
-    subtitle: "The grammar stops being a lesson and starts becoming a route.",
-    focus: ["Direct Anchor", "Stop Short", "Low Profile", "Origin", "Reorientation", "Route Choice"],
+    label: "SECTOR 01 // THE SPAN",
+    subtitle: "A continuous dimensional construct. Read the space, choose the route, keep moving.",
+    focus: ["Exploration", "Stop Short", "Low Profile", "Origin", "Moving Endpoint", "Reorientation", "Route Choice"],
     implemented: true,
-    rooms: MAP_01_ROOMS
+    campaignRooms: MAP_01_FIELD,
+    courseRooms: MAP_01_COURSE
   },
   {
     id: "map-02",
-    label: "MAP 02 // TIMING FIELD",
+    label: "SECTOR 02 // TIMING FIELD",
     subtitle: "Moving endpoints, sightline timing, and the first lethal world hazards.",
     focus: ["Moving Endpoint", "Timed Sightlines", "Timed Release"],
     implemented: false,
-    rooms: []
+    campaignRooms: [],
+    courseRooms: []
   },
   {
     id: "map-03",
-    label: "MAP 03 // OCCLUSION",
+    label: "SECTOR 03 // OCCLUSION",
     subtitle: "Positioning and reorientation become the puzzle before the trigger is pulled.",
     focus: ["Origin", "Reorientation", "Shielding", "Low Profile"],
     implemented: false,
-    rooms: []
+    campaignRooms: [],
+    courseRooms: []
   },
   {
     id: "map-04",
-    label: "MAP 04 // CLEAN GEOMETRY",
+    label: "SECTOR 04 // CLEAN GEOMETRY",
     subtitle: "Several routes work. Only a few are elegant.",
     focus: ["Route Fork", "Efficiency", "Constraint Play"],
     implemented: false,
-    rooms: []
+    campaignRooms: [],
+    courseRooms: []
   },
   {
     id: "map-05",
-    label: "MAP 05 // TERMINAL VECTOR",
+    label: "SECTOR 05 // TERMINAL VECTOR",
     subtitle: "The full traversal language under pressure.",
     focus: ["Synthesis", "Long Chains", "Mastery"],
     implemented: false,
-    rooms: []
+    campaignRooms: [],
+    courseRooms: []
   }
 ];
