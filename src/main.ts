@@ -1,4 +1,5 @@
 import "./styles.css";
+import "./lookdev-mobile.css";
 import {
   createArcadeAssembly,
   createFPSAssembly,
@@ -7,6 +8,7 @@ import {
 } from "@slu/web-shell";
 import { TraversalGame } from "./game/TraversalGame";
 import { TraversalSettingsStore } from "./game/TraversalSettings";
+import { enhanceTraversalPresentation } from "./render/enhanceTraversalPresentation";
 
 const canvas = document.getElementById("game-canvas") as HTMLCanvasElement | null;
 const uiRoot = document.getElementById("ui");
@@ -17,7 +19,7 @@ const rendererAdapter = createThreeStarterAdapter(canvas);
 const app = await createGameApp({
   gameId: "traversal-fps",
   gameName: "Traversal FPS",
-  version: "0.3.0",
+  version: "0.4.0",
   renderer: rendererAdapter,
   root: uiRoot,
   assemblies: [
@@ -99,15 +101,13 @@ const traversalDifficulties = [
   }
 ] as const;
 
-// Frames provide reusable systems, but Traversal owns its shipped mode set.
-// Replace inherited generic FPS/Arcade modes so Time Attack/Combat Trial/etc. cannot leak into the game UI.
 app.shell.modes.replace(traversalModes);
 app.shell.difficulty.register(traversalDifficulties);
 
 app.ui.updateScreen("main-menu", {
   choices: [
     { id: "play", label: "Play" },
-    { id: "settings", label: "Settings", description: "FPS controls, display, motion, and audio" },
+    { id: "settings", label: "Settings", description: "FPS controls, display, motion, audio, and render lookdev" },
     { id: "credits", label: "Credits" }
   ]
 });
@@ -147,17 +147,20 @@ app.ui.updateScreen("stage-select", {
     {
       id: "stage-01",
       label: "Platforms 01–05",
-      description: "Five linked traversal problems. Room numbers are the only route labels for now."
+      description: "Five linked traversal problems. ROOM 01 is the active rendering lookdev target."
     }
   ]
 });
 
 const game = new TraversalGame(canvas, app.shell, app.flow, app.ui, traversalSettings);
+enhanceTraversalPresentation(game, traversalSettings);
 game.start();
 
 console.info("Traversal FPS ready", {
   shellVersion: "1.0.2+settings+mode-replace",
   shellCommit: "d45d5b89b56eb65cf10cc25ef3a89595d63f6b3f",
-  gameVersion: "0.3.0",
+  gameVersion: "0.4.0",
+  renderTarget: "ROOM 01 / Vector Surface",
+  mobileControls: true,
   assemblies: app.composer.listAssemblies()
 });
