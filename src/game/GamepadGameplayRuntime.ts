@@ -36,9 +36,9 @@ const BASE_LOOK_Y = 13.5;
 
 /**
  * The Shell owns menu-pad navigation. Traversal owns gameplay-pad input.
- * The right stick is precision-biased near center with acceleration reserved for
- * the outer edge, so small corrections stay immediate while full-stick turns
- * still have enough authority for an FPS.
+ * Right-stick aiming uses a radial deadzone so diagonal corrections do not feel
+ * artificially stiffer than cardinal movement. Near-center response is close to
+ * linear; acceleration stays concentrated near full deflection.
  */
 export function installGamepadGameplay(game: object, settings: TraversalSettingsStore): void {
   const state = game as unknown as RuntimeState;
@@ -112,12 +112,8 @@ function pollGamepad(
   const leftY = curveMoveAxis(pad.axes[1] ?? 0);
 
   const aim = settings.value;
-  const rightX = curveLookAxis(
+  const right = curveLookVector(
     pad.axes[2] ?? 0,
-    aim.controllerRightDeadzone,
-    aim.controllerLookAcceleration
-  );
-  const rightY = curveLookAxis(
     pad.axes[3] ?? 0,
     aim.controllerRightDeadzone,
     aim.controllerLookAcceleration
@@ -146,8 +142,8 @@ function pollGamepad(
   return {
     moveX: leftX,
     moveZ: -leftY,
-    lookX: rightX * BASE_LOOK_X * horizontalScale * frameScale,
-    lookY: rightY * BASE_LOOK_Y * verticalScale * frameScale,
+    lookX: right.x * BASE_LOOK_X * horizontalScale * frameScale,
+    lookY: right.y * BASE_LOOK_Y * verticalScale * frameScale,
     firePressed: fireHeld && !previousFire,
     crouchHeld: Boolean((buttons[1] ?? false) || (buttons[10] ?? false)),
     warpHeld,
@@ -159,8 +155,6 @@ function pollGamepad(
 }
 
 function sensitivityScale(setting: number): number {
-  // 5 reproduces the original nominal turn rate while 1–10 retains a familiar
-  // console-FPS tuning range.
   return 0.35 + Math.max(1, Math.min(10, setting)) * 0.13;
 }
 
@@ -172,20 +166,25 @@ function curveMoveAxis(value: number): number {
   return Math.sign(value) * curved;
 }
 
-function curveLookAxis(value: number, deadzone: number, acceleration: number): number {
+function curveLookVector(
+  x: number,
+  y: number,
+  deadzone: number,
+  acceleration: number
+): { x: number; y: number } {
   const dz = Math.max(0.02, Math.min(0.28, deadzone));
-  const magnitude = Math.abs(value);
-  if (magnitude <= dz) return 0;
+  const magnitude = Math.min(1, Math.hypot(x, y));
+  if (magnitude <= dz || magnitude <= 0.0001) return { x: 0, y: 0 };
 
   const normalized = Math.min(1, (magnitude - dz) / (1 - dz));
-
-  // A soft power curve keeps micro-aim precise without the near-center stall of
-  // smoothstep. Acceleration only arrives near the outer 28% of stick travel.
-  const precision = Math.pow(normalized, 1.35);
+  const precision = Math.pow(normalized, 1.08);
   const outer = Math.max(0, Math.min(1, (normalized - 0.72) / 0.28));
   const outerEase = outer * outer * (3 - 2 * outer);
-  const accelBoost = 1 + Math.max(0, Math.min(5, acceleration)) * 0.11 * outerEase;
-  return Math.sign(value) * Math.min(1.55, precision * accelBoost);
+  const accelBoost = 1 + Math.max(0, Math.min(5, acceleration)) * 0.1 * outerEase;
+  const curvedMagnitude = Math.min(1.5, precision * accelBoost);
+  const scale = curvedMagnitude / magnitude;
+
+  return { x: x * scale, y: y * scale };
 }
 
 function activeGamepad(): Gamepad | null {
