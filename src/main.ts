@@ -53,7 +53,7 @@ const rendererAdapter = createThreeStarterAdapter(canvas);
 const app = await createGameApp({
   gameId: "traversal-fps",
   gameName: "Traversal FPS",
-  version: "0.10.0",
+  version: "0.10.1",
   renderer: rendererAdapter,
   root: uiRoot,
   assemblies: [
@@ -225,7 +225,7 @@ app.ui.updateScreen("credits", {
     { id: "credit-tech", label: "Technology // Three.js + SLU Web Game Shell", disabled: true },
     { id: "credit-type", label: "Typography // Rajdhani + Sora", disabled: true },
     { id: "credit-tools", label: "Development Assistance // OpenAI + Anthropic", disabled: true },
-    { id: "credit-build", label: "Build // v0.10.0", description: "Occlusion", disabled: true }
+    { id: "credit-build", label: "Build // v0.10.1", description: "Feel Certification", disabled: true }
   ]
 });
 
@@ -318,7 +318,7 @@ game.start();
 console.info("Traversal FPS ready", {
   shellVersion: "1.0.2+settings+mode-replace",
   shellCommit: "d45d5b89b56eb65cf10cc25ef3a89595d63f6b3f",
-  gameVersion: "0.10.0",
+  gameVersion: "0.10.1",
   renderTarget: "Vector Surface",
   typography: "Rajdhani / Sora",
   starfield: "shader-twinkle",
@@ -328,7 +328,9 @@ console.info("Traversal FPS ready", {
   scope: "R3 / Q / touch toggle // precision look // 36-48 degree FOV",
   campaignScoring: "route discipline only // no time decay",
   settingsFocus: "selection retained after value changes",
-  rifleCadenceMs: 285,
+  rifleCadenceMs: 320,
+  stopShortStepPercent: 4,
+  feelPass: "sharper stick response // selected-vector beam // recoil recovery // haptic hierarchy // simplified campaign HUD",
   autoStepMeters: 0.38,
   puzzleGrammar: PUZZLE_GRAMMAR_V1.map((entry) => entry.id),
   trainingRooms: 8,
