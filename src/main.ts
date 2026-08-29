@@ -1,5 +1,6 @@
 import "./styles.css";
 import "./lookdev-mobile.css";
+import "./typography.css";
 import {
   createArcadeAssembly,
   createFPSAssembly,
@@ -19,7 +20,7 @@ const rendererAdapter = createThreeStarterAdapter(canvas);
 const app = await createGameApp({
   gameId: "traversal-fps",
   gameName: "Traversal FPS",
-  version: "0.4.0",
+  version: "0.4.1",
   renderer: rendererAdapter,
   root: uiRoot,
   assemblies: [
@@ -159,8 +160,10 @@ game.start();
 console.info("Traversal FPS ready", {
   shellVersion: "1.0.2+settings+mode-replace",
   shellCommit: "d45d5b89b56eb65cf10cc25ef3a89595d63f6b3f",
-  gameVersion: "0.4.0",
+  gameVersion: "0.4.1",
   renderTarget: "ROOM 01 / Vector Surface",
+  typography: "Rajdhani / Sora",
+  starfield: "shader-twinkle",
   mobileControls: true,
   assemblies: app.composer.listAssemblies()
 });
