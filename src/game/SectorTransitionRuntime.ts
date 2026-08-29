@@ -45,7 +45,10 @@ function showTransition(
   const sectorNumber = map?.id.match(/(\d+)/)?.[1]?.padStart(2, "0") ?? "01";
   const mapTitle = map?.label.replace(/^SECTOR \d+ \/\/ /, "") ?? "THE SPAN";
 
-  if (contentId === "training") {
+  if (contentId === "controls") {
+    kicker.textContent = "TRAINING";
+    title.textContent = "CONTROLS";
+  } else if (contentId === "training") {
     kicker.textContent = "TRAINING";
     title.textContent = "VECTOR FUNDAMENTALS";
   } else if (state.modeId === "standard") {
