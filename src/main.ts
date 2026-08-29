@@ -26,6 +26,7 @@ import { installScopeRuntime } from "./game/ScopeRuntime";
 import { installGameplayClarity } from "./game/GameplayClarityRuntime";
 import { installSectorTransitions } from "./game/SectorTransitionRuntime";
 import { installOnboardingRuntime } from "./game/OnboardingRuntime";
+import { installSettingsFocusRetention } from "./game/SettingsFocusRuntime";
 import { TraversalProgression, ACHIEVEMENTS } from "./game/Progression";
 import { achievementChoices, installAchievementRuntime } from "./game/AchievementRuntime";
 import { enhanceTraversalPresentation } from "./render/enhanceTraversalPresentation";
@@ -293,6 +294,8 @@ app.flow.onBack = (screenId: string) => {
   originalBack(screenId);
 };
 
+installSettingsFocusRetention(app.flow, app.ui, uiRoot);
+
 const game = new TraversalGame(canvas, app.shell, app.flow, app.ui, traversalSettings);
 enhanceTraversalMovement(game);
 enhanceGrammarRuntime(game, contentRuntime);
@@ -313,8 +316,8 @@ installEditorShortcut();
 game.start();
 
 console.info("Traversal FPS ready", {
-  shellVersion: "1.0.2+focus-preserve",
-  shellCommit: "1572b50133544ca97a9b7803a4792e9bda0fa750",
+  shellVersion: "1.0.2+settings+mode-replace",
+  shellCommit: "d45d5b89b56eb65cf10cc25ef3a89595d63f6b3f",
   gameVersion: "0.10.0",
   renderTarget: "Vector Surface",
   typography: "Rajdhani / Sora",
@@ -324,6 +327,7 @@ console.info("Traversal FPS ready", {
   controllerAim: "horizontal 1-10 // vertical 1-10 // acceleration 0-5 // scope multiplier // right deadzone",
   scope: "R3 / Q / touch toggle // precision look // 36-48 degree FOV",
   campaignScoring: "route discipline only // no time decay",
+  settingsFocus: "selection retained after value changes",
   rifleCadenceMs: 285,
   autoStepMeters: 0.38,
   puzzleGrammar: PUZZLE_GRAMMAR_V1.map((entry) => entry.id),
