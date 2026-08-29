@@ -4,16 +4,13 @@
 }
 
 #sector-transition::before,
-#sector-transition::after {
-  display: none;
-}
-
+#sector-transition::after,
 .sector-transition-grid {
   display: none;
 }
 
 #sector-transition.show {
-  animation: premium-transition-shell 1.55s ease forwards;
+  animation: premium-transition-shell 2.6s ease forwards;
 }
 
 .sector-transition-line {
@@ -27,7 +24,7 @@
 }
 
 #sector-transition.show .sector-transition-line {
-  animation: premium-sector-line 1.05s .2s ease forwards;
+  animation: premium-sector-line 1.9s .3s ease forwards;
 }
 
 .sector-transition-copy {
@@ -36,7 +33,7 @@
 }
 
 #sector-transition.show .sector-transition-copy {
-  animation: premium-sector-copy 1.25s .16s ease forwards;
+  animation: premium-sector-copy 2.1s .24s ease forwards;
 }
 
 .sector-transition-copy span {
@@ -61,17 +58,17 @@
 
 @keyframes premium-transition-shell {
   0%, 100% { opacity: 0; background: rgba(1, 6, 12, 0); }
-  15%, 72% { opacity: 1; background: rgba(1, 6, 12, .78); }
+  11%, 82% { opacity: 1; background: rgba(1, 6, 12, .78); }
 }
 
 @keyframes premium-sector-line {
   0% { transform: translateX(-50%) scaleX(0); opacity: 0; }
-  45%, 72% { transform: translateX(-50%) scaleX(1); opacity: .9; }
+  28%, 78% { transform: translateX(-50%) scaleX(1); opacity: .9; }
   100% { transform: translateX(-50%) scaleX(.35); opacity: 0; }
 }
 
 @keyframes premium-sector-copy {
   0% { opacity: 0; transform: translateY(8px); filter: blur(3px); }
-  20%, 72% { opacity: 1; transform: translateY(0); filter: blur(0); }
+  16%, 78% { opacity: 1; transform: translateY(0); filter: blur(0); }
   100% { opacity: 0; transform: translateY(-4px); }
 }
