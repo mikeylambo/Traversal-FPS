@@ -25,6 +25,7 @@ type PadFrame = {
   warpReleased: boolean;
   wheelDelta: number;
   resetPressed: boolean;
+  scopePressed: boolean;
 };
 
 const DEADZONE = 0.16;
@@ -61,6 +62,9 @@ export function installGamepadGameplay(game: object): void {
     previousWarp = frame.warpHeld;
     if (frame.wheelDelta !== 0) adjustRepeatAt = performance.now() + 105;
     document.body.classList.toggle("gamepad-active", hasStandardGamepad());
+    if (frame.scopePressed) {
+      window.dispatchEvent(new CustomEvent("traversal:scope-toggle", { detail: { source: "gamepad" } }));
+    }
     originalUpdate(dt);
   };
 
@@ -104,15 +108,15 @@ function pollGamepad(
   const previousFire = previousButtons[7] ?? false;
   const warpHeld = buttonValue(pad, 6) > 0.42;
 
-  // LB shortens; RB extends. Repeat while held so stop-short feels analog enough
-  // without sacrificing the right stick for aim during vector placement.
-  const shorten = buttons[4] ?? false;
-  const extend = buttons[5] ?? false;
+  // RB shortens; LB extends. This mirrors the player's sense of pulling the
+  // destination back with the right hand and opening the line with the left.
+  const shorten = buttons[5] ?? false;
+  const extend = buttons[4] ?? false;
   const now = performance.now();
   let wheelDelta = 0;
   if (warpHeld && shorten !== extend) {
-    const wasShorten = previousButtons[4] ?? false;
-    const wasExtend = previousButtons[5] ?? false;
+    const wasShorten = previousButtons[5] ?? false;
+    const wasExtend = previousButtons[4] ?? false;
     const newlyPressed = shorten ? !wasShorten : !wasExtend;
     if (newlyPressed || now >= adjustRepeatAt) wheelDelta = shorten ? 1 : -1;
   }
@@ -123,11 +127,12 @@ function pollGamepad(
     lookX: rightX * 15.5 * dt * 60,
     lookY: rightY * 13.5 * dt * 60,
     firePressed: fireHeld && !previousFire,
-    crouchHeld: buttons[1] ?? false,
+    crouchHeld: Boolean((buttons[1] ?? false) || (buttons[10] ?? false)),
     warpHeld,
     warpReleased: previousWarp && !warpHeld,
     wheelDelta,
-    resetPressed: Boolean(buttons[2] && !(previousButtons[2] ?? false))
+    resetPressed: Boolean(buttons[2] && !(previousButtons[2] ?? false)),
+    scopePressed: Boolean(buttons[11] && !(previousButtons[11] ?? false))
   };
 }
 
@@ -173,6 +178,7 @@ function emptyFrame(): PadFrame {
     warpHeld: false,
     warpReleased: false,
     wheelDelta: 0,
-    resetPressed: false
+    resetPressed: false,
+    scopePressed: false
   };
 }
