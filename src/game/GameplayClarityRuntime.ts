@@ -21,8 +21,8 @@ type RuntimeState = {
 };
 
 /**
- * Keeps the signature spatial information large and immediate while stripping
- * Campaign telemetry down to what matters in the moment.
+ * Keeps the signature spatial information large and immediate. Campaign is
+ * intentionally sparse: location + sphere progress are enough during play.
  */
 export function installGameplayClarity(game: object): void {
   const state = game as unknown as RuntimeState;
@@ -60,21 +60,19 @@ export function installGameplayClarity(game: object): void {
 }
 
 function simplifyCampaignHUD(state: RuntimeState): void {
-  if (state.modeId !== "standard") return;
+  const campaign = state.modeId === "standard";
+  const metricPanel = document.getElementById("metric-panel");
+  if (metricPanel) metricPanel.hidden = campaign;
+  if (!campaign) return;
+
   const room = ROOMS[state.roomIndex];
   if (!room) return;
 
   const roomLabel = document.getElementById("room-label");
   const roomObjective = document.getElementById("room-objective");
-  const runPrimary = document.getElementById("run-primary");
-  const stats = document.getElementById("run-stats");
-  const mode = document.getElementById("mode-label");
 
   if (roomLabel) roomLabel.textContent = room.title;
-  if (roomObjective) roomObjective.textContent = `${state.roomKills}/${room.requiredKills} RESOLVED`;
-  if (runPrimary?.textContent) runPrimary.textContent = runPrimary.textContent.replace("ROUTE SCORE ", "ROUTE ");
-  if (stats) stats.textContent = `${state.shots} SHOTS · ${state.warps} WARPS${state.roomRestarts ? ` · ${state.roomRestarts} RESTARTS` : ""}`;
-  if (mode) mode.textContent = "CAMPAIGN";
+  if (roomObjective) roomObjective.textContent = `${state.roomKills}/${room.requiredKills} SPHERES`;
 }
 
 function updateStopShort(state: RuntimeState): void {
