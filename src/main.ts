@@ -50,7 +50,7 @@ const rendererAdapter = createThreeStarterAdapter(canvas);
 const app = await createGameApp({
   gameId: "traversal-fps",
   gameName: "Traversal FPS",
-  version: "0.9.1",
+  version: "0.9.2",
   renderer: rendererAdapter,
   root: uiRoot,
   assemblies: [
@@ -222,7 +222,7 @@ app.ui.updateScreen("credits", {
     { id: "credit-tech", label: "Technology // Three.js + SLU Web Game Shell", disabled: true },
     { id: "credit-type", label: "Typography // Rajdhani + Sora", disabled: true },
     { id: "credit-tools", label: "Development Assistance // OpenAI + Anthropic", disabled: true },
-    { id: "credit-build", label: "Build // v0.9.1", description: "Controller Comfort + Scope", disabled: true }
+    { id: "credit-build", label: "Build // v0.9.2", description: "Controller Aim Tuning", disabled: true }
   ]
 });
 
@@ -301,9 +301,9 @@ installHazardRuntime(game);
 installCampaignFieldPresentation(game, contentRuntime);
 installTraversalEditor(game, contentRuntime);
 installMapEditorNaming();
-installGamepadGameplay(game);
+installGamepadGameplay(game, traversalSettings);
 installCombatFeel(game);
-installScopeRuntime(game);
+installScopeRuntime(game, traversalSettings);
 installGameplayClarity(game);
 installSectorTransitions(game, contentRuntime);
 installOnboardingRuntime(game, contentRuntime);
@@ -313,12 +313,13 @@ game.start();
 console.info("Traversal FPS ready", {
   shellVersion: "1.0.2+settings+mode-replace",
   shellCommit: "d45d5b89b56eb65cf10cc25ef3a89595d63f6b3f",
-  gameVersion: "0.9.1",
+  gameVersion: "0.9.2",
   renderTarget: "Vector Surface",
   typography: "Rajdhani / Sora",
   starfield: "shader-twinkle",
   movement: "run + crouch + warp",
   controller: "left move // right look // RT fire // LT warp // RB shorter // LB longer // L3-B crouch // R3 scope // X reset",
+  controllerAim: "horizontal 1-10 // vertical 1-10 // acceleration 0-5 // scope multiplier // right deadzone",
   scope: "R3 / Q / touch toggle // precision look // 36-48 degree FOV",
   rifleCadenceMs: 285,
   autoStepMeters: 0.38,
