@@ -51,7 +51,7 @@ const MAP_01_FIELD: RoomSpec[] = [
       { id: "span-low", kind: "sentry", position: [-16, 4.2, -35] },
       { id: "span-drift", kind: "drifter", position: [0, 7.2, -55], drift: { axis: "x", amplitude: 14, speed: 0.76 } },
       { id: "span-right", kind: "sentry", position: [16, 4.2, -65] },
-      { id: "span-alt", kind: "drifter", position: [-10, 6.2, -75], drift: { axis: "y", amplitude: 2.6, speed: 1.05 } },
+      { id: "span-alt", kind: "drifter", position: [4, 6.2, -90], drift: { axis: "y", amplitude: 2.6, speed: 1.05 } },
       { id: "span-final", kind: "sentry", position: [0, 2.2, -111] }
     ],
     hazards: [
@@ -115,7 +115,7 @@ const MAP_01_COURSE: RoomSpec[] = [
     ],
     enemies: [
       { id: "m1-3-perch", kind: "sentry", position: [8, 4.2, -8] },
-      { id: "m1-3-exit", kind: "sentry", position: [8, 4.5, -25], radius: 0.92 }
+      { id: "m1-3-exit", kind: "sentry", position: [8, 4.2, -31], radius: 0.92 }
     ]
   },
   {
