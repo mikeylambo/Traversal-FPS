@@ -1,6 +1,7 @@
 import "./styles.css";
 import "./lookdev-mobile.css";
 import "./typography.css";
+import "./movement.css";
 import {
   createArcadeAssembly,
   createFPSAssembly,
