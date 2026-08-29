@@ -7,12 +7,11 @@ const HEAD_MARGIN = 0.16;
 const PLAYER_RADIUS = 0.32;
 const RUN_SPEED = 7.5;
 const CROUCH_SPEED = 4.9;
-const JUMP_SPEED = 6.8;
+const AUTO_STEP_HEIGHT = 0.38;
 const BASE_GRAVITY = 18;
 
 type MovementInput = {
   movement(): { x: number; z: number };
-  consumeJump(): boolean;
   isCrouchHeld(): boolean;
 };
 
@@ -30,9 +29,9 @@ type RuntimeState = {
 };
 
 /**
- * Adds conventional FPS jump/crouch without turning them into warp substitutes.
- * It also upgrades the old floor-only resolver into a compact AABB player body so
- * future puzzle maps can use real walls, ceilings, and crouch-clearance routes.
+ * Traversal deliberately has no conventional jump. Run/crouch handle local positioning;
+ * the Warp Rifle owns meaningful elevation and gap traversal. A small automatic step-up
+ * prevents tiny lips and stairs from creating fake reasons for a jump button.
  */
 export function enhanceTraversalMovement(game: object): void {
   const state = game as unknown as RuntimeState;
@@ -75,45 +74,21 @@ export function enhanceTraversalMovement(game: object): void {
     const direction = forward.multiplyScalar(move.z).add(right.multiplyScalar(move.x));
     const speed = crouching ? CROUCH_SPEED : RUN_SPEED;
     const bodyHeight = eyeHeight + HEAD_MARGIN;
-    const footY = state.camera.position.y - eyeHeight;
 
     moveWithBodyCollision(
       state.camera.position,
       direction.x * speed * dt,
       direction.z * speed * dt,
-      footY,
+      eyeHeight,
       bodyHeight,
-      room.platforms
+      room.platforms,
+      grounded && now >= state.airGraceUntil
     );
-
-    const jumpPressed = state.input.consumeJump();
-    if (jumpPressed && grounded && now >= state.airGraceUntil) {
-      state.velocityY = JUMP_SPEED;
-      grounded = false;
-    }
 
     const previousY = state.camera.position.y;
     if (now >= state.airGraceUntil) {
       state.velocityY -= BASE_GRAVITY * state.gravityScalar * dt;
-      let nextY = state.camera.position.y + state.velocityY * dt;
-
-      if (state.velocityY > 0) {
-        const ceiling = ceilingLimit(
-          state.camera.position.x,
-          state.camera.position.z,
-          state.camera.position.y,
-          nextY,
-          eyeHeight,
-          bodyHeight,
-          room.platforms
-        );
-        if (ceiling !== null) {
-          nextY = ceiling;
-          state.velocityY = 0;
-        }
-      }
-
-      state.camera.position.y = nextY;
+      state.camera.position.y += state.velocityY * dt;
       const landed = resolveFloor(
         state.camera.position,
         previousY,
@@ -124,7 +99,7 @@ export function enhanceTraversalMovement(game: object): void {
       grounded = landed;
       if (landed) state.velocityY = 0;
     } else {
-      // Warp phase-hang is intentionally airborne: it cannot be converted into a jump.
+      // Warp phase-hang remains an authored airborne state rather than a free movement verb.
       state.velocityY = 0;
       grounded = false;
     }
@@ -142,15 +117,84 @@ function moveWithBodyCollision(
   position: THREE.Vector3,
   dx: number,
   dz: number,
+  eyeHeight: number,
+  bodyHeight: number,
+  platforms: PlatformSpec[],
+  allowStep: boolean
+): void {
+  moveAxis(position, "x", dx, eyeHeight, bodyHeight, platforms, allowStep);
+  moveAxis(position, "z", dz, eyeHeight, bodyHeight, platforms, allowStep);
+}
+
+function moveAxis(
+  position: THREE.Vector3,
+  axis: "x" | "z",
+  delta: number,
+  eyeHeight: number,
+  bodyHeight: number,
+  platforms: PlatformSpec[],
+  allowStep: boolean
+): void {
+  if (Math.abs(delta) < 0.000001) return;
+
+  const candidateX = axis === "x" ? position.x + delta : position.x;
+  const candidateZ = axis === "z" ? position.z + delta : position.z;
+  const footY = position.y - eyeHeight;
+
+  if (!bodyBlocked(candidateX, candidateZ, footY, bodyHeight, platforms)) {
+    position[axis] += delta;
+    return;
+  }
+
+  if (!allowStep) return;
+  const step = findStepHeight(candidateX, candidateZ, footY, bodyHeight, platforms);
+  if (step === null) return;
+
+  position.y += step;
+  position[axis] += delta;
+}
+
+function findStepHeight(
+  x: number,
+  z: number,
   footY: number,
   bodyHeight: number,
   platforms: PlatformSpec[]
-): void {
-  const nextX = position.x + dx;
-  if (!bodyBlocked(nextX, position.z, footY, bodyHeight, platforms)) position.x = nextX;
+): number | null {
+  const candidates = new Set<number>();
 
-  const nextZ = position.z + dz;
-  if (!bodyBlocked(position.x, nextZ, footY, bodyHeight, platforms)) position.z = nextZ;
+  for (const platform of platforms) {
+    const [cx, cy, cz] = platform.center;
+    const [sx, sy, sz] = platform.size;
+    if (
+      Math.abs(x - cx) > sx * 0.5 + PLAYER_RADIUS ||
+      Math.abs(z - cz) > sz * 0.5 + PLAYER_RADIUS
+    ) continue;
+
+    const top = cy + sy * 0.5;
+    const rise = top - footY;
+    if (rise > 0.025 && rise <= AUTO_STEP_HEIGHT) candidates.add(Number(rise.toFixed(4)));
+  }
+
+  for (const rise of [...candidates].sort((a, b) => a - b)) {
+    const raisedFoot = footY + rise;
+    if (bodyBlocked(x, z, raisedFoot, bodyHeight, platforms)) continue;
+    if (!supportedAt(x, z, raisedFoot, platforms)) continue;
+    return rise;
+  }
+
+  return null;
+}
+
+function supportedAt(x: number, z: number, footY: number, platforms: PlatformSpec[]): boolean {
+  return platforms.some((platform) => {
+    const [cx, cy, cz] = platform.center;
+    const [sx, sy, sz] = platform.size;
+    const top = cy + sy * 0.5;
+    return Math.abs(top - footY) <= 0.035 &&
+      Math.abs(x - cx) <= sx * 0.5 - 0.03 &&
+      Math.abs(z - cz) <= sz * 0.5 - 0.03;
+  });
 }
 
 function bodyBlocked(
@@ -198,36 +242,6 @@ function hasHeadroom(
     return Math.abs(x - cx) <= sx * 0.5 + PLAYER_RADIUS &&
       Math.abs(z - cz) <= sz * 0.5 + PLAYER_RADIUS;
   });
-}
-
-function ceilingLimit(
-  x: number,
-  z: number,
-  currentCameraY: number,
-  nextCameraY: number,
-  eyeHeight: number,
-  bodyHeight: number,
-  platforms: PlatformSpec[]
-): number | null {
-  const headOffset = bodyHeight - eyeHeight;
-  const currentHead = currentCameraY + headOffset;
-  const nextHead = nextCameraY + headOffset;
-  let limit: number | null = null;
-
-  for (const platform of platforms) {
-    const [cx, cy, cz] = platform.center;
-    const [sx, sy, sz] = platform.size;
-    if (Math.abs(x - cx) > sx * 0.5 + PLAYER_RADIUS ||
-        Math.abs(z - cz) > sz * 0.5 + PLAYER_RADIUS) continue;
-
-    const underside = cy - sy * 0.5;
-    if (currentHead <= underside && nextHead >= underside) {
-      const cameraLimit = underside - headOffset - 0.025;
-      limit = limit === null ? cameraLimit : Math.min(limit, cameraLimit);
-    }
-  }
-
-  return limit;
 }
 
 function resolveFloor(
