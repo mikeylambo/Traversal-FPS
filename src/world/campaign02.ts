@@ -21,12 +21,28 @@ export const MAP_02_FIELD: RoomSpec[] = [
       { center: [7, 5, -80], size: [1, 10, 18] }
     ],
     enemies: [
+      // Start -> first platform. The sphere remains beyond the landing so the
+      // sector opens by asking for a deliberate Stop Short.
       { id: "timing-window", kind: "sentry", position: [0, 2.2, -29] },
-      { id: "timing-drift-a", kind: "drifter", position: [-4, 6, -47], drift: { axis: "x", amplitude: 10, speed: 0.68 } },
-      { id: "timing-high", kind: "sentry", position: [0, 7.2, -58] },
-      { id: "timing-drift-b", kind: "drifter", position: [8, 4.5, -78], drift: { axis: "x", amplitude: 7, speed: 0.92 } },
-      { id: "timing-final", kind: "sentry", position: [0, 3.2, -119] },
-      { id: "timing-alt", kind: "drifter", position: [-10, 6.2, -94], drift: { axis: "y", amplitude: 2.4, speed: 1.05 } }
+
+      // Primary second route: time the moving endpoint while it crosses the
+      // elevated platform rather than arriving at a platform edge.
+      { id: "timing-drift-a", kind: "drifter", position: [0, 6.2, -49], drift: { axis: "x", amplitude: 6, speed: 0.68 } },
+
+      // From the elevated center platform this vector passes through the right
+      // platform before continuing beyond it, making Stop Short intentional.
+      { id: "timing-high", kind: "sentry", position: [18, 3.7, -74] },
+
+      // This moving endpoint sits beyond the -88 platform. Its narrower drift
+      // keeps every readable timing window inside the platform footprint.
+      { id: "timing-drift-b", kind: "drifter", position: [-1, 2.2, -97], drift: { axis: "x", amplitude: 3, speed: 0.92 } },
+
+      // Final line passes cleanly through the completion platform.
+      { id: "timing-final", kind: "sentry", position: [0, 2.2, -119] },
+
+      // Alternate second route: stop on the left platform, then rejoin through
+      // timing-high. This is an actual route choice rather than a decorative orb.
+      { id: "timing-alt", kind: "drifter", position: [-16, 4.2, -36], drift: { axis: "y", amplitude: 1.4, speed: 1.05 } }
     ],
     hazards: [
       {
