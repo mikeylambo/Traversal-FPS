@@ -3,6 +3,7 @@ import "./lookdev-mobile.css";
 import "./typography.css";
 import "./movement.css";
 import "./achievements.css";
+import "./feel-pass.css";
 import "./editor/editor.css";
 import {
   createArcadeAssembly,
@@ -16,12 +17,17 @@ import { enhanceTraversalMovement } from "./game/MovementPatch";
 import { enhanceGrammarRuntime } from "./game/GrammarRuntimePatch";
 import { installContentRuntime } from "./game/ContentRuntime";
 import { installHazardRuntime } from "./game/HazardRuntime";
+import { installGamepadGameplay } from "./game/GamepadGameplayRuntime";
+import { installCombatFeel } from "./game/CombatFeelRuntime";
+import { installGameplayClarity } from "./game/GameplayClarityRuntime";
+import { installSectorTransitions } from "./game/SectorTransitionRuntime";
 import { TraversalProgression, ACHIEVEMENTS } from "./game/Progression";
 import { achievementChoices, installAchievementRuntime } from "./game/AchievementRuntime";
 import { enhanceTraversalPresentation } from "./render/enhanceTraversalPresentation";
 import { removeCircularEnvironment } from "./render/removeCircularEnvironment";
 import { installCampaignFieldPresentation } from "./render/CampaignFieldPresentation";
 import { installTraversalEditor } from "./editor/TraversalEditor";
+import { installEditorShortcut } from "./editor/EditorShortcutRuntime";
 import { PUZZLE_GRAMMAR_V1 } from "./world/puzzleGrammar";
 import { CAMPAIGN_MAPS } from "./world/campaign";
 import { ROOMS } from "./world/stages";
@@ -35,7 +41,7 @@ const rendererAdapter = createThreeStarterAdapter(canvas);
 const app = await createGameApp({
   gameId: "traversal-fps",
   gameName: "Traversal FPS",
-  version: "0.7.0",
+  version: "0.8.0",
   renderer: rendererAdapter,
   root: uiRoot,
   assemblies: [
@@ -144,7 +150,8 @@ progression.onUnlock(() => refreshAchievements());
 
 app.ui.updateScreen("main-menu", {
   choices: [
-    { id: "play", label: "Play" },
+    { id: "play", label: "Play", description: "Training // Campaign // Time Trial // Challenge" },
+    { id: "vector-lab", label: "Vector Lab", description: "Build, edit, test, save, and export Traversal spaces." },
     { id: "achievements", label: "Achievements", description: `${progression.snapshot().achievements.length} / ${ACHIEVEMENTS.length} unlocked` },
     { id: "settings", label: "Settings", description: "FPS controls, display, motion, audio, and render lookdev" },
     { id: "credits", label: "Credits" }
@@ -197,7 +204,7 @@ app.ui.updateScreen("credits", {
     { id: "credit-tech", label: "Technology // Three.js + SLU Web Game Shell", description: "Web rendering, input, game flow, persistence, and platform systems.", disabled: true },
     { id: "credit-type", label: "Typography // Rajdhani + Sora", description: "Display and interface type system.", disabled: true },
     { id: "credit-tools", label: "Development Assistance // OpenAI + Anthropic", description: "Design synthesis, engineering assistance, and iteration support.", disabled: true },
-    { id: "credit-build", label: "Current Build // v0.7.0", description: "Campaign Field Prototype + Vector Lab v0.", disabled: true }
+    { id: "credit-build", label: "Current Build // v0.8.0", description: "Controller + Feel + Stop-Short Clarity + Vector Lab Mode.", disabled: true }
   ]
 });
 
@@ -206,6 +213,21 @@ app.flow.onActivate = (screenId: string, choiceId: string) => {
   if (screenId === "main-menu" && choiceId === "achievements") {
     refreshAchievements();
     app.ui.show("achievements");
+    return;
+  }
+
+  if (screenId === "main-menu" && choiceId === "vector-lab") {
+    app.shell.modes.activate("standard");
+    app.shell.difficulty.set("standard");
+    contentRuntime.setSelectedMap("map-01");
+    document.body.classList.add("vector-lab-launching");
+    void app.shell.loadLevel("vector-lab").then(() => {
+      app.ui.show("gameplay-placeholder");
+      window.setTimeout(() => {
+        document.getElementById("editor-toggle")?.click();
+        document.body.classList.remove("vector-lab-launching");
+      }, 90);
+    });
     return;
   }
 
@@ -261,16 +283,23 @@ removeCircularEnvironment(game);
 installHazardRuntime(game);
 installCampaignFieldPresentation(game, contentRuntime);
 installTraversalEditor(game, contentRuntime);
+installGamepadGameplay(game);
+installCombatFeel(game);
+installGameplayClarity(game);
+installSectorTransitions(game, contentRuntime);
+installEditorShortcut();
 game.start();
 
 console.info("Traversal FPS ready", {
   shellVersion: "1.0.2+settings+mode-replace",
   shellCommit: "d45d5b89b56eb65cf10cc25ef3a89595d63f6b3f",
-  gameVersion: "0.7.0",
+  gameVersion: "0.8.0",
   renderTarget: "Vector Surface",
   typography: "Rajdhani / Sora",
   starfield: "shader-twinkle",
   movement: "run + crouch + warp",
+  controller: "left move // right look // RT fire // LT warp // LB-RB landing // B crouch // X reset",
+  rifleCadenceMs: 285,
   autoStepMeters: 0.38,
   puzzleGrammar: PUZZLE_GRAMMAR_V1.map((entry) => entry.id),
   trainingRooms: ROOMS.length,
@@ -282,7 +311,7 @@ console.info("Traversal FPS ready", {
   })),
   achievements: ACHIEVEMENTS.length,
   hazards: ["lethal-field", "sweep"],
-  editor: "Vector Lab v0 // F2",
+  editor: "Vector Lab // main menu // F2 // backquote",
   mobileControls: true,
   vrStatus: "future-compatible target; not current production scope",
   assemblies: app.composer.listAssemblies()
