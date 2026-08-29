@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import type { TraversalSettingsStore } from "./TraversalSettings";
 
 type RuntimeState = {
   camera: THREE.PerspectiveCamera;
@@ -17,7 +18,7 @@ type RuntimeState = {
 };
 
 /** Precision scope is a positioning/visibility tool, not a second weapon mode. */
-export function installScopeRuntime(game: object): void {
+export function installScopeRuntime(game: object, settings: TraversalSettingsStore): void {
   const state = game as unknown as RuntimeState;
   let scoped = false;
   let blend = 0;
@@ -62,7 +63,10 @@ export function installScopeRuntime(game: object): void {
   const originalLook = state.input.consumeLook.bind(state.input);
   state.input.consumeLook = () => {
     const look = originalLook();
-    const precision = scoped ? 0.56 : 1;
+    const gamepad = document.body.classList.contains("gamepad-active");
+    const precision = scoped
+      ? gamepad ? settings.value.controllerScopeSensitivity : 0.56
+      : 1;
     return { x: look.x * precision, y: look.y * precision };
   };
 
