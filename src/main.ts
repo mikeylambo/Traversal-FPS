@@ -37,6 +37,7 @@ import { installMapEditorNaming } from "./editor/MapEditorNamingRuntime";
 import { PUZZLE_GRAMMAR_V1 } from "./world/puzzleGrammar";
 import { CAMPAIGN_MAPS } from "./world/campaign";
 import { registerCampaign02 } from "./world/registerCampaign02";
+import { registerCampaign03 } from "./world/registerCampaign03";
 import { ROOMS } from "./world/stages";
 
 const canvas = document.getElementById("game-canvas") as HTMLCanvasElement | null;
@@ -44,13 +45,14 @@ const uiRoot = document.getElementById("ui");
 if (!canvas || !uiRoot) throw new Error("Traversal FPS boot DOM is incomplete");
 
 registerCampaign02();
+registerCampaign03();
 
 const traversalSettings = new TraversalSettingsStore();
 const rendererAdapter = createThreeStarterAdapter(canvas);
 const app = await createGameApp({
   gameId: "traversal-fps",
   gameName: "Traversal FPS",
-  version: "0.9.2",
+  version: "0.10.0",
   renderer: rendererAdapter,
   root: uiRoot,
   assemblies: [
@@ -222,7 +224,7 @@ app.ui.updateScreen("credits", {
     { id: "credit-tech", label: "Technology // Three.js + SLU Web Game Shell", disabled: true },
     { id: "credit-type", label: "Typography // Rajdhani + Sora", disabled: true },
     { id: "credit-tools", label: "Development Assistance // OpenAI + Anthropic", disabled: true },
-    { id: "credit-build", label: "Build // v0.9.2", description: "Controller Aim Tuning", disabled: true }
+    { id: "credit-build", label: "Build // v0.10.0", description: "Occlusion", disabled: true }
   ]
 });
 
@@ -311,9 +313,9 @@ installEditorShortcut();
 game.start();
 
 console.info("Traversal FPS ready", {
-  shellVersion: "1.0.2+settings+mode-replace",
-  shellCommit: "d45d5b89b56eb65cf10cc25ef3a89595d63f6b3f",
-  gameVersion: "0.9.2",
+  shellVersion: "1.0.2+focus-preserve",
+  shellCommit: "1572b50133544ca97a9b7803a4792e9bda0fa750",
+  gameVersion: "0.10.0",
   renderTarget: "Vector Surface",
   typography: "Rajdhani / Sora",
   starfield: "shader-twinkle",
@@ -321,6 +323,7 @@ console.info("Traversal FPS ready", {
   controller: "left move // right look // RT fire // LT warp // RB shorter // LB longer // L3-B crouch // R3 scope // X reset",
   controllerAim: "horizontal 1-10 // vertical 1-10 // acceleration 0-5 // scope multiplier // right deadzone",
   scope: "R3 / Q / touch toggle // precision look // 36-48 degree FOV",
+  campaignScoring: "route discipline only // no time decay",
   rifleCadenceMs: 285,
   autoStepMeters: 0.38,
   puzzleGrammar: PUZZLE_GRAMMAR_V1.map((entry) => entry.id),
