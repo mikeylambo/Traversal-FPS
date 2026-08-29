@@ -1,0 +1,17 @@
+body.controls-onboarding #tutorial-card {
+  min-width: min(420px, calc(100vw - 32px));
+}
+
+body.controls-onboarding #tutorial-card .tutorial-skip {
+  display: none !important;
+}
+
+body.controls-onboarding #tutorial-room {
+  letter-spacing: .16em;
+  opacity: .68;
+}
+
+body.controls-onboarding #tutorial-text {
+  font-size: clamp(20px, 2vw, 30px);
+  letter-spacing: .04em;
+}
