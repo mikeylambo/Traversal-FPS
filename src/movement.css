@@ -1,4 +1,4 @@
-/* Jump/crouch presentation. Kept separate so puzzle locomotion can evolve independently. */
+/* Crouch presentation. Kept separate so puzzle locomotion can evolve independently. */
 
 body.crouching #reticle {
   transform: translate(-50%, -50%) scale(calc(var(--reticle-scale) * 0.97));
@@ -10,22 +10,13 @@ body.crouching #anchor-status::before {
   opacity: .62;
 }
 
-.mobile-action.jump,
 .mobile-action.crouch {
   width: 64px;
   height: 64px;
-  font-size: 9px;
-  border-color: rgba(180, 239, 255, .34);
-}
-
-.mobile-action.jump {
-  right: max(112px, calc(env(safe-area-inset-right) + 104px));
-  bottom: max(118px, calc(env(safe-area-inset-bottom) + 108px));
-}
-
-.mobile-action.crouch {
   right: max(194px, calc(env(safe-area-inset-right) + 186px));
   bottom: max(32px, calc(env(safe-area-inset-bottom) + 22px));
+  font-size: 9px;
+  border-color: rgba(180, 239, 255, .34);
 }
 
 .mobile-action.crouch.latched,
@@ -35,24 +26,11 @@ body.crouching .mobile-action.crouch {
   box-shadow: 0 0 24px rgba(75, 225, 255, .24), inset 0 0 20px rgba(99, 235, 255, .14);
 }
 
-body.airborne .mobile-action.jump {
-  opacity: .58;
-}
-
 @media (max-height: 520px) and (pointer: coarse) {
-  .mobile-action.jump,
   .mobile-action.crouch {
     width: 56px;
     height: 56px;
-    font-size: 8px;
-  }
-
-  .mobile-action.jump {
-    right: max(98px, calc(env(safe-area-inset-right) + 90px));
-    bottom: max(94px, calc(env(safe-area-inset-bottom) + 84px));
-  }
-
-  .mobile-action.crouch {
     right: max(164px, calc(env(safe-area-inset-right) + 156px));
+    font-size: 8px;
   }
 }
