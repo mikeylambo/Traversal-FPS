@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#06121f" />
   <title>Traversal FPS</title>
 </head>
@@ -29,6 +29,8 @@
         <strong id="run-primary"></strong>
         <span id="run-stats"></span>
       </section>
+
+      <button id="visual-lab-toggle" type="button" aria-expanded="false">LOOKDEV</button>
 
       <div id="tutorial-card">
         <div class="tutorial-rail" aria-hidden="true"></div>
@@ -67,6 +69,45 @@
         <span class="reticle-dot"></span>
       </div>
     </div>
+
+    <aside id="visual-lab" aria-label="Rendering Lookdev">
+      <header>
+        <div>
+          <span class="lab-kicker">ROOM 01 // LIVE RENDER LAB</span>
+          <strong>VECTOR SURFACE</strong>
+        </div>
+        <button id="visual-lab-reset" type="button">RESET</button>
+      </header>
+      <label>TOON BANDING <output id="look-toon-value"></output><input id="look-toon" type="range" /></label>
+      <label>RIM LIGHT <output id="look-rim-value"></output><input id="look-rim" type="range" /></label>
+      <label>TECH GRID <output id="look-grid-value"></output><input id="look-grid" type="range" /></label>
+      <label>ENERGY <output id="look-energy-value"></output><input id="look-energy" type="range" /></label>
+      <label>FOG <output id="look-fog-value"></output><input id="look-fog" type="range" /></label>
+      <label>BLOOM <output id="look-bloom-value"></output><input id="look-bloom" type="range" /></label>
+      <label>EXPOSURE <output id="look-exposure-value"></output><input id="look-exposure" type="range" /></label>
+      <p>V toggles this panel. Values save locally while we dial the final rendering language.</p>
+    </aside>
+
+    <div id="mobile-controls" aria-label="Touch controls">
+      <button id="mobile-pause" class="mobile-small mobile-pause" type="button">II</button>
+      <button id="mobile-skip" class="mobile-small mobile-skip" type="button">SKIP</button>
+      <button id="mobile-reset" class="mobile-small mobile-reset" type="button">RESET</button>
+
+      <div id="move-stick" class="touch-stick" aria-label="Move joystick">
+        <span id="move-stick-knob"></span>
+      </div>
+      <div id="look-pad" aria-label="Drag to look"><span>LOOK</span></div>
+
+      <button id="mobile-fire" class="mobile-action fire" type="button">FIRE</button>
+      <button id="mobile-warp" class="mobile-action warp" type="button">WARP</button>
+
+      <label id="mobile-range-wrap">
+        <span>RANGE</span>
+        <input id="mobile-range" type="range" min="12" max="100" value="100" step="1" />
+      </label>
+    </div>
+
+    <div id="rotate-phone">ROTATE TO LANDSCAPE FOR TRAVERSAL</div>
   </div>
 
   <div id="ui"></div>
