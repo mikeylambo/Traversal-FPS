@@ -2,7 +2,7 @@ import type { PuzzleGrammarId } from "./puzzleGrammar";
 
 export type Vec3Tuple = [number, number, number];
 export type EnemyKind = "sentry" | "drifter" | "shield";
-export type HazardKind = "lethal-field" | "sweep";
+export type HazardKind = "lethal-field" | "sweep" | "sightline-gate";
 
 export interface PlatformSpec {
   center: Vec3Tuple;
@@ -23,6 +23,7 @@ export interface HazardSpec {
   center: Vec3Tuple;
   size: Vec3Tuple;
   drift?: { axis: "x" | "y" | "z"; amplitude: number; speed: number; phase?: number };
+  cycle?: { period: number; openFor: number; phase?: number };
 }
 
 export interface RoomSpec {
