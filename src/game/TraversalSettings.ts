@@ -6,6 +6,7 @@ export interface TraversalVisualSettings {
   fogDensity: number;
   bloomStrength: number;
   exposure: number;
+  starTwinkle: number;
 }
 
 export interface TraversalSettingsValue {
@@ -17,14 +18,16 @@ export interface TraversalSettingsValue {
   visual: TraversalVisualSettings;
 }
 
+// Canonical ROOM 01 lookdev preset, promoted from the first player-tuned pass.
 export const DEFAULT_VISUAL_SETTINGS: TraversalVisualSettings = {
-  toonStrength: 0.72,
-  rimStrength: 1.15,
-  gridStrength: 0.42,
-  energyStrength: 1.15,
-  fogDensity: 0.0105,
-  bloomStrength: 0.9,
-  exposure: 1.32
+  toonStrength: 0.91,
+  rimStrength: 1.95,
+  gridStrength: 0.70,
+  energyStrength: 0.55,
+  fogDensity: 0.0135,
+  bloomStrength: 0.30,
+  exposure: 2.00,
+  starTwinkle: 0.82
 };
 
 export const DEFAULT_TRAVERSAL_SETTINGS: TraversalSettingsValue = {
