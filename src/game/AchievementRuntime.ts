@@ -46,7 +46,7 @@ export function installAchievementRuntime(
     const roomBefore = state.roomIndex;
     const modeBefore = state.modeId;
     originalCheckGoal();
-    if (modeBefore !== "training" || state.roomIndex <= roomBefore) return;
+    if (modeBefore !== "training" || content.selectedContentId() !== "training" || state.roomIndex <= roomBefore) return;
     unlockTrainingRoom(progression, roomBefore);
   };
 
@@ -64,6 +64,8 @@ export function installAchievementRuntime(
       void progression.unlock("training-complete");
     } else if (contentId === "map-01") {
       void progression.unlock("map-01-complete");
+    } else if (contentId === "map-02") {
+      void progression.unlock("map-02-complete");
     }
     if (clean) void progression.unlock("clean-run");
     if (modeId === "challenge") void progression.unlock("challenge-clear");
