@@ -74,6 +74,7 @@ export class VisualLab {
 
   private toggleVisible(): void {
     this.visible = !this.visible;
+    if (this.visible && document.pointerLockElement) void document.exitPointerLock?.();
     this.panel.classList.toggle("visible", this.visible);
     this.toggle.setAttribute("aria-expanded", String(this.visible));
     this.sync();
