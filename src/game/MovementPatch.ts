@@ -9,6 +9,8 @@ const RUN_SPEED = 7.5;
 const CROUCH_SPEED = 4.9;
 const AUTO_STEP_HEIGHT = 0.38;
 const BASE_GRAVITY = 18;
+const WARP_LANDING_EDGE_CUSHION = 0.26;
+const WARP_LANDING_VERTICAL_CUSHION = 0.72;
 
 type MovementInput = {
   movement(): { x: number; z: number };
@@ -99,9 +101,18 @@ export function enhanceTraversalMovement(game: object): void {
       grounded = landed;
       if (landed) state.velocityY = 0;
     } else {
-      // Warp phase-hang remains an authored airborne state rather than a free movement verb.
-      state.velocityY = 0;
-      grounded = false;
+      // Warp phase-hang is allowed when the endpoint is truly airborne, but an
+      // endpoint visibly over a platform should settle cleanly instead of missing
+      // because its center is a few centimeters outside the collision inset.
+      const settled = resolveWarpArrival(state.camera.position, eyeHeight, room.platforms);
+      if (settled) {
+        state.velocityY = 0;
+        state.airGraceUntil = 0;
+        grounded = true;
+      } else {
+        state.velocityY = 0;
+        grounded = false;
+      }
     }
 
     document.body.classList.toggle("airborne", !grounded);
@@ -244,6 +255,39 @@ function hasHeadroom(
   });
 }
 
+function resolveWarpArrival(
+  position: THREE.Vector3,
+  eyeHeight: number,
+  platforms: PlatformSpec[]
+): boolean {
+  let best: { platform: PlatformSpec; standingY: number; deltaY: number } | null = null;
+
+  for (const platform of platforms) {
+    const [cx, cy, cz] = platform.center;
+    const [sx, sy, sz] = platform.size;
+    const withinFootprint =
+      Math.abs(position.x - cx) <= sx * 0.5 + WARP_LANDING_EDGE_CUSHION &&
+      Math.abs(position.z - cz) <= sz * 0.5 + WARP_LANDING_EDGE_CUSHION;
+    if (!withinFootprint) continue;
+
+    const standingY = cy + sy * 0.5 + eyeHeight;
+    const deltaY = Math.abs(position.y - standingY);
+    if (deltaY > WARP_LANDING_VERTICAL_CUSHION) continue;
+    if (!best || deltaY < best.deltaY) best = { platform, standingY, deltaY };
+  }
+
+  if (!best) return false;
+
+  const [cx, , cz] = best.platform.center;
+  const [sx, , sz] = best.platform.size;
+  const safeHalfX = Math.max(0.05, sx * 0.5 - 0.12);
+  const safeHalfZ = Math.max(0.05, sz * 0.5 - 0.12);
+  position.x = THREE.MathUtils.clamp(position.x, cx - safeHalfX, cx + safeHalfX);
+  position.z = THREE.MathUtils.clamp(position.z, cz - safeHalfZ, cz + safeHalfZ);
+  position.y = best.standingY;
+  return true;
+}
+
 function resolveFloor(
   position: THREE.Vector3,
   previousY: number,
@@ -258,8 +302,8 @@ function resolveFloor(
     const [cx, cy, cz] = platform.center;
     const [sx, sy, sz] = platform.size;
     const inside =
-      Math.abs(position.x - cx) <= sx * 0.5 - 0.05 &&
-      Math.abs(position.z - cz) <= sz * 0.5 - 0.05;
+      Math.abs(position.x - cx) <= sx * 0.5 + 0.08 &&
+      Math.abs(position.z - cz) <= sz * 0.5 + 0.08;
     if (!inside) continue;
 
     const standingY = cy + sy * 0.5 + eyeHeight;
