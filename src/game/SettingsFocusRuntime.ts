@@ -35,7 +35,9 @@ function preserveChoice(choiceId: string, ui: UILike, root: HTMLElement): void {
     const screen = root.querySelector<HTMLElement>('[data-screen-id="settings"]');
     if (!screen) return;
 
-    const buttons = [...screen.querySelectorAll<HTMLButtonElement>('[data-choice-id]:not(:disabled)')];
+    const buttons = Array.from(
+      screen.querySelectorAll<HTMLButtonElement>('[data-choice-id]:not(:disabled)')
+    );
     const targetIndex = buttons.findIndex((button) => button.dataset.choiceId === choiceId);
     if (targetIndex < 0) return;
 
