@@ -10,9 +10,15 @@ type ResultChoice = {
 
 type RuntimeState = {
   modeId: string;
+  modeLabel: string;
   shots: number;
   totalKills: number;
+  roomKills: number;
+  roomIndex: number;
+  tutorialUntil: number;
   finishRun: () => void;
+  loadRoom: (index: number) => void;
+  updateHUD: () => void;
   extraKills: () => number;
   wastedShots: () => number;
   ui: {
@@ -20,11 +26,36 @@ type RuntimeState = {
   };
 };
 
-/** Keeps legacy core scoring/results in sync as Training and Campaign swap room sets. */
+/** Keeps scoring/results in sync and lets Campaign read as a continuous sector instead of a test chamber. */
 export function enhanceGrammarRuntime(game: object, content: ContentRuntime): void {
   const state = game as unknown as RuntimeState;
 
   state.extraKills = () => Math.max(0, state.totalKills - content.activeParKills());
+
+  const originalLoadRoom = state.loadRoom.bind(game);
+  state.loadRoom = (index: number) => {
+    originalLoadRoom(index);
+    if (content.activeForm() === "campaign-field") state.tutorialUntil = 0;
+  };
+
+  const originalHUD = state.updateHUD.bind(game);
+  state.updateHUD = () => {
+    originalHUD();
+    if (content.activeForm() !== "campaign-field") return;
+
+    const room = ROOMS[state.roomIndex];
+    const roomLabel = document.getElementById("room-label");
+    const roomObjective = document.getElementById("room-objective");
+    const tutorialCard = document.getElementById("tutorial-card");
+    const modeLabel = document.getElementById("mode-label");
+
+    if (roomLabel) roomLabel.textContent = "SECTOR 01 // THE SPAN";
+    if (roomObjective && room) {
+      roomObjective.textContent = `NODES RESOLVED ${state.roomKills}/${room.requiredKills} // FIND THE EXIT`;
+    }
+    if (modeLabel) modeLabel.textContent = "CAMPAIGN // DIMENSIONAL CONSTRUCT";
+    tutorialCard?.classList.remove("visible");
+  };
 
   const originalFinishRun = state.finishRun.bind(game);
   state.finishRun = () => {
@@ -56,6 +87,8 @@ function rewriteResults(
   let subtitle = typeof payload.subtitle === "string" ? payload.subtitle : "";
   if (contentId === "training") {
     subtitle = subtitle.replace("Five rooms cleared", `${ROOMS.length} rooms cleared`);
+  } else if (content.activeForm() === "campaign-field") {
+    subtitle = `SECTOR CLEARED · ${contentId.toUpperCase()} · ${state.modeLabel}`;
   } else {
     subtitle = `${subtitle} · ${contentId.toUpperCase()}`;
   }
