@@ -19,32 +19,45 @@
 }
 
 #warp-hint {
-  font-size: 12px !important;
+  font-size: 11px !important;
   font-weight: 700;
-  letter-spacing: .11em !important;
-  opacity: .82 !important;
+  letter-spacing: .1em !important;
+  opacity: .76 !important;
 }
 
 #stop-short-readout {
   position: fixed;
   left: 50%;
-  bottom: 132px;
+  bottom: 126px;
   z-index: 34;
-  width: min(430px, calc(100vw - 36px));
-  padding: 10px 18px 11px;
-  transform: translate(-50%, 12px);
+  width: min(380px, calc(100vw - 36px));
+  padding: 9px 15px 12px;
+  transform: translate(-50%, 10px);
   display: grid;
   grid-template-columns: 1fr auto;
   align-items: end;
-  gap: 1px 16px;
+  gap: 0 14px;
   color: #dffbff;
-  border: 1px solid color-mix(in srgb, var(--hud-accent, #69e7ff) 46%, transparent);
-  background: linear-gradient(110deg, rgba(3, 15, 26, .94), rgba(6, 25, 39, .78));
-  clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
-  box-shadow: 0 16px 44px rgba(0, 0, 0, .34), inset 3px 0 0 color-mix(in srgb, var(--hud-accent, #69e7ff) 72%, white);
+  border: 1px solid color-mix(in srgb, var(--hud-accent, #69e7ff) 40%, transparent);
+  background: rgba(3, 14, 24, .91);
+  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+  box-shadow: 0 14px 38px rgba(0, 0, 0, .3), inset 2px 0 0 color-mix(in srgb, var(--hud-accent, #69e7ff) 60%, white);
   opacity: 0;
   pointer-events: none;
-  transition: opacity .16s ease, transform .16s ease, border-color .16s ease;
+  overflow: hidden;
+  transition: opacity .14s ease, transform .14s ease, border-color .14s ease;
+}
+
+#stop-short-readout::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: var(--landing-width, 100%);
+  height: 2px;
+  background: linear-gradient(90deg, var(--hud-accent, #69e7ff), #efffff);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--hud-accent, #69e7ff) 55%, transparent);
+  transition: width .07s linear, opacity .14s ease;
 }
 
 #stop-short-readout.visible {
@@ -58,50 +71,51 @@
   font-size: 9px;
   font-weight: 700;
   letter-spacing: .18em;
-  opacity: .66;
+  opacity: .62;
 }
 
 #stop-short-readout strong {
   grid-row: 1 / 3;
   grid-column: 2;
   font-family: "Rajdhani", sans-serif;
-  font-size: 42px;
+  font-size: 39px;
   line-height: .86;
   letter-spacing: -.025em;
+  font-variant-numeric: tabular-nums;
 }
 
 #stop-short-readout em,
 #shot-budget-readout em {
   font-family: "Rajdhani", sans-serif;
   font-style: normal;
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 700;
   letter-spacing: .08em;
 }
 
 #stop-short-readout small {
   grid-column: 1 / -1;
-  margin-top: 5px;
+  margin-top: 4px;
   font-family: "Sora", sans-serif;
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 600;
-  letter-spacing: .08em;
-  opacity: .7;
+  letter-spacing: .07em;
+  opacity: .62;
 }
 
 #stop-short-readout.placing {
-  border-color: color-mix(in srgb, var(--hud-accent, #69e7ff) 84%, white);
+  border-color: color-mix(in srgb, var(--hud-accent, #69e7ff) 76%, white);
 }
 
 #stop-short-readout.short {
-  box-shadow: 0 16px 54px rgba(0, 0, 0, .4),
-    0 0 24px color-mix(in srgb, var(--hud-accent, #69e7ff) 16%, transparent),
-    inset 4px 0 0 #ecffff;
+  box-shadow: 0 16px 50px rgba(0, 0, 0, .36),
+    0 0 20px color-mix(in srgb, var(--hud-accent, #69e7ff) 13%, transparent),
+    inset 3px 0 0 #ecffff;
 }
 
 #stop-short-readout.short strong,
 #stop-short-readout.short em {
-  text-shadow: 0 0 18px color-mix(in srgb, var(--hud-accent, #69e7ff) 70%, transparent);
+  text-shadow: 0 0 16px color-mix(in srgb, var(--hud-accent, #69e7ff) 58%, transparent);
 }
 
 #shot-budget-readout {
@@ -109,13 +123,13 @@
   right: 32px;
   top: 150px;
   z-index: 34;
-  width: 286px;
-  padding: 12px 15px 13px;
+  width: 260px;
+  padding: 11px 14px 12px;
   background: rgba(7, 15, 24, .88);
-  border: 1px solid rgba(255, 202, 104, .5);
-  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+  border: 1px solid rgba(255, 202, 104, .46);
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
   opacity: 0;
-  transform: translateX(12px);
+  transform: translateX(10px);
   pointer-events: none;
   transition: opacity .15s ease, transform .15s ease;
 }
@@ -129,7 +143,7 @@
   display: block;
   margin: 2px 0 0;
   font-family: "Rajdhani", sans-serif;
-  font-size: 31px;
+  font-size: 30px;
   line-height: 1;
   letter-spacing: .02em;
   color: #fff3c6;
@@ -145,14 +159,14 @@
 #shot-budget-pips {
   display: flex;
   gap: 5px;
-  margin-top: 9px;
+  margin-top: 8px;
 }
 
 #shot-budget-pips i {
-  height: 4px;
+  height: 3px;
   flex: 1;
   background: #ffd36c;
-  box-shadow: 0 0 9px rgba(255, 211, 108, .35);
+  box-shadow: 0 0 9px rgba(255, 211, 108, .32);
 }
 
 #shot-budget-pips i.spent {
@@ -169,7 +183,7 @@
   to { box-shadow: 0 0 24px rgba(255, 83, 105, .25); }
 }
 
-/* Rifle impulse. Kept brief so it adds mass without blinding the aiming task. */
+/* Rifle impulse. Brief and physical rather than a large screen flash. */
 #game::after {
   content: "";
   position: fixed;
@@ -177,15 +191,24 @@
   z-index: 24;
   pointer-events: none;
   opacity: 0;
-  background: radial-gradient(circle at 64% 62%, rgba(213, 252, 255, .14), transparent 16%);
+  background: radial-gradient(circle at 64% 62%, rgba(213, 252, 255, .16), transparent 17%);
 }
 
 body.rifle-fired #game::after {
-  animation: rifle-impulse 90ms ease-out;
+  animation: rifle-impulse 105ms ease-out;
+}
+
+body.rifle-recovering:not(.warp-preview) #reticle {
+  transform: translate(-50%, -50%) scale(calc(var(--reticle-scale) * 1.035));
+}
+
+body.rifle-recovering:not(.warp-preview) .reticle-ring {
+  width: 20px;
+  height: 20px;
 }
 
 @keyframes rifle-impulse {
-  0% { opacity: .9; }
+  0% { opacity: .95; }
   100% { opacity: 0; }
 }
 
@@ -317,8 +340,8 @@ body.gamepad-active #capture-hint {
 
   #stop-short-readout {
     bottom: 126px;
-    width: min(360px, calc(100vw - 24px));
+    width: min(340px, calc(100vw - 24px));
   }
 
-  #stop-short-readout strong { font-size: 35px; }
+  #stop-short-readout strong { font-size: 34px; }
 }
