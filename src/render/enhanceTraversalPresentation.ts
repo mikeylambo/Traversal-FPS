@@ -149,13 +149,10 @@ export function enhanceTraversalPresentation(game: object, settings: TraversalSe
     state.enemies.push({ spec, mesh, base: mesh.position.clone(), alive: true });
   };
 
-  // Replace the old generic burst with a readable matter -> coordinate resolve.
   state.addKillFx = (position: THREE.Vector3, kind: EnemySpec["kind"]) => {
     targetResolve.resolve(position, kind);
   };
 
-  // The live WarpSystem still owns gameplay geometry. This brighter pass makes the
-  // creation event visible, then hands off to the persistent selectable vector.
   const originalWarpWrite = state.warp.write.bind(state.warp);
   state.warp.write = (origin: THREE.Vector3, target: THREE.Vector3) => {
     targetResolve.write(origin, target);
@@ -256,7 +253,6 @@ function addRoomEnvironment(state: RuntimeState, rendering: VectorRendering, ind
     return mesh;
   };
 
-  // Calibration gates establish scale and keep every puzzle visually authored.
   const gatePositions = index === 0 ? [maxZ + 1.5, midZ, minZ - 1.5] : [maxZ + 1.2, midZ, minZ - 1.2];
   gatePositions.forEach((z, gateIndex) => {
     const height = 6.2 + ((index + gateIndex) % 3) * 0.7;
@@ -273,7 +269,6 @@ function addRoomEnvironment(state: RuntimeState, rendering: VectorRendering, ind
     depthWrite: false
   });
 
-  // Distant coordinate monuments keep the void from feeling empty while preserving clean routes.
   for (let i = 0; i < 5; i += 1) {
     const z = THREE.MathUtils.lerp(maxZ + 4, minZ - 8, i / 4);
     const side = i % 2 === 0 ? -1 : 1;
@@ -286,8 +281,7 @@ function addRoomEnvironment(state: RuntimeState, rendering: VectorRendering, ind
     spine.rotation.z = side * (0.08 + index * 0.012);
   }
 
-  // Thin path-adjacent coordinate hoops make the traversal line feel embedded in a larger machine.
-  const hoopCount = index === 0 ? 4 : 3;
+  const hoopCount: number = index === 0 ? 4 : 3;
   for (let i = 0; i < hoopCount; i += 1) {
     const z = THREE.MathUtils.lerp(maxZ - 2, minZ + 2, hoopCount === 1 ? 0.5 : i / (hoopCount - 1));
     const hoop = new THREE.Mesh(new THREE.TorusGeometry(Math.min(5.2, outerX * 0.72), 0.022, 6, 72), glow.clone());
@@ -297,7 +291,6 @@ function addRoomEnvironment(state: RuntimeState, rendering: VectorRendering, ind
     state.roomRoot.add(hoop);
   }
 
-  // Exit gets a distant concentric echo so goals read as part of the same coordinate system.
   for (let i = 0; i < 3; i += 1) {
     const ring = new THREE.Mesh(new THREE.TorusGeometry(2.15 + i * 0.32, 0.032 - i * 0.006, 6, 64), glow.clone());
     ring.position.set(room.goal[0], room.goal[1], room.goal[2] - 0.45 - i * 0.18);
