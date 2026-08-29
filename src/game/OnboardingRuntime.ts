@@ -85,7 +85,6 @@ export function installOnboardingRuntime(game: object, content: ContentRuntime):
   input.consumeFire = () => {
     const fired = originalFire();
     if (!active()) return fired;
-    // Keep the target intact until the player has physically learned movement/look/crouch.
     return step >= 3 ? fired : false;
   };
 
@@ -121,13 +120,19 @@ export function installOnboardingRuntime(game: object, content: ContentRuntime):
   state.warp.commit = (position: THREE.Vector3) => {
     if (active()) {
       const percent = state.warp.selectionPercent();
-      if (step < 6 || percent >= 95) {
-        if (step >= 5) step = 5;
+      if (step < 5) return false;
+      if (percent >= 95) {
+        step = 5;
         return false;
       }
+      if (step === 5) step = 6;
     }
+
     const committed = originalCommit(position);
-    if (active() && committed && step === 6) advance(7);
+    if (active() && committed && step >= 6) {
+      step = 7;
+      nextAdvanceAt = performance.now();
+    }
     return committed;
   };
 
