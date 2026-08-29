@@ -81,21 +81,21 @@ function updateStopShort(state: RuntimeState): void {
     ? "KILL TARGET → WRITE VECTOR"
     : held
       ? pad
-        ? "LB SHORTER // RB LONGER // RELEASE LT TO COMMIT"
-        : "WHEEL TO PLACE LANDING // RELEASE RMB TO COMMIT"
+        ? "RB SHORTER // LB LONGER // RELEASE LT"
+        : "WHEEL TO PLACE LANDING // RELEASE RMB"
       : pad
-        ? "HOLD LT // CHOOSE LANDING // RELEASE TO COMMIT"
-        : "HOLD RMB // CHOOSE LANDING // RELEASE TO COMMIT";
+        ? "HOLD LT // CHOOSE LANDING // RELEASE"
+        : "HOLD RMB // CHOOSE LANDING // RELEASE";
 
   const warpHint = document.getElementById("warp-hint");
   if (warpHint && hasAnchor) {
     warpHint.textContent = held
       ? pad
-        ? "LB / RB TO PLACE LANDING // RELEASE LT"
+        ? "RB SHORTER // LB LONGER // RELEASE LT"
         : "WHEEL TO PLACE LANDING // RELEASE RMB"
       : pad
-        ? "HOLD LT TO PREVIEW THE LANDING POINT"
-        : "HOLD RMB TO PREVIEW THE LANDING POINT";
+        ? "HOLD LT TO PREVIEW LANDING"
+        : "HOLD RMB TO PREVIEW LANDING";
   }
 }
 
@@ -129,8 +129,6 @@ function emphasizeTrainingStopShort(state: RuntimeState): void {
   if (state.modeId !== "training" || state.roomIndex !== 1) return;
   const tutorial = document.getElementById("tutorial-text");
   const objective = document.getElementById("room-objective");
-  if (tutorial) {
-    tutorial.textContent = "STOP SHORT IS CORE: KILL → HOLD WARP → CHOOSE ANY POINT 12–100% ALONG THE LINE → RELEASE.";
-  }
-  if (objective) objective.textContent = "WRITE VECTOR // LAND BEFORE 100%";
+  if (tutorial) tutorial.textContent = "STOP SHORT: CHOOSE ANY POINT 12–100% ALONG THE VECTOR.";
+  if (objective) objective.textContent = "LAND BEFORE 100%";
 }
