@@ -9,6 +9,7 @@ import {
 } from "@slu/web-shell";
 import { TraversalGame } from "./game/TraversalGame";
 import { TraversalSettingsStore } from "./game/TraversalSettings";
+import { enhanceTraversalMovement } from "./game/MovementPatch";
 import { enhanceTraversalPresentation } from "./render/enhanceTraversalPresentation";
 
 const canvas = document.getElementById("game-canvas") as HTMLCanvasElement | null;
@@ -20,7 +21,7 @@ const rendererAdapter = createThreeStarterAdapter(canvas);
 const app = await createGameApp({
   gameId: "traversal-fps",
   gameName: "Traversal FPS",
-  version: "0.4.1",
+  version: "0.4.2",
   renderer: rendererAdapter,
   root: uiRoot,
   assemblies: [
@@ -137,7 +138,7 @@ app.ui.updateScreen("loadout", {
     {
       id: "continue",
       label: "Warp Rifle",
-      description: "Zero-spread precision rifle. No ammo or reload. Every kill writes one consumable warp vector."
+      description: "Zero-spread precision rifle. Space jumps; Ctrl/C crouches. Every kill writes one consumable warp vector."
     }
   ]
 });
@@ -148,22 +149,24 @@ app.ui.updateScreen("stage-select", {
     {
       id: "stage-01",
       label: "Platforms 01–05",
-      description: "Five linked traversal problems. ROOM 01 is the active rendering lookdev target."
+      description: "Five linked traversal problems. The current slice now supports jump, crouch, walls, and low-clearance spaces."
     }
   ]
 });
 
 const game = new TraversalGame(canvas, app.shell, app.flow, app.ui, traversalSettings);
+enhanceTraversalMovement(game);
 enhanceTraversalPresentation(game, traversalSettings);
 game.start();
 
 console.info("Traversal FPS ready", {
   shellVersion: "1.0.2+settings+mode-replace",
   shellCommit: "d45d5b89b56eb65cf10cc25ef3a89595d63f6b3f",
-  gameVersion: "0.4.1",
-  renderTarget: "ROOM 01 / Vector Surface",
+  gameVersion: "0.4.2",
+  renderTarget: "Vector Surface",
   typography: "Rajdhani / Sora",
   starfield: "shader-twinkle",
+  movement: "run + jump + crouch + warp",
   mobileControls: true,
   assemblies: app.composer.listAssemblies()
 });
