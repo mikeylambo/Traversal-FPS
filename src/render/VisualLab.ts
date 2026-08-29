@@ -14,7 +14,8 @@ const sliderConfig: Array<{
   { key: "energyStrength", id: "look-energy", min: 0.3, max: 2.5, step: 0.05, format: (v) => v.toFixed(2) },
   { key: "fogDensity", id: "look-fog", min: 0.002, max: 0.03, step: 0.0005, format: (v) => v.toFixed(4) },
   { key: "bloomStrength", id: "look-bloom", min: 0, max: 2.2, step: 0.05, format: (v) => v.toFixed(2) },
-  { key: "exposure", id: "look-exposure", min: 0.65, max: 2, step: 0.05, format: (v) => v.toFixed(2) }
+  { key: "exposure", id: "look-exposure", min: 0.65, max: 2, step: 0.05, format: (v) => v.toFixed(2) },
+  { key: "starTwinkle", id: "look-stars", min: 0, max: 1.5, step: 0.05, format: (v) => v.toFixed(2) }
 ];
 
 export class VisualLab {
