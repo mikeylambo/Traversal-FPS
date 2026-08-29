@@ -1,0 +1,324 @@
+/* Gameplay clarity + weight pass ------------------------------------------------ */
+
+#room-objective,
+#run-stats {
+  font-size: clamp(13px, 1vw, 18px) !important;
+  line-height: 1.15;
+  font-weight: 600;
+  letter-spacing: .09em;
+  opacity: .9 !important;
+}
+
+#run-primary {
+  font-size: clamp(30px, 2.5vw, 46px) !important;
+}
+
+#warp-percent {
+  font-size: 22px;
+  letter-spacing: .04em;
+}
+
+#warp-hint {
+  font-size: 12px !important;
+  font-weight: 700;
+  letter-spacing: .11em !important;
+  opacity: .82 !important;
+}
+
+#stop-short-readout {
+  position: fixed;
+  left: 50%;
+  bottom: 132px;
+  z-index: 34;
+  width: min(430px, calc(100vw - 36px));
+  padding: 10px 18px 11px;
+  transform: translate(-50%, 12px);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: 1px 16px;
+  color: #dffbff;
+  border: 1px solid color-mix(in srgb, var(--hud-accent, #69e7ff) 46%, transparent);
+  background: linear-gradient(110deg, rgba(3, 15, 26, .94), rgba(6, 25, 39, .78));
+  clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+  box-shadow: 0 16px 44px rgba(0, 0, 0, .34), inset 3px 0 0 color-mix(in srgb, var(--hud-accent, #69e7ff) 72%, white);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .16s ease, transform .16s ease, border-color .16s ease;
+}
+
+#stop-short-readout.visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+#stop-short-readout > span,
+#shot-budget-readout > span {
+  font-family: "Sora", sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .18em;
+  opacity: .66;
+}
+
+#stop-short-readout strong {
+  grid-row: 1 / 3;
+  grid-column: 2;
+  font-family: "Rajdhani", sans-serif;
+  font-size: 42px;
+  line-height: .86;
+  letter-spacing: -.025em;
+}
+
+#stop-short-readout em,
+#shot-budget-readout em {
+  font-family: "Rajdhani", sans-serif;
+  font-style: normal;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: .08em;
+}
+
+#stop-short-readout small {
+  grid-column: 1 / -1;
+  margin-top: 5px;
+  font-family: "Sora", sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  opacity: .7;
+}
+
+#stop-short-readout.placing {
+  border-color: color-mix(in srgb, var(--hud-accent, #69e7ff) 84%, white);
+}
+
+#stop-short-readout.short {
+  box-shadow: 0 16px 54px rgba(0, 0, 0, .4),
+    0 0 24px color-mix(in srgb, var(--hud-accent, #69e7ff) 16%, transparent),
+    inset 4px 0 0 #ecffff;
+}
+
+#stop-short-readout.short strong,
+#stop-short-readout.short em {
+  text-shadow: 0 0 18px color-mix(in srgb, var(--hud-accent, #69e7ff) 70%, transparent);
+}
+
+#shot-budget-readout {
+  position: fixed;
+  right: 32px;
+  top: 150px;
+  z-index: 34;
+  width: 286px;
+  padding: 12px 15px 13px;
+  background: rgba(7, 15, 24, .88);
+  border: 1px solid rgba(255, 202, 104, .5);
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+  opacity: 0;
+  transform: translateX(12px);
+  pointer-events: none;
+  transition: opacity .15s ease, transform .15s ease;
+}
+
+#shot-budget-readout.visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+#shot-budget-readout strong {
+  display: block;
+  margin: 2px 0 0;
+  font-family: "Rajdhani", sans-serif;
+  font-size: 31px;
+  line-height: 1;
+  letter-spacing: .02em;
+  color: #fff3c6;
+}
+
+#shot-budget-readout em {
+  display: block;
+  margin-top: 4px;
+  color: #ffd77c;
+  font-size: 13px;
+}
+
+#shot-budget-pips {
+  display: flex;
+  gap: 5px;
+  margin-top: 9px;
+}
+
+#shot-budget-pips i {
+  height: 4px;
+  flex: 1;
+  background: #ffd36c;
+  box-shadow: 0 0 9px rgba(255, 211, 108, .35);
+}
+
+#shot-budget-pips i.spent {
+  background: rgba(255, 255, 255, .12);
+  box-shadow: none;
+}
+
+#shot-budget-readout.danger {
+  border-color: rgba(255, 93, 113, .82);
+  animation: shot-budget-danger .72s ease-in-out infinite alternate;
+}
+
+@keyframes shot-budget-danger {
+  to { box-shadow: 0 0 24px rgba(255, 83, 105, .25); }
+}
+
+/* Rifle impulse. Kept brief so it adds mass without blinding the aiming task. */
+#game::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 24;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(circle at 64% 62%, rgba(213, 252, 255, .14), transparent 16%);
+}
+
+body.rifle-fired #game::after {
+  animation: rifle-impulse 90ms ease-out;
+}
+
+@keyframes rifle-impulse {
+  0% { opacity: .9; }
+  100% { opacity: 0; }
+}
+
+body.gamepad-active #capture-hint {
+  display: none !important;
+}
+
+/* Sector/course transitions ----------------------------------------------------- */
+#sector-transition {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  pointer-events: none;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  color: #e8fcff;
+  background: rgba(1, 6, 12, 0);
+  opacity: 0;
+}
+
+#sector-transition::before,
+#sector-transition::after {
+  content: "";
+  position: absolute;
+  left: -8vw;
+  width: 116vw;
+  height: 51vh;
+  background: #020810;
+  transition: transform .55s cubic-bezier(.7, 0, .2, 1);
+}
+
+#sector-transition::before { top: 0; transform: translateY(-105%); }
+#sector-transition::after { bottom: 0; transform: translateY(105%); }
+
+#sector-transition.show {
+  opacity: 1;
+  animation: transition-shell 2.1s linear forwards;
+}
+
+#sector-transition.show::before,
+#sector-transition.show::after { transform: translateY(0); }
+
+.sector-transition-grid {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  opacity: .16;
+  background-image:
+    linear-gradient(rgba(105, 231, 255, .18) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(105, 231, 255, .18) 1px, transparent 1px);
+  background-size: 44px 44px;
+  transform: perspective(500px) rotateX(58deg) scale(1.8);
+}
+
+.sector-transition-line {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  z-index: 2;
+  width: 100%;
+  height: 2px;
+  transform: scaleX(0);
+  background: linear-gradient(90deg, transparent, var(--hud-accent, #69e7ff), white, var(--hud-accent, #69e7ff), transparent);
+  box-shadow: 0 0 20px var(--hud-accent, #69e7ff);
+}
+
+#sector-transition.show .sector-transition-line {
+  animation: sector-line 1.25s .28s cubic-bezier(.2, .8, .2, 1) forwards;
+}
+
+.sector-transition-copy {
+  position: relative;
+  z-index: 3;
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+#sector-transition.show .sector-transition-copy {
+  animation: sector-copy 1.55s .28s ease forwards;
+}
+
+.sector-transition-copy span,
+.sector-transition-copy em {
+  font-family: "Sora", sans-serif;
+  font-style: normal;
+  font-size: clamp(9px, .75vw, 12px);
+  font-weight: 600;
+  letter-spacing: .22em;
+  opacity: .68;
+}
+
+.sector-transition-copy strong {
+  margin: 7px 0 5px;
+  font-family: "Rajdhani", sans-serif;
+  font-size: clamp(44px, 7vw, 94px);
+  line-height: .9;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  text-shadow: 0 0 32px color-mix(in srgb, var(--hud-accent, #69e7ff) 28%, transparent);
+}
+
+@keyframes transition-shell {
+  0%, 100% { opacity: 0; }
+  8%, 84% { opacity: 1; }
+}
+
+@keyframes sector-line {
+  0% { transform: scaleX(0); opacity: 0; }
+  34% { transform: scaleX(1); opacity: 1; }
+  100% { transform: scaleX(.24); opacity: .18; }
+}
+
+@keyframes sector-copy {
+  0% { opacity: 0; transform: translateY(12px); filter: blur(5px); }
+  18%, 72% { opacity: 1; transform: translateY(0); filter: blur(0); }
+  100% { opacity: 0; transform: translateY(-8px); }
+}
+
+@media (max-width: 760px) {
+  #shot-budget-readout {
+    top: 116px;
+    right: 12px;
+    width: 220px;
+  }
+
+  #stop-short-readout {
+    bottom: 126px;
+    width: min(360px, calc(100vw - 24px));
+  }
+
+  #stop-short-readout strong { font-size: 35px; }
+}
