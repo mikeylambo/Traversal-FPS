@@ -25,7 +25,7 @@ export const MAP_02_FIELD: RoomSpec[] = [
       { id: "timing-drift-a", kind: "drifter", position: [-4, 6, -47], drift: { axis: "x", amplitude: 10, speed: 0.68 } },
       { id: "timing-high", kind: "sentry", position: [0, 7.2, -58] },
       { id: "timing-drift-b", kind: "drifter", position: [8, 4.5, -78], drift: { axis: "x", amplitude: 7, speed: 0.92 } },
-      { id: "timing-final", kind: "sentry", position: [0, 3.2, -101] },
+      { id: "timing-final", kind: "sentry", position: [0, 3.2, -119] },
       { id: "timing-alt", kind: "drifter", position: [-10, 6.2, -94], drift: { axis: "y", amplitude: 2.4, speed: 1.05 } }
     ],
     hazards: [
@@ -170,7 +170,7 @@ export const MAP_02_COURSE: RoomSpec[] = [
     enemies: [
       { id: "m2-final-left", kind: "drifter", position: [-2, 5, -14], drift: { axis: "x", amplitude: 7, speed: 0.82 } },
       { id: "m2-final-right", kind: "sentry", position: [8, 4.2, -25] },
-      { id: "m2-final-exit", kind: "sentry", position: [0, 3.2, -38] }
+      { id: "m2-final-exit", kind: "sentry", position: [0, 3.2, -50] }
     ],
     hazards: [
       {
