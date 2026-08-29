@@ -12,6 +12,7 @@ export interface ContentRuntime {
   activeRooms(): RoomSpec[];
   activeParKills(): number;
   setSelectedMap(id: string): void;
+  reloadSelected(): void;
   setTrainingPath(path: TrainingPath): void;
   enterGrammar(): void;
 }
@@ -51,10 +52,12 @@ export function installContentRuntime(shell: any): ContentRuntime {
     return structuredClone(map?.courseRooms ?? []) as RoomSpec[];
   };
 
-  shell.events.on("level:loaded", () => {
+  const reloadSelected = () => {
     const next = selectRooms();
     ROOMS.splice(0, ROOMS.length, ...next);
-  });
+  };
+
+  shell.events.on("level:loaded", reloadSelected);
 
   return {
     selectedContentId: () => activeId,
@@ -65,6 +68,7 @@ export function installContentRuntime(shell: any): ContentRuntime {
       const map = CAMPAIGN_MAPS.find((entry) => entry.id === id);
       if (map?.implemented) selectedMapId = id;
     },
+    reloadSelected,
     setTrainingPath(path: TrainingPath) {
       selectedTrainingPath = path;
     },
