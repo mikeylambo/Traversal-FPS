@@ -20,6 +20,7 @@ type RuntimeState = {
   camera: THREE.PerspectiveCamera;
   input: MovementInput;
   roomIndex: number;
+  roomRestarts: number;
   yaw: number;
   velocityY: number;
   airGraceUntil: number;
@@ -131,9 +132,8 @@ export function enhanceTraversalMovement(game: object): void {
     document.body.classList.toggle("airborne", !grounded);
 
     if (state.camera.position.y < -9.5) {
-      // Preserve the existing room reset behavior by falling through the same threshold.
-      // The core update notices this state on its next movement tick through loadRoom logic.
-      state.camera.position.y = -10;
+      state.roomRestarts += 1;
+      state.loadRoom(state.roomIndex);
     }
   };
 }
