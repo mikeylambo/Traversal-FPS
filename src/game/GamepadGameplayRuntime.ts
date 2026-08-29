@@ -36,8 +36,9 @@ const BASE_LOOK_Y = 13.5;
 
 /**
  * The Shell owns menu-pad navigation. Traversal owns gameplay-pad input.
- * Right-stick tuning follows a familiar FPS shape: separate horizontal/vertical
- * sensitivity, configurable center deadzone, and extra acceleration near full deflection.
+ * The right stick is precision-biased near center with acceleration reserved for
+ * the outer edge, so small corrections stay immediate while full-stick turns
+ * still have enough authority for an FPS.
  */
 export function installGamepadGameplay(game: object, settings: TraversalSettingsStore): void {
   const state = game as unknown as RuntimeState;
@@ -64,7 +65,10 @@ export function installGamepadGameplay(game: object, settings: TraversalSettings
     frame = pollGamepad(dt, previousButtons, previousWarp, adjustRepeatAt, settings);
     previousButtons = currentButtons();
     previousWarp = frame.warpHeld;
-    if (frame.wheelDelta !== 0) adjustRepeatAt = performance.now() + 105;
+    if (frame.wheelDelta !== 0) {
+      adjustRepeatAt = performance.now() + 82;
+      rumbleLandingAdjustment();
+    }
     document.body.classList.toggle("gamepad-active", hasStandardGamepad());
     if (frame.scopePressed) {
       window.dispatchEvent(new CustomEvent("traversal:scope-toggle", { detail: { source: "gamepad" } }));
@@ -119,12 +123,11 @@ function pollGamepad(
     aim.controllerLookAcceleration
   );
 
-  const fireHeld = buttonValue(pad, 7) > 0.55;
+  const fireHeld = buttonValue(pad, 7) > 0.45;
   const previousFire = previousButtons[7] ?? false;
-  const warpHeld = buttonValue(pad, 6) > 0.42;
+  const warpHeld = buttonValue(pad, 6) > 0.32;
 
-  // RB shortens; LB extends. This mirrors the player's sense of pulling the
-  // destination back with the right hand and opening the line with the left.
+  // RB pulls the landing point back; LB extends it toward the written endpoint.
   const shorten = buttons[5] ?? false;
   const extend = buttons[4] ?? false;
   const now = performance.now();
@@ -156,8 +159,8 @@ function pollGamepad(
 }
 
 function sensitivityScale(setting: number): number {
-  // 5 reproduces the previous default. 1 remains deliberately usable; 10 gives
-  // a fast-turn ceiling without making the middle settings jump dramatically.
+  // 5 reproduces the original nominal turn rate while 1–10 retains a familiar
+  // console-FPS tuning range.
   return 0.35 + Math.max(1, Math.min(10, setting)) * 0.13;
 }
 
@@ -175,10 +178,14 @@ function curveLookAxis(value: number, deadzone: number, acceleration: number): n
   if (magnitude <= dz) return 0;
 
   const normalized = Math.min(1, (magnitude - dz) / (1 - dz));
-  const base = normalized * normalized * (3 - 2 * normalized);
-  const outer = Math.pow(normalized, 4.5);
-  const accelBoost = 1 + Math.max(0, Math.min(5, acceleration)) * 0.1 * outer;
-  return Math.sign(value) * Math.min(1.45, base * accelBoost);
+
+  // A soft power curve keeps micro-aim precise without the near-center stall of
+  // smoothstep. Acceleration only arrives near the outer 28% of stick travel.
+  const precision = Math.pow(normalized, 1.35);
+  const outer = Math.max(0, Math.min(1, (normalized - 0.72) / 0.28));
+  const outerEase = outer * outer * (3 - 2 * outer);
+  const accelBoost = 1 + Math.max(0, Math.min(5, acceleration)) * 0.11 * outerEase;
+  return Math.sign(value) * Math.min(1.55, precision * accelBoost);
 }
 
 function activeGamepad(): Gamepad | null {
@@ -202,6 +209,24 @@ function currentButtons(): boolean[] {
 function buttonValue(pad: Gamepad, index: number): number {
   const button = pad.buttons[index];
   return button ? Math.max(button.value, button.pressed ? 1 : 0) : 0;
+}
+
+function rumbleLandingAdjustment(): void {
+  try {
+    const pad = activeGamepad() as (Gamepad & {
+      vibrationActuator?: {
+        playEffect?: (type: string, params: Record<string, number>) => Promise<unknown>;
+      };
+    }) | null;
+    void pad?.vibrationActuator?.playEffect?.("dual-rumble", {
+      duration: 24,
+      strongMagnitude: 0.05,
+      weakMagnitude: 0.16,
+      startDelay: 0
+    });
+  } catch {
+    // Selection haptics are optional.
+  }
 }
 
 function emptyFrame(): PadFrame {
