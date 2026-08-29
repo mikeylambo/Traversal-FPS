@@ -57,6 +57,11 @@ export class WarpSystem {
     this.refreshLiveVector();
   }
 
+  setSelectionFraction(fraction: number): void {
+    if (!this.anchor) return;
+    this.fraction = THREE.MathUtils.clamp(fraction, 0.12, 1);
+  }
+
   updateSelection(isHeld: boolean, wheelDelta: number, timeSeconds = 0): void {
     if (!this.anchor) return;
     if (isHeld && wheelDelta !== 0) {
