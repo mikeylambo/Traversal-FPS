@@ -637,8 +637,8 @@ export class TraversalGame {
       resultChoices = [
         {
           id: "result-score",
-          label: `Run Score // ${score.toLocaleString()}`,
-          description: "Time + route discipline + shots fired + restarts",
+          label: `Route Score // ${score.toLocaleString()}`,
+          description: "Route discipline + shots fired + restarts",
           disabled: true
         },
         {
@@ -704,9 +704,8 @@ export class TraversalGame {
       this.extraKills() * this.extraKillPenaltySeconds;
   }
 
-  private runScore(elapsed: number): number {
-    const cost = elapsed * 20 +
-      this.extraKills() * 350 +
+  private runScore(_elapsed: number): number {
+    const cost = this.extraKills() * 350 +
       this.wastedShots() * 55 +
       this.roomRestarts * 250;
     return Math.max(0, Math.round(12000 - cost));
@@ -864,7 +863,7 @@ export class TraversalGame {
       runPrimary.textContent = this.formatTime(elapsed + penalty);
       stats.textContent = `RAW ${this.formatTime(elapsed)} // PEN +${penalty.toFixed(2)}S // ${this.shots} SHOTS`;
     } else if (this.scoreFocus) {
-      runPrimary.textContent = `SCORE ${this.runScore(elapsed).toLocaleString()}`;
+      runPrimary.textContent = `ROUTE SCORE ${this.runScore(elapsed).toLocaleString()}`;
       stats.textContent = `${this.formatTime(elapsed)} // ${this.totalKills} KILLS // ${this.shots} SHOTS // ${this.warps} WARPS`;
     } else if (this.modeId === "challenge") {
       runPrimary.textContent = `CLEAN ${this.roomKills}/${room.requiredKills}`;
@@ -1118,29 +1117,23 @@ export class TraversalGame {
       const osc = context.createOscillator();
       const gain = context.createGain();
       const shellSettings = this.shell.settings.snapshot();
-      const mix = Math.max(0, Number(shellSettings.masterVolume ?? 1)) *
-        Math.max(0, Number(shellSettings.sfxVolume ?? 0.9));
+      const master = shellSettings.masterVolume ?? 1;
+      const sfx = shellSettings.sfxVolume ?? 1;
 
       osc.type = type;
-      osc.frequency.setValueAtTime(Math.max(1, startFrequency), start);
+      osc.frequency.setValueAtTime(startFrequency, start);
       osc.frequency.exponentialRampToValueAtTime(
-        Math.max(1, endFrequency),
+        Math.max(20, endFrequency),
         start + duration
       );
-      gain.gain.setValueAtTime(
-        Math.max(0.0001, volume * mix),
-        start
-      );
-      gain.gain.exponentialRampToValueAtTime(
-        0.0001,
-        start + duration
-      );
-
-      osc.connect(gain).connect(context.destination);
+      gain.gain.setValueAtTime(Math.max(0.0001, volume * master * sfx), start);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+      osc.connect(gain);
+      gain.connect(context.destination);
       osc.start(start);
       osc.stop(start + duration + 0.01);
     } catch {
-      // Audio presentation must never affect gameplay.
+      // Audio is non-critical for boot.
     }
   }
 
@@ -1154,8 +1147,7 @@ export class TraversalGame {
       this.audioContext ??= new AudioContext();
       const context = this.audioContext;
       if (context.state === "suspended") void context.resume();
-
-      const length = Math.max(1, Math.floor(context.sampleRate * duration));
+      const length = Math.max(64, Math.floor(context.sampleRate * duration));
       const buffer = context.createBuffer(1, length, context.sampleRate);
       const data = buffer.getChannelData(0);
       for (let i = 0; i < length; i += 1) {
@@ -1167,39 +1159,33 @@ export class TraversalGame {
       const filter = context.createBiquadFilter();
       const gain = context.createGain();
       const shellSettings = this.shell.settings.snapshot();
-      const mix = Math.max(0, Number(shellSettings.masterVolume ?? 1)) *
-        Math.max(0, Number(shellSettings.sfxVolume ?? 0.9));
+      const master = shellSettings.masterVolume ?? 1;
+      const sfx = shellSettings.sfxVolume ?? 1;
 
       filter.type = type;
       filter.frequency.value = frequency;
-      filter.Q.value = type === "bandpass" ? 0.9 : 0.45;
-      gain.gain.setValueAtTime(
-        Math.max(0.0001, volume * mix),
-        context.currentTime
-      );
-      gain.gain.exponentialRampToValueAtTime(
-        0.0001,
-        context.currentTime + duration
-      );
-
+      filter.Q.value = type === "bandpass" ? 1.1 : 0.4;
+      gain.gain.value = volume * master * sfx;
       source.buffer = buffer;
-      source.connect(filter).connect(gain).connect(context.destination);
+      source.connect(filter);
+      filter.connect(gain);
+      gain.connect(context.destination);
       source.start();
     } catch {
-      // Audio presentation must never affect gameplay.
+      // Audio is non-critical for gameplay.
     }
   }
 
   private formatTime(seconds: number): string {
     const minutes = Math.floor(seconds / 60);
-    const remainder = seconds - minutes * 60;
-    return `${String(minutes).padStart(2, "0")}:${remainder.toFixed(2).padStart(5, "0")}`;
+    const secs = seconds - minutes * 60;
+    return `${String(minutes).padStart(2, "0")}:${secs.toFixed(2).padStart(5, "0")}`;
   }
 
   private resize(): void {
-    const width = window.innerWidth;
-    const height = window.innerHeight;
-    this.camera.aspect = width / Math.max(height, 1);
+    const width = this.canvas.clientWidth || window.innerWidth;
+    const height = this.canvas.clientHeight || window.innerHeight;
+    this.camera.aspect = width / Math.max(1, height);
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(width, height, false);
   }
