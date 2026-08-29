@@ -1,3 +1,4 @@
+import { CAMPAIGN_MAPS } from "../world/campaign";
 import { ROOMS } from "../world/stages";
 import type { ContentRuntime } from "./ContentRuntime";
 
@@ -26,7 +27,7 @@ type RuntimeState = {
   };
 };
 
-/** Keeps scoring/results in sync and lets Campaign read as a continuous sector instead of a test chamber. */
+/** Keeps dynamic content/results in sync and lets Campaign read as a place, not a test chamber. */
 export function enhanceGrammarRuntime(game: object, content: ContentRuntime): void {
   const state = game as unknown as RuntimeState;
 
@@ -47,13 +48,10 @@ export function enhanceGrammarRuntime(game: object, content: ContentRuntime): vo
     const roomLabel = document.getElementById("room-label");
     const roomObjective = document.getElementById("room-objective");
     const tutorialCard = document.getElementById("tutorial-card");
-    const modeLabel = document.getElementById("mode-label");
+    const map = CAMPAIGN_MAPS.find((entry) => entry.id === content.selectedContentId());
 
-    if (roomLabel) roomLabel.textContent = "SECTOR 01 // THE SPAN";
-    if (roomObjective && room) {
-      roomObjective.textContent = `NODES RESOLVED ${state.roomKills}/${room.requiredKills} // FIND THE EXIT`;
-    }
-    if (modeLabel) modeLabel.textContent = "CAMPAIGN // DIMENSIONAL CONSTRUCT";
+    if (roomLabel) roomLabel.textContent = map?.label ?? room?.title ?? "CAMPAIGN";
+    if (roomObjective && room) roomObjective.textContent = `${state.roomKills}/${room.requiredKills} SPHERES`;
     tutorialCard?.classList.remove("visible");
   };
 
@@ -83,40 +81,55 @@ function rewriteResults(
   const extraKills = Math.max(0, state.totalKills - par);
   const wasted = state.wastedShots();
   const contentId = content.selectedContentId();
+  const campaign = content.activeForm() === "campaign-field";
+  const map = CAMPAIGN_MAPS.find((entry) => entry.id === contentId);
 
   let subtitle = typeof payload.subtitle === "string" ? payload.subtitle : "";
   if (contentId === "training") {
     subtitle = subtitle.replace("Five rooms cleared", `${ROOMS.length} rooms cleared`);
-  } else if (content.activeForm() === "campaign-field") {
-    subtitle = `SECTOR CLEARED · ${contentId.toUpperCase()} · ${state.modeLabel}`;
+  } else if (campaign) {
+    subtitle = map?.label ?? "Sector Cleared";
   } else {
     subtitle = `${subtitle} · ${contentId.toUpperCase()}`;
   }
 
-  const choices = Array.isArray(payload.choices)
-    ? (payload.choices as ResultChoice[]).map((choice) => {
-        if (choice.id === "result-shots") {
-          return {
-            ...choice,
-            description: state.modeId === "challenge"
-              ? `${wasted} non-kill shots · one miss allowance per chamber`
-              : state.modeId === "time-trial"
-                ? `${wasted} non-kill shots · +${extraShots} over theoretical minimum`
-                : `${par} theoretical minimum · +${extraShots} over`
-          };
-        }
-        if (choice.id === "result-kills") {
-          return { ...choice, description: `${par} is the minimum route` };
-        }
-        if (choice.id === "result-route" && state.modeId !== "challenge") {
-          return {
-            ...choice,
-            description: `${state.totalKills} kills · ${par} minimum · +${extraKills} extra`
-          };
-        }
-        return choice;
-      })
-    : payload.choices;
+  const sourceChoices = Array.isArray(payload.choices)
+    ? payload.choices as ResultChoice[]
+    : [];
 
-  return { ...payload, subtitle, choices };
+  const choices = sourceChoices
+    .filter((choice) => !(campaign && choice.id === "result-score"))
+    .map((choice) => {
+      if (campaign && choice.id === "result-route") {
+        return {
+          ...choice,
+          label: `Spheres // ${state.totalKills}`,
+          description: `${par} required`
+        };
+      }
+      if (choice.id === "result-shots") {
+        return {
+          ...choice,
+          description: state.modeId === "challenge"
+            ? `${wasted} non-kill shots · one miss allowance per chamber`
+            : state.modeId === "time-trial"
+              ? `${wasted} non-kill shots · +${extraShots} over theoretical minimum`
+              : campaign
+                ? `${wasted} non-kill shots`
+                : `${par} theoretical minimum · +${extraShots} over`
+        };
+      }
+      if (choice.id === "result-kills") {
+        return { ...choice, description: `${par} is the minimum route` };
+      }
+      if (choice.id === "result-route" && state.modeId !== "challenge") {
+        return {
+          ...choice,
+          description: `${state.totalKills} kills · ${par} minimum · +${extraKills} extra`
+        };
+      }
+      return choice;
+    });
+
+  return { ...payload, subtitle, choices: Array.isArray(payload.choices) ? choices : payload.choices };
 }
