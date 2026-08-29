@@ -47,10 +47,14 @@ export function enhanceGrammarRuntime(game: object, content: ContentRuntime): vo
     const room = ROOMS[state.roomIndex];
     const roomLabel = document.getElementById("room-label");
     const roomObjective = document.getElementById("room-objective");
+    const missionEyebrow = document.getElementById("mission-eyebrow");
     const tutorialCard = document.getElementById("tutorial-card");
     const map = CAMPAIGN_MAPS.find((entry) => entry.id === content.selectedContentId());
+    const sectorNumber = map?.id.match(/(\d+)/)?.[1]?.padStart(2, "0") ?? "01";
+    const mapTitle = map?.label.replace(/^SECTOR \d+ \/\/ /, "") ?? room?.title ?? "CAMPAIGN";
 
-    if (roomLabel) roomLabel.textContent = map?.label ?? room?.title ?? "CAMPAIGN";
+    if (missionEyebrow) missionEyebrow.textContent = `SECTOR ${sectorNumber}`;
+    if (roomLabel) roomLabel.textContent = mapTitle;
     if (roomObjective && room) roomObjective.textContent = `${state.roomKills}/${room.requiredKills} SPHERES`;
     tutorialCard?.classList.remove("visible");
   };
