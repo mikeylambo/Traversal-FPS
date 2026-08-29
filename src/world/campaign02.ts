@@ -141,7 +141,7 @@ export const MAP_02_COURSE: RoomSpec[] = [
     ],
     enemies: [
       { id: "m2-cross-perch", kind: "sentry", position: [8, 4.2, -9] },
-      { id: "m2-cross-exit", kind: "sentry", position: [8, 4.2, -26] }
+      { id: "m2-cross-exit", kind: "sentry", position: [8, 4.2, -31] }
     ],
     hazards: [
       {
