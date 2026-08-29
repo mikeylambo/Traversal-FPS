@@ -13,6 +13,8 @@ import { TraversalSettingsStore } from "./game/TraversalSettings";
 import { enhanceTraversalMovement } from "./game/MovementPatch";
 import { enhanceTraversalPresentation } from "./render/enhanceTraversalPresentation";
 import { removeCircularEnvironment } from "./render/removeCircularEnvironment";
+import { PUZZLE_GRAMMAR_V1 } from "./world/puzzleGrammar";
+import { ROOMS } from "./world/stages";
 
 const canvas = document.getElementById("game-canvas") as HTMLCanvasElement | null;
 const uiRoot = document.getElementById("ui");
@@ -23,7 +25,7 @@ const rendererAdapter = createThreeStarterAdapter(canvas);
 const app = await createGameApp({
   gameId: "traversal-fps",
   gameName: "Traversal FPS",
-  version: "0.4.2",
+  version: "0.5.0",
   renderer: rendererAdapter,
   root: uiRoot,
   assemblies: [
@@ -140,18 +142,18 @@ app.ui.updateScreen("loadout", {
     {
       id: "continue",
       label: "Warp Rifle",
-      description: "Zero-spread precision rifle. Space jumps; Ctrl/C crouches. Every kill writes one consumable warp vector."
+      description: "Run and crouch for local positioning. No jump: every meaningful gap or elevation change belongs to the Warp Rifle."
     }
   ]
 });
 
 app.ui.updateScreen("stage-select", {
-  title: "Vertical Slice",
+  title: "Puzzle Grammar v1",
   choices: [
     {
       id: "stage-01",
-      label: "Platforms 01–05",
-      description: "Five linked traversal problems. The current slice now supports jump, crouch, walls, and low-clearance spaces."
+      label: "Grammar 01–08",
+      description: "Eight linked revelations: direct anchor, stop-short, airborne chain, firing origin, route choice, low profile, moving endpoint, and reorientation."
     }
   ]
 });
@@ -165,11 +167,14 @@ game.start();
 console.info("Traversal FPS ready", {
   shellVersion: "1.0.2+settings+mode-replace",
   shellCommit: "d45d5b89b56eb65cf10cc25ef3a89595d63f6b3f",
-  gameVersion: "0.4.2",
+  gameVersion: "0.5.0",
   renderTarget: "Vector Surface",
   typography: "Rajdhani / Sora",
   starfield: "shader-twinkle",
-  movement: "run + jump + crouch + warp",
+  movement: "run + crouch + warp",
+  autoStepMeters: 0.38,
+  puzzleGrammar: PUZZLE_GRAMMAR_V1.map((entry) => entry.id),
+  rooms: ROOMS.length,
   mobileControls: true,
   assemblies: app.composer.listAssemblies()
 });
