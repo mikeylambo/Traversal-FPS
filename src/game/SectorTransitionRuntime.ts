@@ -7,6 +7,8 @@ type RuntimeState = {
   loadRoom(index: number): void;
 };
 
+const TITLE_DURATION_MS = 2600;
+
 /** Gives each content family a restrained entrance card. */
 export function installSectorTransitions(game: object, content: ContentRuntime): void {
   const state = game as unknown as RuntimeState;
@@ -68,5 +70,5 @@ function showTransition(
   overlay.classList.add("show");
   window.setTimeout(() => {
     if (overlay.dataset.serial === String(serial)) overlay.classList.remove("show");
-  }, 1550);
+  }, TITLE_DURATION_MS);
 }
