@@ -23,6 +23,12 @@ export interface TraversalSettingsValue {
   visual: TraversalVisualSettings;
 }
 
+let activeStore: TraversalSettingsStore | null = null;
+
+export function activeTraversalSettingsStore(): TraversalSettingsStore | null {
+  return activeStore;
+}
+
 // Canonical ROOM 01 lookdev preset, promoted from the first player-tuned pass.
 export const DEFAULT_VISUAL_SETTINGS: TraversalVisualSettings = {
   toonStrength: 0.91,
@@ -71,6 +77,7 @@ export class TraversalSettingsStore {
 
   constructor() {
     this.value = this.load();
+    activeStore = this;
   }
 
   choices(): SettingChoice[] {
