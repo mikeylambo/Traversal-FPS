@@ -75,20 +75,35 @@ export class WarpSystem {
   updateSelection(isHeld: boolean, wheelDelta: number, timeSeconds = 0): void {
     if (!this.anchor) return;
     if (isHeld && wheelDelta !== 0) {
-      this.fraction = THREE.MathUtils.clamp(this.fraction - wheelDelta * 0.08, 0.12, 1);
+      // Fine enough for puzzle placement, coarse enough that a shoulder tap is meaningful.
+      this.fraction = THREE.MathUtils.clamp(this.fraction - wheelDelta * 0.04, 0.12, 1);
     }
 
+    const selected = this.selectedPoint();
     const lineMaterial = this.line.material as THREE.LineBasicMaterial;
-    lineMaterial.opacity = isHeld ? 1 : 0.78;
-    this.beam.material.opacity = isHeld ? 0.24 : 0.1;
-    this.marker.visible = isHeld;
+    lineMaterial.opacity = isHeld ? 0.42 : 0.78;
+    this.beam.material.opacity = isHeld ? 0.36 : 0.1;
 
+    // The thin line always preserves the full written vector. While placing a
+    // landing, the brighter beam terminates at the selected point. The player can
+    // therefore read both the original endpoint and the route they are actually buying.
+    this.positionBeam(
+      this.beam,
+      this.anchor.origin,
+      isHeld ? selected : this.anchor.target
+    );
+
+    this.marker.visible = isHeld;
     if (isHeld) {
-      const selected = this.selectedPoint();
       this.marker.position.copy(selected);
-      const pulse = 1 + Math.sin(timeSeconds * 11) * 0.12;
-      this.marker.scale.setScalar(pulse);
+      const pulse = 1 + Math.sin(timeSeconds * 11) * 0.1;
+      const shortScale = this.fraction < 0.995 ? 1.16 : 1;
+      this.marker.scale.setScalar(pulse * shortScale);
       this.markerRing.rotation.z = timeSeconds * 1.8;
+
+      const ringMaterial = this.markerRing.material as THREE.MeshBasicMaterial;
+      ringMaterial.color.setHex(this.fraction < 0.995 ? 0xffffff : 0x78f7ff);
+      ringMaterial.opacity = this.fraction < 0.995 ? 1 : 0.9;
     }
   }
 
