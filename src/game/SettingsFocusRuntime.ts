@@ -1,5 +1,9 @@
+import { installSettingsAdjustmentRuntime } from "./SettingsAdjustmentRuntime";
+import { activeTraversalSettingsStore } from "./TraversalSettings";
+
 type FlowLike = {
   onActivate(screenId: string, choiceId: string): void;
+  onBack(screenId: string): void;
 };
 
 type UILike = {
@@ -8,8 +12,8 @@ type UILike = {
 
 /**
  * The pinned Shell rebuilds Settings after every change and resets its internal
- * focus index to zero. Keep the player's selected row stable without forking the
- * verified Shell line used by this project.
+ * focus index to zero. Keep the player's selected row stable, then layer the
+ * Traversal-specific select + left/right adjustment model on top.
  */
 export function installSettingsFocusRetention(
   flow: FlowLike,
@@ -23,6 +27,9 @@ export function installSettingsFocusRetention(
     if (screenId !== "settings") return;
     preserveChoice(choiceId, ui, root);
   };
+
+  const settings = activeTraversalSettingsStore();
+  if (settings) installSettingsAdjustmentRuntime(flow, root, settings);
 }
 
 function preserveChoice(choiceId: string, ui: UILike, root: HTMLElement): void {
