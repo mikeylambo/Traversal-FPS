@@ -11,6 +11,7 @@ import {
 import { TraversalGame } from "./game/TraversalGame";
 import { TraversalSettingsStore } from "./game/TraversalSettings";
 import { enhanceTraversalMovement } from "./game/MovementPatch";
+import { enhanceGrammarRuntime } from "./game/GrammarRuntimePatch";
 import { enhanceTraversalPresentation } from "./render/enhanceTraversalPresentation";
 import { removeCircularEnvironment } from "./render/removeCircularEnvironment";
 import { PUZZLE_GRAMMAR_V1 } from "./world/puzzleGrammar";
@@ -160,6 +161,7 @@ app.ui.updateScreen("stage-select", {
 
 const game = new TraversalGame(canvas, app.shell, app.flow, app.ui, traversalSettings);
 enhanceTraversalMovement(game);
+enhanceGrammarRuntime(game);
 enhanceTraversalPresentation(game, traversalSettings);
 removeCircularEnvironment(game);
 game.start();
