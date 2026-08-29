@@ -1,3 +1,5 @@
+import type { TraversalSettingsStore } from "./TraversalSettings";
+
 type GameplayInput = {
   movement(): { x: number; z: number };
   consumeLook(): { x: number; y: number };
@@ -28,14 +30,16 @@ type PadFrame = {
   scopePressed: boolean;
 };
 
-const DEADZONE = 0.16;
+const MOVE_DEADZONE = 0.16;
+const BASE_LOOK_X = 15.5;
+const BASE_LOOK_Y = 13.5;
 
 /**
  * The Shell owns menu-pad navigation. Traversal owns gameplay-pad input.
- * Keeping these layers separate lets the FPS feel tune independently while
- * preserving one controller from title screen through play.
+ * Right-stick tuning follows a familiar FPS shape: separate horizontal/vertical
+ * sensitivity, configurable center deadzone, and extra acceleration near full deflection.
  */
-export function installGamepadGameplay(game: object): void {
+export function installGamepadGameplay(game: object, settings: TraversalSettingsStore): void {
   const state = game as unknown as RuntimeState;
   const input = state.input;
 
@@ -57,7 +61,7 @@ export function installGamepadGameplay(game: object): void {
 
   const originalUpdate = state.update.bind(game);
   state.update = (dt: number) => {
-    frame = pollGamepad(dt, previousButtons, previousWarp, adjustRepeatAt);
+    frame = pollGamepad(dt, previousButtons, previousWarp, adjustRepeatAt, settings);
     previousButtons = currentButtons();
     previousWarp = frame.warpHeld;
     if (frame.wheelDelta !== 0) adjustRepeatAt = performance.now() + 105;
@@ -93,16 +97,27 @@ function pollGamepad(
   dt: number,
   previousButtons: boolean[],
   previousWarp: boolean,
-  adjustRepeatAt: number
+  adjustRepeatAt: number,
+  settings: TraversalSettingsStore
 ): PadFrame {
   const pad = activeGamepad();
   if (!pad) return emptyFrame();
 
   const buttons = pad.buttons.map((button) => button.pressed || button.value > 0.55);
-  const leftX = curveAxis(pad.axes[0] ?? 0);
-  const leftY = curveAxis(pad.axes[1] ?? 0);
-  const rightX = curveAxis(pad.axes[2] ?? 0);
-  const rightY = curveAxis(pad.axes[3] ?? 0);
+  const leftX = curveMoveAxis(pad.axes[0] ?? 0);
+  const leftY = curveMoveAxis(pad.axes[1] ?? 0);
+
+  const aim = settings.value;
+  const rightX = curveLookAxis(
+    pad.axes[2] ?? 0,
+    aim.controllerRightDeadzone,
+    aim.controllerLookAcceleration
+  );
+  const rightY = curveLookAxis(
+    pad.axes[3] ?? 0,
+    aim.controllerRightDeadzone,
+    aim.controllerLookAcceleration
+  );
 
   const fireHeld = buttonValue(pad, 7) > 0.55;
   const previousFire = previousButtons[7] ?? false;
@@ -121,11 +136,15 @@ function pollGamepad(
     if (newlyPressed || now >= adjustRepeatAt) wheelDelta = shorten ? 1 : -1;
   }
 
+  const frameScale = dt * 60;
+  const horizontalScale = sensitivityScale(aim.controllerSensitivityX);
+  const verticalScale = sensitivityScale(aim.controllerSensitivityY);
+
   return {
     moveX: leftX,
     moveZ: -leftY,
-    lookX: rightX * 15.5 * dt * 60,
-    lookY: rightY * 13.5 * dt * 60,
+    lookX: rightX * BASE_LOOK_X * horizontalScale * frameScale,
+    lookY: rightY * BASE_LOOK_Y * verticalScale * frameScale,
     firePressed: fireHeld && !previousFire,
     crouchHeld: Boolean((buttons[1] ?? false) || (buttons[10] ?? false)),
     warpHeld,
@@ -134,6 +153,32 @@ function pollGamepad(
     resetPressed: Boolean(buttons[2] && !(previousButtons[2] ?? false)),
     scopePressed: Boolean(buttons[11] && !(previousButtons[11] ?? false))
   };
+}
+
+function sensitivityScale(setting: number): number {
+  // 5 reproduces the previous default. 1 remains deliberately usable; 10 gives
+  // a fast-turn ceiling without making the middle settings jump dramatically.
+  return 0.35 + Math.max(1, Math.min(10, setting)) * 0.13;
+}
+
+function curveMoveAxis(value: number): number {
+  const magnitude = Math.abs(value);
+  if (magnitude <= MOVE_DEADZONE) return 0;
+  const normalized = (magnitude - MOVE_DEADZONE) / (1 - MOVE_DEADZONE);
+  const curved = normalized * normalized * (3 - 2 * normalized);
+  return Math.sign(value) * curved;
+}
+
+function curveLookAxis(value: number, deadzone: number, acceleration: number): number {
+  const dz = Math.max(0.02, Math.min(0.28, deadzone));
+  const magnitude = Math.abs(value);
+  if (magnitude <= dz) return 0;
+
+  const normalized = Math.min(1, (magnitude - dz) / (1 - dz));
+  const base = normalized * normalized * (3 - 2 * normalized);
+  const outer = Math.pow(normalized, 4.5);
+  const accelBoost = 1 + Math.max(0, Math.min(5, acceleration)) * 0.1 * outer;
+  return Math.sign(value) * Math.min(1.45, base * accelBoost);
 }
 
 function activeGamepad(): Gamepad | null {
@@ -157,14 +202,6 @@ function currentButtons(): boolean[] {
 function buttonValue(pad: Gamepad, index: number): number {
   const button = pad.buttons[index];
   return button ? Math.max(button.value, button.pressed ? 1 : 0) : 0;
-}
-
-function curveAxis(value: number): number {
-  const magnitude = Math.abs(value);
-  if (magnitude <= DEADZONE) return 0;
-  const normalized = (magnitude - DEADZONE) / (1 - DEADZONE);
-  const curved = normalized * normalized * (3 - 2 * normalized);
-  return Math.sign(value) * curved;
 }
 
 function emptyFrame(): PadFrame {
