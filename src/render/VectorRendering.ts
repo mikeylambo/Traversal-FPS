@@ -59,11 +59,7 @@ const surfaceFragment = /* glsl */`
 
     vec3 base = uBase * (0.28 + lit * 0.82);
     vec3 energy = uAccent * (rim * 0.55 + grid * 0.72 + micro) * uEnergyStrength;
-    vec3 color = base + energy;
-
-    gl_FragColor = vec4(color, 1.0);
-    #include <tonemapping_fragment>
-    #include <colorspace_fragment>
+    gl_FragColor = vec4(base + energy, 1.0);
   }
 `;
 
@@ -98,8 +94,6 @@ const nodeFragment = /* glsl */`
     vec3 color = uColor * (0.48 + facing * 0.44 + fresnel * uRimStrength * 1.35);
     color += uColor * scan * lattice * 0.36 * uEnergyStrength;
     gl_FragColor = vec4(color, 1.0);
-    #include <tonemapping_fragment>
-    #include <colorspace_fragment>
   }
 `;
 
@@ -194,8 +188,6 @@ export class VectorRendering {
   }
 
   clearDisposableMaterials(): void {
-    // Shader materials are tracked for live lookdev. Remove disposed room materials so
-    // long play sessions do not retain old uniforms indefinitely.
     for (let index = this.materials.length - 1; index >= 0; index -= 1) {
       if (this.materials[index]!.userData.disposed === true) this.materials.splice(index, 1);
     }
