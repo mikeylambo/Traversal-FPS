@@ -40,8 +40,16 @@ export const MAP_03_FIELD: RoomSpec[] = [
       { id: "occlusion-origin", kind: "shield", position: [10, 2.2, -3] },
       { id: "occlusion-slot", kind: "sentry", position: [-15, 5.3, -36], radius: 0.52 },
       { id: "occlusion-high", kind: "sentry", position: [16, 6.7, -61], radius: 0.58 },
-      { id: "occlusion-low", kind: "drifter", position: [-5, 3.1, -94], radius: 0.55, drift: { axis: "x", amplitude: 4.5, speed: 0.58 } },
+
+      // Alternate low route. From the high platform the vector crosses the
+      // -84 landing well inside its footprint before continuing beyond it.
+      { id: "occlusion-low", kind: "drifter", position: [-8, 3.1, -92], radius: 0.55, drift: { axis: "x", amplitude: 3, speed: 0.58 } },
+
+      // Higher alternate route lands directly on the -105 platform.
       { id: "occlusion-alt", kind: "drifter", position: [11, 6.1, -105], radius: 0.55, drift: { axis: "y", amplitude: 2.8, speed: 0.72 } },
+
+      // Both late routes converge on a final vector that passes through the
+      // completion platform, making the final Stop Short leg unambiguous.
       { id: "occlusion-final", kind: "sentry", position: [0, 3.2, -140], radius: 0.6 }
     ]
   }
