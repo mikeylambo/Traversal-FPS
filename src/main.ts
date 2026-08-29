@@ -5,6 +5,7 @@ import "./movement.css";
 import "./achievements.css";
 import "./feel-pass.css";
 import "./transition-minimal.css";
+import "./onboarding.css";
 import "./editor/editor.css";
 import {
   createArcadeAssembly,
@@ -22,6 +23,7 @@ import { installGamepadGameplay } from "./game/GamepadGameplayRuntime";
 import { installCombatFeel } from "./game/CombatFeelRuntime";
 import { installGameplayClarity } from "./game/GameplayClarityRuntime";
 import { installSectorTransitions } from "./game/SectorTransitionRuntime";
+import { installOnboardingRuntime } from "./game/OnboardingRuntime";
 import { TraversalProgression, ACHIEVEMENTS } from "./game/Progression";
 import { achievementChoices, installAchievementRuntime } from "./game/AchievementRuntime";
 import { enhanceTraversalPresentation } from "./render/enhanceTraversalPresentation";
@@ -32,18 +34,21 @@ import { installEditorShortcut } from "./editor/EditorShortcutRuntime";
 import { installMapEditorNaming } from "./editor/MapEditorNamingRuntime";
 import { PUZZLE_GRAMMAR_V1 } from "./world/puzzleGrammar";
 import { CAMPAIGN_MAPS } from "./world/campaign";
+import { registerCampaign02 } from "./world/registerCampaign02";
 import { ROOMS } from "./world/stages";
 
 const canvas = document.getElementById("game-canvas") as HTMLCanvasElement | null;
 const uiRoot = document.getElementById("ui");
 if (!canvas || !uiRoot) throw new Error("Traversal FPS boot DOM is incomplete");
 
+registerCampaign02();
+
 const traversalSettings = new TraversalSettingsStore();
 const rendererAdapter = createThreeStarterAdapter(canvas);
 const app = await createGameApp({
   gameId: "traversal-fps",
   gameName: "Traversal FPS",
-  version: "0.8.1",
+  version: "0.9.0",
   renderer: rendererAdapter,
   root: uiRoot,
   assemblies: [
@@ -189,13 +194,22 @@ app.ui.updateScreen("loadout", {
   ]
 });
 
+const trainingChoices = [
+  {
+    id: "training-full",
+    label: "Full Training",
+    description: "Controls + eight traversal lessons."
+  },
+  {
+    id: "training-grammar",
+    label: "Grammar 01–08",
+    description: "Replay the eight traversal lessons."
+  }
+];
+
 app.ui.updateScreen("stage-select", {
   title: "Training",
-  choices: [{
-    id: "training",
-    label: "GRAMMAR 01–08",
-    description: "Eight core traversal lessons."
-  }]
+  choices: trainingChoices
 });
 
 app.ui.updateScreen("credits", {
@@ -206,7 +220,7 @@ app.ui.updateScreen("credits", {
     { id: "credit-tech", label: "Technology // Three.js + SLU Web Game Shell", disabled: true },
     { id: "credit-type", label: "Typography // Rajdhani + Sora", disabled: true },
     { id: "credit-tools", label: "Development Assistance // OpenAI + Anthropic", disabled: true },
-    { id: "credit-build", label: "Build // v0.8.1", description: "Campaign Field Prototype", disabled: true }
+    { id: "credit-build", label: "Build // v0.9.0", description: "Onboarding + Timing Field", disabled: true }
   ]
 });
 
@@ -235,13 +249,10 @@ app.flow.onActivate = (screenId: string, choiceId: string) => {
 
   if (screenId === "mode-select") {
     if (choiceId === "training") {
+      contentRuntime.setTrainingPath("controls");
       app.ui.updateScreen("stage-select", {
         title: "Training",
-        choices: [{
-          id: "training",
-          label: "GRAMMAR 01–08",
-          description: "Direct Anchor through Reorientation."
-        }]
+        choices: trainingChoices
       });
     } else {
       app.ui.updateScreen("stage-select", {
@@ -260,8 +271,10 @@ app.flow.onActivate = (screenId: string, choiceId: string) => {
     }
   }
 
-  if (screenId === "stage-select" && choiceId.startsWith("map-")) {
-    contentRuntime.setSelectedMap(choiceId);
+  if (screenId === "stage-select") {
+    if (choiceId === "training-full") contentRuntime.setTrainingPath("controls");
+    if (choiceId === "training-grammar") contentRuntime.setTrainingPath("grammar");
+    if (choiceId.startsWith("map-")) contentRuntime.setSelectedMap(choiceId);
   }
 
   originalActivate(screenId, choiceId);
@@ -290,13 +303,14 @@ installGamepadGameplay(game);
 installCombatFeel(game);
 installGameplayClarity(game);
 installSectorTransitions(game, contentRuntime);
+installOnboardingRuntime(game, contentRuntime);
 installEditorShortcut();
 game.start();
 
 console.info("Traversal FPS ready", {
   shellVersion: "1.0.2+settings+mode-replace",
   shellCommit: "d45d5b89b56eb65cf10cc25ef3a89595d63f6b3f",
-  gameVersion: "0.8.1",
+  gameVersion: "0.9.0",
   renderTarget: "Vector Surface",
   typography: "Rajdhani / Sora",
   starfield: "shader-twinkle",
@@ -305,7 +319,8 @@ console.info("Traversal FPS ready", {
   rifleCadenceMs: 285,
   autoStepMeters: 0.38,
   puzzleGrammar: PUZZLE_GRAMMAR_V1.map((entry) => entry.id),
-  trainingRooms: ROOMS.length,
+  trainingRooms: 8,
+  onboarding: "action-gated controls // keyboard + controller + touch",
   campaignMaps: CAMPAIGN_MAPS.map((map) => ({
     id: map.id,
     implemented: map.implemented,
@@ -313,7 +328,7 @@ console.info("Traversal FPS ready", {
     courseRooms: map.courseRooms.length
   })),
   achievements: ACHIEVEMENTS.length,
-  hazards: ["lethal-field", "sweep"],
+  hazards: ["lethal-field", "sweep", "sightline-gate"],
   editor: "Map Editor // main menu // F2 // backquote",
   mobileControls: true,
   vrStatus: "future-compatible target; not current production scope",
