@@ -53,7 +53,7 @@ const rendererAdapter = createThreeStarterAdapter(canvas);
 const app = await createGameApp({
   gameId: "traversal-fps",
   gameName: "Traversal FPS",
-  version: "0.11.0",
+  version: "0.11.1",
   renderer: rendererAdapter,
   root: uiRoot,
   assemblies: [
@@ -224,7 +224,7 @@ app.ui.updateScreen("credits", {
     { id: "credit-tech", label: "Technology // Three.js + SLU Web Game Shell", disabled: true },
     { id: "credit-type", label: "Typography // Rajdhani + Sora", disabled: true },
     { id: "credit-tools", label: "Development Assistance // OpenAI + Anthropic", disabled: true },
-    { id: "credit-build", label: "Build // v0.11.0", description: "Campaign Flow", disabled: true }
+    { id: "credit-build", label: "Build // v0.11.1", description: "Campaign Landing + Handoff", disabled: true }
   ]
 });
 
@@ -318,7 +318,7 @@ game.start();
 console.info("Traversal FPS ready", {
   shellVersion: "1.0.2+settings+mode-replace",
   shellCommit: "d45d5b89b56eb65cf10cc25ef3a89595d63f6b3f",
-  gameVersion: "0.11.0",
+  gameVersion: "0.11.1",
   renderTarget: "Vector Surface",
   typography: "Rajdhani / Sora",
   starfield: "shader-twinkle",
@@ -327,7 +327,8 @@ console.info("Traversal FPS ready", {
   controllerAim: "horizontal 1-10 // vertical 1-10 // acceleration 0-5 // scope multiplier // right deadzone",
   scope: "R3 / Q / touch toggle // precision look // 36-48 degree FOV",
   campaignScoring: "no live score // sphere progress + completion stats",
-  campaignFlow: "implemented sectors chain without intermediate menus",
+  campaignFlow: "implemented sectors chain with clear pulse + title cue",
+  landingAssist: "warp arrival cushion + audited campaign sphere vectors",
   settingsFocus: "select row // left-right adjust // selection retained",
   rifleCadenceMs: 320,
   stopShortStepPercent: 4,
