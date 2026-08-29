@@ -3,6 +3,7 @@ import type { TraversalSettingsStore } from "../game/TraversalSettings";
 import type { EnemySpec, PlatformSpec } from "../world/stages";
 import { VectorRendering } from "./VectorRendering";
 import { VisualLab } from "./VisualLab";
+import { TwinklingStarfield } from "./TwinklingStarfield";
 
 const ROOM_ACCENTS = [0x69e7ff, 0xffcf66, 0xff78c8, 0xff9d67, 0xa1ff91];
 
@@ -39,6 +40,10 @@ export function enhanceTraversalPresentation(game: object, settings: TraversalSe
   const rendering = new VectorRendering(state.renderer, state.scene, state.camera);
   const visualLab = new VisualLab(settings);
   const touchCapable = navigator.maxTouchPoints > 0 || matchMedia("(pointer: coarse)").matches;
+  const starfield = new TwinklingStarfield(state.scene, touchCapable ? 520 : 760);
+
+  state.scene.background = new THREE.Color(0x020812);
+  if (state.scene.fog instanceof THREE.FogExp2) state.scene.fog.color.setHex(0x04111d);
 
   if (touchCapable) state.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.35));
   rendering.resize(window.innerWidth, window.innerHeight);
@@ -190,6 +195,7 @@ export function enhanceTraversalPresentation(game: object, settings: TraversalSe
       rendererAny.render = nativeRender;
     }
 
+    starfield.update(dt, settings.value.visual.starTwinkle);
     rendering.update(dt, settings.value.visual);
     rendering.render();
   };
@@ -248,28 +254,4 @@ function addRoomOneLookdev(state: RuntimeState, rendering: VectorRendering): voi
   const gate = new THREE.Mesh(new THREE.TorusGeometry(2.15, 0.055, 8, 64), glow.clone());
   gate.position.set(0, 2.25, -24.2);
   state.roomRoot.add(gate);
-
-  const particles = new THREE.BufferGeometry();
-  const positions: number[] = [];
-  for (let i = 0; i < 150; i += 1) {
-    const t = i * 1.61803398875;
-    positions.push(
-      Math.sin(t * 2.1) * (11 + (i % 7) * 1.7),
-      1.2 + (i % 19) * 0.55,
-      -7 - (i % 31) * 2.7
-    );
-  }
-  particles.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
-  const points = new THREE.Points(
-    particles,
-    new THREE.PointsMaterial({
-      color: 0x8ceeff,
-      size: 0.055,
-      transparent: true,
-      opacity: 0.5,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false
-    })
-  );
-  state.roomRoot.add(points);
 }
