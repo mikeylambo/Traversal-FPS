@@ -12,6 +12,7 @@ import { TraversalGame } from "./game/TraversalGame";
 import { TraversalSettingsStore } from "./game/TraversalSettings";
 import { enhanceTraversalMovement } from "./game/MovementPatch";
 import { enhanceTraversalPresentation } from "./render/enhanceTraversalPresentation";
+import { removeCircularEnvironment } from "./render/removeCircularEnvironment";
 
 const canvas = document.getElementById("game-canvas") as HTMLCanvasElement | null;
 const uiRoot = document.getElementById("ui");
@@ -158,6 +159,7 @@ app.ui.updateScreen("stage-select", {
 const game = new TraversalGame(canvas, app.shell, app.flow, app.ui, traversalSettings);
 enhanceTraversalMovement(game);
 enhanceTraversalPresentation(game, traversalSettings);
+removeCircularEnvironment(game);
 game.start();
 
 console.info("Traversal FPS ready", {
