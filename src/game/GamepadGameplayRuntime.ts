@@ -1,4 +1,5 @@
-import { DEFAULT_GAMEPAD_BINDINGS } from "../input/TraversalActions";
+import { resolveTraversalAction } from "../input/TraversalBindings";
+import type { TraversalActionId } from "../input/TraversalActions";
 import type { TraversalSettingsStore } from "./TraversalSettings";
 
 type GameplayInput = {
@@ -37,9 +38,8 @@ const BASE_LOOK_Y = 13.5;
 
 /**
  * The Shell owns menu-pad navigation. Traversal owns gameplay-pad input.
- * Right-stick aiming uses a radial deadzone so diagonal corrections do not feel
- * artificially stiffer than cardinal movement. Near-center response is close to
- * linear; acceleration stays concentrated near full deflection.
+ * Bindings resolve from the persistent semantic action store every frame, so a
+ * future remap UI can apply changes immediately without rebuilding gameplay.
  */
 export function installGamepadGameplay(game: object, settings: TraversalSettingsStore): void {
   const state = game as unknown as RuntimeState;
@@ -109,8 +109,8 @@ function pollGamepad(
   if (!pad) return emptyFrame();
 
   const buttons = pad.buttons.map((button) => button.pressed || button.value > 0.55);
-  const [moveXIndex, moveYIndex] = DEFAULT_GAMEPAD_BINDINGS.moveAxes;
-  const [lookXIndex, lookYIndex] = DEFAULT_GAMEPAD_BINDINGS.lookAxes;
+  const [moveXIndex, moveYIndex] = axisPair("move", [0, 1]);
+  const [lookXIndex, lookYIndex] = axisPair("look", [2, 3]);
   const leftX = curveMoveAxis(pad.axes[moveXIndex] ?? 0);
   const leftY = curveMoveAxis(pad.axes[moveYIndex] ?? 0);
 
@@ -122,18 +122,27 @@ function pollGamepad(
     aim.controllerLookAcceleration
   );
 
-  const fireHeld = buttonValue(pad, DEFAULT_GAMEPAD_BINDINGS.fire) > 0.45;
-  const previousFire = previousButtons[DEFAULT_GAMEPAD_BINDINGS.fire] ?? false;
-  const warpHeld = buttonValue(pad, DEFAULT_GAMEPAD_BINDINGS.warp) > 0.32;
+  const fireIndices = buttonIndices("fire");
+  const warpIndices = buttonIndices("warp");
+  const shorterIndices = buttonIndices("landing-shorter");
+  const longerIndices = buttonIndices("landing-longer");
+  const crouchIndices = buttonIndices("crouch");
+  const resetIndices = buttonIndices("reset");
+  const scopeIndices = buttonIndices("scope");
 
-  // RB pulls the landing point back; LB extends it toward the written endpoint.
-  const shorten = buttons[DEFAULT_GAMEPAD_BINDINGS.landingShorter] ?? false;
-  const extend = buttons[DEFAULT_GAMEPAD_BINDINGS.landingLonger] ?? false;
+  const fireHeld = maxButtonValue(pad, fireIndices) > 0.45;
+  const previousFire = anyPrevious(previousButtons, fireIndices);
+  const warpHeld = maxButtonValue(pad, warpIndices) > 0.32;
+
+  // The shorter/longer semantic direction stays stable even when physical
+  // shoulder buttons are remapped.
+  const shorten = anyPressed(buttons, shorterIndices);
+  const extend = anyPressed(buttons, longerIndices);
   const now = performance.now();
   let wheelDelta = 0;
   if (warpHeld && shorten !== extend) {
-    const wasShorten = previousButtons[DEFAULT_GAMEPAD_BINDINGS.landingShorter] ?? false;
-    const wasExtend = previousButtons[DEFAULT_GAMEPAD_BINDINGS.landingLonger] ?? false;
+    const wasShorten = anyPrevious(previousButtons, shorterIndices);
+    const wasExtend = anyPrevious(previousButtons, longerIndices);
     const newlyPressed = shorten ? !wasShorten : !wasExtend;
     if (newlyPressed || now >= adjustRepeatAt) wheelDelta = shorten ? 1 : -1;
   }
@@ -141,7 +150,6 @@ function pollGamepad(
   const frameScale = dt * 60;
   const horizontalScale = sensitivityScale(aim.controllerSensitivityX);
   const verticalScale = sensitivityScale(aim.controllerSensitivityY);
-  const crouchHeld = DEFAULT_GAMEPAD_BINDINGS.crouch.some((index) => Boolean(buttons[index]));
 
   return {
     moveX: leftX,
@@ -149,19 +157,38 @@ function pollGamepad(
     lookX: right.x * BASE_LOOK_X * horizontalScale * frameScale,
     lookY: right.y * BASE_LOOK_Y * verticalScale * frameScale,
     firePressed: fireHeld && !previousFire,
-    crouchHeld,
+    crouchHeld: anyPressed(buttons, crouchIndices),
     warpHeld,
     warpReleased: previousWarp && !warpHeld,
     wheelDelta,
-    resetPressed: Boolean(
-      buttons[DEFAULT_GAMEPAD_BINDINGS.reset] &&
-      !(previousButtons[DEFAULT_GAMEPAD_BINDINGS.reset] ?? false)
-    ),
-    scopePressed: Boolean(
-      buttons[DEFAULT_GAMEPAD_BINDINGS.scope] &&
-      !(previousButtons[DEFAULT_GAMEPAD_BINDINGS.scope] ?? false)
-    )
+    resetPressed: anyPressed(buttons, resetIndices) && !anyPrevious(previousButtons, resetIndices),
+    scopePressed: anyPressed(buttons, scopeIndices) && !anyPrevious(previousButtons, scopeIndices)
   };
+}
+
+function axisPair(id: TraversalActionId, fallback: [number, number]): [number, number] {
+  return resolveTraversalAction(id).gamepad.axisPair ?? fallback;
+}
+
+function buttonIndices(id: TraversalActionId): number[] {
+  const binding = resolveTraversalAction(id).gamepad;
+  const indices = [...(binding.buttons ?? [])];
+  if (binding.triggerButton !== undefined) indices.push(binding.triggerButton);
+  return [...new Set(indices)];
+}
+
+function anyPressed(buttons: boolean[], indices: number[]): boolean {
+  return indices.some((index) => Boolean(buttons[index]));
+}
+
+function anyPrevious(buttons: boolean[], indices: number[]): boolean {
+  return indices.some((index) => Boolean(buttons[index]));
+}
+
+function maxButtonValue(pad: Gamepad, indices: number[]): number {
+  let value = 0;
+  for (const index of indices) value = Math.max(value, buttonValue(pad, index));
+  return value;
 }
 
 function sensitivityScale(setting: number): number {
