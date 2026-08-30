@@ -8,6 +8,10 @@ import {
   type RoomSpec,
   type Vec3Tuple
 } from "../world/stages";
+import {
+  analyzeVectorLandings,
+  validateRoom
+} from "../world/contentValidation";
 
 type Selection =
   | { type: "platform"; index: number }
@@ -30,9 +34,9 @@ const SNAP = 0.5;
 const DRAFT_PREFIX = "traversal-vector-lab:v0:";
 
 /**
- * Internal authoring layer. It edits the same RoomSpec data the game consumes, then
- * reloads the active field for immediate playtesting. This is intentionally data-first
- * so it can evolve into a player-facing Vector Lab once the schema stabilizes.
+ * Data-first authoring layer for the same RoomSpec content consumed by gameplay.
+ * The editor visualizes authored bounds, moving paths, and the selected sphere's
+ * live vector/landing intersections so geometry mistakes are visible before playtest.
  */
 export function installTraversalEditor(game: object, content: ContentRuntime): void {
   const state = game as unknown as RuntimeState;
@@ -41,14 +45,14 @@ export function installTraversalEditor(game: object, content: ContentRuntime): v
   const toggle = document.createElement("button");
   toggle.id = "editor-toggle";
   toggle.type = "button";
-  toggle.textContent = "F2 // VECTOR LAB";
+  toggle.textContent = "F2 // MAP EDITOR";
   document.body.appendChild(toggle);
 
   const panel = document.createElement("aside");
   panel.id = "traversal-editor";
   panel.innerHTML = `
     <header>
-      <div><span>INTERNAL AUTHORING</span><strong>VECTOR LAB // v0</strong></div>
+      <div><span>AUTHORING</span><strong>MAP EDITOR // v1</strong></div>
       <button type="button" data-editor="close">CLOSE</button>
     </header>
     <p id="editor-context"></p>
@@ -57,12 +61,22 @@ export function installTraversalEditor(game: object, content: ContentRuntime): v
       <div class="editor-grid">
         <button type="button" data-editor="add-platform">PLATFORM</button>
         <button type="button" data-editor="add-sentry">SENTRY</button>
+        <button type="button" data-editor="add-shield">SHIELD</button>
         <button type="button" data-editor="add-drifter">DRIFTER X</button>
         <button type="button" data-editor="add-field">LETHAL FIELD</button>
         <button type="button" data-editor="add-sweep">SWEEP</button>
+        <button type="button" data-editor="add-gate">SIGHTLINE GATE</button>
         <button type="button" data-editor="set-spawn">SET SPAWN</button>
         <button type="button" data-editor="set-goal">SET EXIT</button>
       </div>
+    </section>
+    <section class="editor-block">
+      <h3>INSPECT</h3>
+      <div class="editor-grid">
+        <button type="button" data-editor="toggle-overlays" id="editor-overlays">OVERLAYS ON</button>
+        <button type="button" data-editor="audit">AUDIT ROOM</button>
+      </div>
+      <pre id="editor-validation"></pre>
     </section>
     <section class="editor-block">
       <h3>SELECTION</h3>
@@ -101,7 +115,7 @@ export function installTraversalEditor(game: object, content: ContentRuntime): v
       </div>
       <textarea id="editor-json" spellcheck="false" placeholder="RoomSpec JSON appears here for export/import."></textarea>
     </section>
-    <footer>F2 toggles // placement uses the reticle direction // snap ${SNAP}m</footer>
+    <footer>F2 toggles // cyan = selected vector // green = safe landing // snap ${SNAP}m</footer>
   `;
   document.body.appendChild(panel);
 
@@ -117,7 +131,13 @@ export function installTraversalEditor(game: object, content: ContentRuntime): v
   marker.visible = false;
   state.scene.add(marker);
 
+  const overlayRoot = new THREE.Group();
+  overlayRoot.name = "map-editor-intelligence";
+  overlayRoot.renderOrder = 990;
+  state.scene.add(overlayRoot);
+
   let open = false;
+  let overlaysEnabled = true;
   let selection: Selection | null = null;
   const sourceSnapshots = new Map<string, RoomSpec>();
 
@@ -126,6 +146,8 @@ export function installTraversalEditor(game: object, content: ContentRuntime): v
   const context = panel.querySelector<HTMLElement>("#editor-context")!;
   const selectionLabel = panel.querySelector<HTMLElement>("#editor-selection")!;
   const selectionInfo = panel.querySelector<HTMLElement>("#editor-selection-info")!;
+  const validation = panel.querySelector<HTMLElement>("#editor-validation")!;
+  const overlayButton = panel.querySelector<HTMLButtonElement>("#editor-overlays")!;
   const par = panel.querySelector<HTMLElement>("#editor-par")!;
 
   const rememberSource = () => {
@@ -137,6 +159,7 @@ export function installTraversalEditor(game: object, content: ContentRuntime): v
     open = next;
     document.body.classList.toggle("traversal-editor-open", open);
     toggle.setAttribute("aria-expanded", String(open));
+    overlayRoot.visible = open && overlaysEnabled;
     if (open) {
       rememberSource();
       state.input.releasePointerLock();
@@ -144,6 +167,7 @@ export function installTraversalEditor(game: object, content: ContentRuntime): v
       refreshUI();
     } else {
       marker.visible = false;
+      clearOverlayRoot();
       state.input.setEnabled(true);
       state.input.capture();
     }
@@ -177,6 +201,10 @@ export function installTraversalEditor(game: object, content: ContentRuntime): v
       addEnemy({ id: nextId("node"), kind: "sentry", position: tuple(pointAhead(10)) });
       return reload();
     }
+    if (action === "add-shield") {
+      addEnemy({ id: nextId("shield"), kind: "shield", position: tuple(pointAhead(10)) });
+      return reload();
+    }
     if (action === "add-drifter") {
       addEnemy({
         id: nextId("drift"),
@@ -200,6 +228,16 @@ export function installTraversalEditor(game: object, content: ContentRuntime): v
       });
       return reload();
     }
+    if (action === "add-gate") {
+      addHazard({
+        id: nextId("gate"),
+        kind: "sightline-gate",
+        center: tuple(pointAhead(10)),
+        size: [8, 6, 0.5],
+        cycle: { period: 2.5, openFor: 0.9 }
+      });
+      return reload();
+    }
     if (action === "set-spawn") {
       current.spawn = tuple(state.camera.position);
       return refreshUI();
@@ -207,6 +245,17 @@ export function installTraversalEditor(game: object, content: ContentRuntime): v
     if (action === "set-goal") {
       current.goal = [snap(state.camera.position.x), snap(state.camera.position.y - 1.1), snap(state.camera.position.z)];
       return reload();
+    }
+    if (action === "toggle-overlays") {
+      overlaysEnabled = !overlaysEnabled;
+      overlayButton.textContent = overlaysEnabled ? "OVERLAYS ON" : "OVERLAYS OFF";
+      overlayRoot.visible = overlaysEnabled;
+      return refreshOverlays();
+    }
+    if (action === "audit") {
+      refreshValidation();
+      context.textContent = `${baseContext()} // AUDIT COMPLETE`;
+      return;
     }
     if (action === "prev" || action === "next") return cycleSelection(action === "next" ? 1 : -1);
     if (action === "delete") return deleteSelection();
@@ -326,22 +375,145 @@ export function installTraversalEditor(game: object, content: ContentRuntime): v
     return current.hazards?.[selection.index] ?? null;
   }
 
+  function baseContext(): string {
+    const current = room();
+    return `${content.selectedContentId().toUpperCase()} // ${content.activeForm().toUpperCase()} // ${current.title}`;
+  }
+
   function refreshUI(): void {
     const current = room();
-    context.textContent = `${content.selectedContentId().toUpperCase()} // ${content.activeForm().toUpperCase()} // ${current.title}`;
+    context.textContent = baseContext();
     par.textContent = String(current.requiredKills);
+    overlayButton.textContent = overlaysEnabled ? "OVERLAYS ON" : "OVERLAYS OFF";
 
     const selected = selectedObject();
     if (!selection || !selected) {
       selectionLabel.textContent = "NONE";
-      selectionInfo.textContent = `${current.platforms.length} platforms // ${current.enemies.length} targets // ${current.hazards?.length ?? 0} hazards`;
+      selectionInfo.textContent = `${current.platforms.length} platforms // ${current.enemies.length} spheres // ${current.hazards?.length ?? 0} hazards`;
       marker.visible = false;
-      return;
+    } else {
+      selectionLabel.textContent = `${selection.type.toUpperCase()} ${selection.index + 1}`;
+      selectionInfo.textContent = JSON.stringify(selected, null, 2);
+      updateMarker(selected);
     }
 
-    selectionLabel.textContent = `${selection.type.toUpperCase()} ${selection.index + 1}`;
-    selectionInfo.textContent = JSON.stringify(selected, null, 2);
-    updateMarker(selected);
+    refreshValidation();
+    refreshOverlays();
+  }
+
+  function refreshValidation(): void {
+    const current = room();
+    const report = validateRoom(current);
+    const lines: string[] = [];
+    if (report.errors === 0 && report.warnings === 0) {
+      lines.push("PASS // STRUCTURE + OBVIOUS LANDINGS");
+    } else {
+      lines.push(`${report.errors} ERRORS // ${report.warnings} WARNINGS`);
+      for (const issue of report.issues.slice(0, 10)) {
+        const mark = issue.severity === "error" ? "E" : "W";
+        lines.push(`${mark} ${issue.code}${issue.entityId ? ` // ${issue.entityId}` : ""}`);
+        lines.push(`  ${issue.message}`);
+      }
+      if (report.issues.length > 10) lines.push(`+ ${report.issues.length - 10} MORE`);
+    }
+
+    const selected = selectedObject();
+    if (selection?.type === "enemy" && selected && "position" in selected) {
+      const origin = rawTuple(state.camera.position);
+      const landings = analyzeVectorLandings(origin, selected.position, current.platforms);
+      lines.push("");
+      lines.push(`LIVE VECTOR // ${landings.length} SAFE LANDING${landings.length === 1 ? "" : "S"}`);
+      for (const landing of landings.slice(0, 5)) {
+        lines.push(`  ${Math.round(landing.fraction * 100)}% → PLATFORM ${landing.platformIndex + 1}`);
+      }
+    }
+
+    validation.textContent = lines.join("\n");
+    validation.dataset.state = report.errors > 0 ? "error" : report.warnings > 0 ? "warning" : "pass";
+  }
+
+  function refreshOverlays(): void {
+    clearOverlayRoot();
+    overlayRoot.visible = open && overlaysEnabled;
+    if (!open || !overlaysEnabled) return;
+
+    const current = room();
+    current.platforms.forEach((platform) => addBoundsOverlay(platform.center, platform.size, 0x64cfe3, 0.18));
+
+    const selected = selectedObject();
+    if (!selection || !selected) return;
+
+    if (selection.type === "enemy" && "position" in selected) {
+      const origin = rawTuple(state.camera.position);
+      addLine(origin, selected.position, 0x73f4ff, 0.95);
+      for (const landing of analyzeVectorLandings(origin, selected.position, current.platforms)) {
+        const ring = new THREE.Mesh(
+          new THREE.TorusGeometry(0.32, 0.045, 8, 28),
+          new THREE.MeshBasicMaterial({
+            color: 0xa1ff91,
+            transparent: true,
+            opacity: 0.95,
+            depthTest: false
+          })
+        );
+        ring.position.set(...landing.point);
+        ring.rotation.x = Math.PI * 0.5;
+        ring.renderOrder = 997;
+        overlayRoot.add(ring);
+      }
+      if (selected.drift) addDriftPath(selected.position, selected.drift.axis, selected.drift.amplitude);
+    }
+
+    if (selection.type === "hazard" && "center" in selected && selected.drift) {
+      addDriftPath(selected.center, selected.drift.axis, selected.drift.amplitude, 0xff8c75);
+    }
+  }
+
+  function addBoundsOverlay(center: Vec3Tuple, size: Vec3Tuple, color: number, opacity: number): void {
+    const geometry = new THREE.EdgesGeometry(new THREE.BoxGeometry(...size));
+    const material = new THREE.LineBasicMaterial({ color, transparent: true, opacity, depthTest: false });
+    const edges = new THREE.LineSegments(geometry, material);
+    edges.position.set(...center);
+    edges.renderOrder = 991;
+    overlayRoot.add(edges);
+  }
+
+  function addLine(a: Vec3Tuple, b: Vec3Tuple, color: number, opacity: number): void {
+    const geometry = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(...a),
+      new THREE.Vector3(...b)
+    ]);
+    const material = new THREE.LineBasicMaterial({ color, transparent: true, opacity, depthTest: false });
+    const line = new THREE.Line(geometry, material);
+    line.renderOrder = 996;
+    overlayRoot.add(line);
+  }
+
+  function addDriftPath(
+    center: Vec3Tuple,
+    axis: "x" | "y" | "z",
+    amplitude: number,
+    color = 0xffcf66
+  ): void {
+    const a: Vec3Tuple = [...center];
+    const b: Vec3Tuple = [...center];
+    const index = axis === "x" ? 0 : axis === "y" ? 1 : 2;
+    a[index] -= amplitude;
+    b[index] += amplitude;
+    addLine(a, b, color, 0.82);
+  }
+
+  function clearOverlayRoot(): void {
+    for (const child of [...overlayRoot.children]) {
+      child.traverse((object) => {
+        const drawable = object as THREE.Mesh | THREE.Line | THREE.LineSegments;
+        drawable.geometry?.dispose?.();
+        const material = drawable.material as THREE.Material | THREE.Material[] | undefined;
+        if (Array.isArray(material)) material.forEach((entry) => entry.dispose());
+        else material?.dispose?.();
+      });
+      overlayRoot.remove(child);
+    }
   }
 
   function updateMarker(selected: PlatformSpec | EnemySpec | HazardSpec): void {
@@ -360,9 +532,9 @@ export function installTraversalEditor(game: object, content: ContentRuntime): v
   function saveDraft(): void {
     try {
       localStorage.setItem(draftKey(), JSON.stringify(room()));
-      context.textContent = `${context.textContent} // DRAFT SAVED`;
+      context.textContent = `${baseContext()} // DRAFT SAVED`;
     } catch {
-      context.textContent = `${context.textContent} // SAVE BLOCKED`;
+      context.textContent = `${baseContext()} // SAVE BLOCKED`;
     }
   }
 
@@ -372,7 +544,7 @@ export function installTraversalEditor(game: object, content: ContentRuntime): v
       if (!raw) return;
       replaceRoom(JSON.parse(raw) as RoomSpec);
     } catch {
-      context.textContent = `${context.textContent} // INVALID DRAFT`;
+      context.textContent = `${baseContext()} // INVALID DRAFT`;
     }
   }
 
@@ -380,13 +552,14 @@ export function installTraversalEditor(game: object, content: ContentRuntime): v
     const json = JSON.stringify(room(), null, 2);
     textarea.value = json;
     void navigator.clipboard?.writeText(json).catch(() => undefined);
+    refreshValidation();
   }
 
   function importJson(): void {
     try {
       replaceRoom(JSON.parse(textarea.value) as RoomSpec);
     } catch {
-      context.textContent = `${context.textContent} // INVALID JSON`;
+      context.textContent = `${baseContext()} // INVALID ROOM JSON`;
     }
   }
 
@@ -398,6 +571,8 @@ export function installTraversalEditor(game: object, content: ContentRuntime): v
 
   function replaceRoom(next: RoomSpec): void {
     if (!next || !Array.isArray(next.platforms) || !Array.isArray(next.enemies)) throw new Error("Invalid RoomSpec");
+    const report = validateRoom(next);
+    if (report.errors > 0) throw new Error(`RoomSpec has ${report.errors} validation errors`);
     ROOMS[state.roomIndex] = structuredClone(next);
     selection = null;
     reload();
@@ -443,4 +618,8 @@ function snap(value: number): number {
 
 function tuple(value: THREE.Vector3): Vec3Tuple {
   return [snap(value.x), snap(value.y), snap(value.z)];
+}
+
+function rawTuple(value: THREE.Vector3): Vec3Tuple {
+  return [value.x, value.y, value.z];
 }
