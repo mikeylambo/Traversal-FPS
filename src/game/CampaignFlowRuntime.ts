@@ -1,5 +1,6 @@
 import { CAMPAIGN_MAPS } from "../world/campaign";
 import type { ContentRuntime } from "./ContentRuntime";
+import type { TraversalProgression } from "./Progression";
 
 type RuntimeState = {
   modeId: string;
@@ -21,9 +22,13 @@ let transitionAudio: AudioContext | null = null;
  * Intermediate sector results are still processed internally (progression,
  * achievements, best times) but their menu screen is suppressed; the next
  * implemented sector loads after a brief audiovisual handoff and receives the
- * normal sector title card.
+ * normal sector title card. Sector entry is also persisted as a resume checkpoint.
  */
-export function installCampaignFlow(game: object, content: ContentRuntime): void {
+export function installCampaignFlow(
+  game: object,
+  content: ContentRuntime,
+  progression: TraversalProgression
+): void {
   const state = game as unknown as RuntimeState;
   const originalFinishRun = state.finishRun.bind(game);
   ensureSectorClearFx();
@@ -43,6 +48,7 @@ export function installCampaignFlow(game: object, content: ContentRuntime): void
 
     if (!nextMap) {
       originalFinishRun();
+      void progression.completeCampaignSector(currentId);
       return;
     }
 
@@ -62,6 +68,7 @@ export function installCampaignFlow(game: object, content: ContentRuntime): void
       state.flow.showResults = originalShowResults;
     }
 
+    void progression.completeCampaignSector(currentId, nextMap.id);
     playSectorClearCue();
 
     window.setTimeout(() => {
