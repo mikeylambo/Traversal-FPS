@@ -174,7 +174,6 @@ export class TraversalProgression {
   async completeCampaignSector(sectorId: string, nextSectorId?: string): Promise<void> {
     const sector = this.data.sectors[sectorId] ?? { completed: false, clears: 0 };
     sector.completed = true;
-    sector.clears += 1;
     this.data.sectors[sectorId] = sector;
     if (!this.data.completedMaps.includes(sectorId)) this.data.completedMaps.push(sectorId);
 
