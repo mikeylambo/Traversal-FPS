@@ -1,3 +1,4 @@
+import { installCampaignPersistenceRuntime } from "./CampaignPersistenceRuntime";
 import type { ContentRuntime } from "./ContentRuntime";
 import { ACHIEVEMENTS, type AchievementDefinition, type TraversalProgression } from "./Progression";
 
@@ -25,6 +26,7 @@ export function installAchievementRuntime(
   const state = game as unknown as RuntimeState;
 
   progression.onUnlock(showAchievementToast);
+  installCampaignPersistenceRuntime(game, progression, content);
 
   const originalShoot = state.shoot.bind(game);
   state.shoot = () => {
