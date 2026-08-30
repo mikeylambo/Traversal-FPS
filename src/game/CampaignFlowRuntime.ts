@@ -1,3 +1,4 @@
+import { emitTraversalAudio } from "../audio/TraversalAudio";
 import { CAMPAIGN_MAPS } from "../world/campaign";
 import type { ContentRuntime } from "./ContentRuntime";
 import { activeTraversalProgression } from "./Progression";
@@ -15,7 +16,6 @@ type RuntimeState = {
 };
 
 const SECTOR_HANDOFF_MS = 620;
-let transitionAudio: AudioContext | null = null;
 
 /**
  * Campaign is a journey through the construct, not a list of isolated score runs.
@@ -93,37 +93,5 @@ function playSectorClearCue(): void {
     fx.classList.add("pulse");
     window.setTimeout(() => fx.classList.remove("pulse"), 720);
   }
-
-  try {
-    transitionAudio ??= new AudioContext();
-    const ctx = transitionAudio;
-    void ctx.resume();
-    const now = ctx.currentTime;
-
-    const body = ctx.createOscillator();
-    const bodyGain = ctx.createGain();
-    body.type = "sine";
-    body.frequency.setValueAtTime(92, now);
-    body.frequency.exponentialRampToValueAtTime(54, now + 0.28);
-    bodyGain.gain.setValueAtTime(0.0001, now);
-    bodyGain.gain.exponentialRampToValueAtTime(0.16, now + 0.018);
-    bodyGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.34);
-    body.connect(bodyGain).connect(ctx.destination);
-    body.start(now);
-    body.stop(now + 0.36);
-
-    const edge = ctx.createOscillator();
-    const edgeGain = ctx.createGain();
-    edge.type = "triangle";
-    edge.frequency.setValueAtTime(310, now + 0.035);
-    edge.frequency.exponentialRampToValueAtTime(470, now + 0.18);
-    edgeGain.gain.setValueAtTime(0.0001, now);
-    edgeGain.gain.exponentialRampToValueAtTime(0.055, now + 0.05);
-    edgeGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.28);
-    edge.connect(edgeGain).connect(ctx.destination);
-    edge.start(now + 0.035);
-    edge.stop(now + 0.3);
-  } catch {
-    // Transition audio is enhancement-only.
-  }
+  emitTraversalAudio("sector.clear");
 }
