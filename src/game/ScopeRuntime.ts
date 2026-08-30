@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { DEFAULT_KEYBOARD_CODES } from "../input/TraversalActions";
 import type { TraversalSettingsStore } from "./TraversalSettings";
 
 type RuntimeState = {
@@ -52,7 +53,7 @@ export function installScopeRuntime(game: object, settings: TraversalSettingsSto
   });
 
   window.addEventListener("keydown", (event) => {
-    if (event.code !== "KeyQ" || event.repeat) return;
+    if (event.code !== DEFAULT_KEYBOARD_CODES.scope || event.repeat) return;
     if (!document.body.classList.contains("playing")) return;
     const target = event.target as HTMLElement | null;
     if (target?.closest("input, textarea, select, [contenteditable='true']")) return;
