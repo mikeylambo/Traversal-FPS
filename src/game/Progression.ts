@@ -62,6 +62,11 @@ const STORAGE_KEY = "traversal-progression:v2";
 const LEGACY_STORAGE_KEY = "traversal-progression:v1";
 const FIRST_SECTOR_ID = "map-01";
 const SECTOR_START_CHECKPOINT = "sector-start";
+let activeProgression: TraversalProgression | null = null;
+
+export function activeTraversalProgression(): TraversalProgression | null {
+  return activeProgression;
+}
 
 function emptyCampaign(): CampaignProgress {
   return {
@@ -92,7 +97,9 @@ export class TraversalProgression {
   private data: TraversalProgressData = emptyProgress();
   private listeners = new Set<(achievement: AchievementDefinition) => void>();
 
-  constructor(private readonly storage: { get<T>(key: string): Promise<T | null>; set<T>(key: string, value: T): Promise<void> }) {}
+  constructor(private readonly storage: { get<T>(key: string): Promise<T | null>; set<T>(key: string, value: T): Promise<void> }) {
+    activeProgression = this;
+  }
 
   async load(): Promise<void> {
     const saved = await this.storage.get<TraversalProgressData>(STORAGE_KEY);
@@ -146,12 +153,14 @@ export class TraversalProgression {
 
   async startCampaign(sectorId = FIRST_SECTOR_ID): Promise<void> {
     const now = Date.now();
+    const discovered = new Set(this.data.campaign.discoveredSectors);
+    discovered.add(sectorId);
     this.data.campaign = {
       active: true,
       completed: false,
       currentSectorId: sectorId,
       checkpoint: { sectorId, checkpointId: SECTOR_START_CHECKPOINT, updatedAt: now },
-      discoveredSectors: [sectorId]
+      discoveredSectors: [...discovered]
     };
     await this.persist();
   }
