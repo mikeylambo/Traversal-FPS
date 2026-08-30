@@ -37,7 +37,7 @@ export function installCampaignPersistenceRuntime(
       if (!first) return;
       content.setSelectedMap(first.id);
       void progression.startCampaign(first.id);
-      originalActivate(screenId, first.id);
+      originalActivate(screenId, choiceId);
       return;
     }
 
@@ -48,7 +48,7 @@ export function installCampaignPersistenceRuntime(
         ?? fallback;
       if (!target) return;
       content.setSelectedMap(target.id);
-      originalActivate(screenId, target.id);
+      originalActivate(screenId, choiceId);
       return;
     }
 
