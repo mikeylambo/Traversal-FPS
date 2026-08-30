@@ -1,4 +1,5 @@
 import type { PuzzleGrammarId } from "./puzzleGrammar";
+import type { OriginConstraint } from "./spatialActors";
 
 export type Vec3Tuple = [number, number, number];
 export type EnemyKind = "sentry" | "drifter" | "shield";
@@ -15,6 +16,7 @@ export interface EnemySpec {
   position: Vec3Tuple;
   radius?: number;
   drift?: { axis: "x" | "y"; amplitude: number; speed: number };
+  originConstraint?: OriginConstraint;
 }
 
 export interface HazardSpec {
