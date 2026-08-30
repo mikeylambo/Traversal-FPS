@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { emitTraversalAudio } from "../audio/TraversalAudio";
 import { ROOMS, type HazardSpec } from "../world/stages";
 
 type ActiveHazard = {
@@ -60,6 +61,7 @@ export function installHazardRuntime(game: object): void {
     if (!hit) return;
 
     hitCooldownUntil = now + 650;
+    emitTraversalAudio("hazard.hit");
     document.body.classList.add("hazard-hit");
     window.setTimeout(() => document.body.classList.remove("hazard-hit"), 280);
     state.roomRestarts += 1;
