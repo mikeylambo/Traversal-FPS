@@ -6,6 +6,8 @@ import { activeTraversalProgression } from "./Progression";
 
 type RuntimeState = {
   modeId: string;
+  totalKills: number;
+  extraKills(): number;
   beginRun(): void;
   finishRun(): void;
   ui: {
@@ -24,12 +26,16 @@ const SECTOR_HANDOFF_MS = 620;
  * achievements, best times) but their menu screen is suppressed; the next
  * implemented sector loads after a brief audiovisual handoff and receives the
  * normal sector title card. Sector entry is also persisted as a resume checkpoint.
+ * Route-efficiency calculations are bound to the active content instead of the
+ * Training rooms that happened to exist when TraversalGame.ts first evaluated.
  */
 export function installCampaignFlow(game: object, content: ContentRuntime): void {
   const state = game as unknown as RuntimeState;
   const originalFinishRun = state.finishRun.bind(game);
   const progression = activeTraversalProgression();
   if (progression) installCampaignPersistenceRuntime(game, progression, content);
+
+  state.extraKills = () => Math.max(0, state.totalKills - content.activeParKills());
   ensureSectorClearFx();
 
   state.finishRun = () => {
