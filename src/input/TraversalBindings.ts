@@ -171,10 +171,10 @@ function sanitizeOverrides(input: TraversalBindingOverrides): TraversalBindingOv
     if (!candidate || typeof candidate !== "object") continue;
 
     const keyboardMouse = candidate.keyboardMouse
-      ? sanitizeKeyboardMouse(candidate.keyboardMouse)
+      ? sanitizeKeyboardMouse(candidate.keyboardMouse) ?? undefined
       : undefined;
     const gamepad = candidate.gamepad
-      ? sanitizeGamepad(candidate.gamepad)
+      ? sanitizeGamepad(candidate.gamepad) ?? undefined
       : undefined;
 
     if (keyboardMouse || gamepad) output[action.id] = { keyboardMouse, gamepad };
