@@ -20,8 +20,8 @@ type BindingListener = () => void;
 
 /**
  * Persistent device-binding backend. Defaults remain immutable in
- * TraversalActions; this store only records user overrides. The eventual remap UI
- * should call setKeyboardMouse/setGamepad/resetAction and never mutate gameplay
+ * TraversalActions; this store only records user overrides. The Controls UI
+ * calls setKeyboardMouse/setGamepad/resetAction and never mutates gameplay
  * handlers directly.
  */
 export class TraversalBindingsStore {
@@ -47,14 +47,12 @@ export class TraversalBindingsStore {
 
     return {
       ...base,
-      keyboardMouse: {
-        ...base.keyboardMouse,
-        ...(override.keyboardMouse ?? {})
-      },
-      gamepad: {
-        ...base.gamepad,
-        ...(override.gamepad ?? {})
-      }
+      keyboardMouse: override.keyboardMouse
+        ? cloneKeyboardMouse(override.keyboardMouse)
+        : cloneKeyboardMouse(base.keyboardMouse),
+      gamepad: override.gamepad
+        ? cloneGamepad(override.gamepad)
+        : cloneGamepad(base.gamepad)
     };
   }
 
@@ -233,19 +231,27 @@ function isCode(value: unknown): value is string {
   return typeof value === "string" && value.length > 0 && value.length <= 48;
 }
 
+function cloneKeyboardMouse(binding: KeyboardMouseBinding): KeyboardMouseBinding {
+  return {
+    ...binding,
+    keys: binding.keys ? [...binding.keys] : undefined,
+    moveKeys: binding.moveKeys ? { ...binding.moveKeys } : undefined,
+    mouseButtons: binding.mouseButtons ? [...binding.mouseButtons] : undefined
+  };
+}
+
+function cloneGamepad(binding: GamepadBinding): GamepadBinding {
+  return {
+    ...binding,
+    buttons: binding.buttons ? [...binding.buttons] : undefined,
+    axisPair: binding.axisPair ? [...binding.axisPair] as [number, number] : undefined
+  };
+}
+
 function cloneAction(action: TraversalActionDefinition): TraversalActionDefinition {
   return {
     ...action,
-    keyboardMouse: {
-      ...action.keyboardMouse,
-      keys: action.keyboardMouse.keys ? [...action.keyboardMouse.keys] : undefined,
-      moveKeys: action.keyboardMouse.moveKeys ? { ...action.keyboardMouse.moveKeys } : undefined,
-      mouseButtons: action.keyboardMouse.mouseButtons ? [...action.keyboardMouse.mouseButtons] : undefined
-    },
-    gamepad: {
-      ...action.gamepad,
-      buttons: action.gamepad.buttons ? [...action.gamepad.buttons] : undefined,
-      axisPair: action.gamepad.axisPair ? [...action.gamepad.axisPair] as [number, number] : undefined
-    }
+    keyboardMouse: cloneKeyboardMouse(action.keyboardMouse),
+    gamepad: cloneGamepad(action.gamepad)
   };
 }
