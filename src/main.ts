@@ -296,7 +296,7 @@ app.flow.onBack = (screenId: string) => {
 };
 
 installSettingsFocusRetention(app.flow, app.ui, uiRoot);
-installControlsRuntime(app.flow, app.ui);
+installControlsRuntime(app.flow, app.ui as any);
 
 const game = new TraversalGame(canvas, app.shell, app.flow, app.ui, traversalSettings);
 enhanceTraversalMovement(game);
