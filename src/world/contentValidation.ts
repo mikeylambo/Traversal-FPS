@@ -1,3 +1,4 @@
+import { spatialActorDefinition } from "./spatialActors";
 import type { EnemySpec, HazardSpec, PlatformSpec, RoomSpec, Vec3Tuple } from "./stages";
 
 export type ValidationSeverity = "error" | "warning";
@@ -208,12 +209,41 @@ function validateEnemy(
   if (enemy.radius !== undefined && (!Number.isFinite(enemy.radius) || enemy.radius <= 0)) {
     push("error", "enemy.radius", "Sphere radius must be positive.", enemy.id);
   }
+
+  const actor = spatialActorDefinition(enemy.kind);
+  if (!actor || !actor.implemented) {
+    push("error", "enemy.kind", `Unsupported spatial actor kind: ${String(enemy.kind)}`, enemy.id);
+  }
+
   if (enemy.kind === "drifter") {
     if (!enemy.drift) {
       push("error", "enemy.drift", "Drifter requires drift settings.", enemy.id);
     } else if (!Number.isFinite(enemy.drift.amplitude) || enemy.drift.amplitude < 0 ||
       !Number.isFinite(enemy.drift.speed) || enemy.drift.speed <= 0) {
       push("error", "enemy.drift.values", "Drifter amplitude/speed are invalid.", enemy.id);
+    }
+  }
+
+  if (enemy.originConstraint) {
+    const constraint = enemy.originConstraint;
+    if (!(["x", "y", "z"] as const).includes(constraint.axis)) {
+      push("error", "enemy.origin.axis", "Origin constraint axis must be x, y, or z.", enemy.id);
+    }
+    if (constraint.min === undefined && constraint.max === undefined) {
+      push("error", "enemy.origin.range", "Origin constraint requires min and/or max.", enemy.id);
+    }
+    if (constraint.min !== undefined && !Number.isFinite(constraint.min)) {
+      push("error", "enemy.origin.min", "Origin constraint min must be finite.", enemy.id);
+    }
+    if (constraint.max !== undefined && !Number.isFinite(constraint.max)) {
+      push("error", "enemy.origin.max", "Origin constraint max must be finite.", enemy.id);
+    }
+    if (
+      constraint.min !== undefined &&
+      constraint.max !== undefined &&
+      constraint.min > constraint.max
+    ) {
+      push("error", "enemy.origin.order", "Origin constraint min cannot exceed max.", enemy.id);
     }
   }
 }
