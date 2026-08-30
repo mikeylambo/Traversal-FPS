@@ -1,3 +1,5 @@
+import { DEFAULT_KEYBOARD_CODES } from "./TraversalActions";
+
 export class FPSInput {
   private keys = new Set<string>();
   private lookX = 0;
@@ -71,8 +73,10 @@ export class FPSInput {
   }
 
   movement(): { x: number; z: number } {
-    const keyboardX = (this.keys.has("KeyD") ? 1 : 0) - (this.keys.has("KeyA") ? 1 : 0);
-    const keyboardZ = (this.keys.has("KeyW") ? 1 : 0) - (this.keys.has("KeyS") ? 1 : 0);
+    const keyboardX = (this.keys.has(DEFAULT_KEYBOARD_CODES.moveRight) ? 1 : 0) -
+      (this.keys.has(DEFAULT_KEYBOARD_CODES.moveLeft) ? 1 : 0);
+    const keyboardZ = (this.keys.has(DEFAULT_KEYBOARD_CODES.moveForward) ? 1 : 0) -
+      (this.keys.has(DEFAULT_KEYBOARD_CODES.moveBackward) ? 1 : 0);
     const x = keyboardX + this.touchMoveX;
     const z = keyboardZ + this.touchMoveZ;
     const length = Math.max(1, Math.hypot(x, z));
@@ -178,16 +182,16 @@ export class FPSInput {
     if (!this.enabled) return;
     this.keys.add(event.code);
 
-    if (event.code === "ControlLeft" || event.code === "ControlRight" || event.code === "KeyC") {
+    if (DEFAULT_KEYBOARD_CODES.crouch.includes(event.code as typeof DEFAULT_KEYBOARD_CODES.crouch[number])) {
       this.crouchHeld = true;
     }
-    if (event.code === "KeyR") this.resetQueued = true;
+    if (event.code === DEFAULT_KEYBOARD_CODES.reset) this.resetQueued = true;
     if (event.code === "KeyT") this.tutorialSkipQueued = true;
   };
 
   private readonly onKeyUp = (event: KeyboardEvent) => {
     this.keys.delete(event.code);
-    if (event.code === "ControlLeft" || event.code === "ControlRight" || event.code === "KeyC") {
+    if (DEFAULT_KEYBOARD_CODES.crouch.includes(event.code as typeof DEFAULT_KEYBOARD_CODES.crouch[number])) {
       this.crouchHeld = false;
     }
   };
