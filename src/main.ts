@@ -28,6 +28,8 @@ import { installSectorTransitions } from "./game/SectorTransitionRuntime";
 import { installCampaignFlow } from "./game/CampaignFlowRuntime";
 import { installOnboardingRuntime } from "./game/OnboardingRuntime";
 import { installSettingsFocusRetention } from "./game/SettingsFocusRuntime";
+import { installControlsRuntime } from "./game/ControlsRuntime";
+import { installSpatialActorRuntime } from "./game/SpatialActorRuntime";
 import { TraversalProgression, ACHIEVEMENTS } from "./game/Progression";
 import { achievementChoices, installAchievementRuntime } from "./game/AchievementRuntime";
 import { enhanceTraversalPresentation } from "./render/enhanceTraversalPresentation";
@@ -294,10 +296,12 @@ app.flow.onBack = (screenId: string) => {
 };
 
 installSettingsFocusRetention(app.flow, app.ui, uiRoot);
+installControlsRuntime(app.flow, app.ui);
 
 const game = new TraversalGame(canvas, app.shell, app.flow, app.ui, traversalSettings);
 enhanceTraversalMovement(game);
 enhanceGrammarRuntime(game, contentRuntime);
+installSpatialActorRuntime(game);
 installAchievementRuntime(game, progression, contentRuntime);
 installCampaignFlow(game, contentRuntime);
 enhanceTraversalPresentation(game, traversalSettings);
@@ -325,6 +329,7 @@ console.info("Traversal FPS ready", {
   movement: "run + crouch + warp",
   controller: "left move // right look // RT fire // LT warp // RB shorter // LB longer // L3-B crouch // R3 scope // X reset",
   controllerAim: "horizontal 1-10 // vertical 1-10 // acceleration 0-5 // scope multiplier // right deadzone",
+  controls: "semantic bindings // persistent overrides // Settings > Controls",
   scope: "R3 / Q / touch toggle // precision look // 36-48 degree FOV",
   campaignScoring: "no live score // sphere progress + completion stats",
   campaignFlow: "implemented sectors chain with clear pulse + title cue",
@@ -345,6 +350,7 @@ console.info("Traversal FPS ready", {
   })),
   achievements: ACHIEVEMENTS.length,
   hazards: ["lethal-field", "sweep", "sightline-gate"],
+  spatialActors: "sentry // drifter // shield data-driven; orbit // phase // linked-pair reserved",
   editor: "Map Editor // main menu // F2 // backquote",
   mobileControls: true,
   vrStatus: "future-compatible target; not current production scope",
