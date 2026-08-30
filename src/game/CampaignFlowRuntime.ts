@@ -1,6 +1,7 @@
 import { emitTraversalAudio } from "../audio/TraversalAudio";
 import { CAMPAIGN_MAPS } from "../world/campaign";
 import type { ContentRuntime } from "./ContentRuntime";
+import { installCampaignPersistenceRuntime } from "./CampaignPersistenceRuntime";
 import { activeTraversalProgression } from "./Progression";
 
 type RuntimeState = {
@@ -27,6 +28,8 @@ const SECTOR_HANDOFF_MS = 620;
 export function installCampaignFlow(game: object, content: ContentRuntime): void {
   const state = game as unknown as RuntimeState;
   const originalFinishRun = state.finishRun.bind(game);
+  const progression = activeTraversalProgression();
+  if (progression) installCampaignPersistenceRuntime(game, progression, content);
   ensureSectorClearFx();
 
   state.finishRun = () => {
@@ -41,11 +44,11 @@ export function installCampaignFlow(game: object, content: ContentRuntime): void
     const nextMap = currentIndex >= 0
       ? CAMPAIGN_MAPS.slice(currentIndex + 1).find((entry) => entry.implemented)
       : undefined;
-    const progression = activeTraversalProgression();
+    const activeProgression = activeTraversalProgression();
 
     if (!nextMap) {
       originalFinishRun();
-      void progression?.completeCampaignSector(currentId);
+      void activeProgression?.completeCampaignSector(currentId);
       return;
     }
 
@@ -65,7 +68,7 @@ export function installCampaignFlow(game: object, content: ContentRuntime): void
       state.flow.showResults = originalShowResults;
     }
 
-    void progression?.completeCampaignSector(currentId, nextMap.id);
+    void activeProgression?.completeCampaignSector(currentId, nextMap.id);
     playSectorClearCue();
 
     window.setTimeout(() => {
