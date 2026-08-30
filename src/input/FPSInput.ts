@@ -1,4 +1,4 @@
-import { DEFAULT_KEYBOARD_CODES } from "./TraversalActions";
+import { resolveTraversalAction } from "./TraversalBindings";
 
 export class FPSInput {
   private keys = new Set<string>();
@@ -73,10 +73,13 @@ export class FPSInput {
   }
 
   movement(): { x: number; z: number } {
-    const keyboardX = (this.keys.has(DEFAULT_KEYBOARD_CODES.moveRight) ? 1 : 0) -
-      (this.keys.has(DEFAULT_KEYBOARD_CODES.moveLeft) ? 1 : 0);
-    const keyboardZ = (this.keys.has(DEFAULT_KEYBOARD_CODES.moveForward) ? 1 : 0) -
-      (this.keys.has(DEFAULT_KEYBOARD_CODES.moveBackward) ? 1 : 0);
+    const move = resolveTraversalAction("move").keyboardMouse.moveKeys;
+    const keyboardX = move
+      ? (this.keys.has(move.right) ? 1 : 0) - (this.keys.has(move.left) ? 1 : 0)
+      : 0;
+    const keyboardZ = move
+      ? (this.keys.has(move.forward) ? 1 : 0) - (this.keys.has(move.backward) ? 1 : 0)
+      : 0;
     const x = keyboardX + this.touchMoveX;
     const z = keyboardZ + this.touchMoveZ;
     const length = Math.max(1, Math.hypot(x, z));
@@ -142,19 +145,27 @@ export class FPSInput {
 
   private readonly onMouseDown = (event: MouseEvent) => {
     if (!this.enabled) return;
-    if (event.button === 0) {
+
+    const fireButtons = resolveTraversalAction("fire").keyboardMouse.mouseButtons ?? [];
+    const warpButtons = resolveTraversalAction("warp").keyboardMouse.mouseButtons ?? [];
+    const resetButtons = resolveTraversalAction("reset").keyboardMouse.mouseButtons ?? [];
+
+    if (fireButtons.includes(event.button)) {
       this.fireQueued = true;
       this.capture();
     }
-    if (event.button === 2) {
+    if (warpButtons.includes(event.button)) {
       event.preventDefault();
       this.warpHeld = true;
       this.capture();
     }
+    if (resetButtons.includes(event.button)) this.resetQueued = true;
   };
 
   private readonly onMouseUp = (event: MouseEvent) => {
-    if (!this.enabled || event.button !== 2) return;
+    if (!this.enabled) return;
+    const warpButtons = resolveTraversalAction("warp").keyboardMouse.mouseButtons ?? [];
+    if (!warpButtons.includes(event.button)) return;
     this.warpHeld = false;
     this.warpReleased = true;
   };
@@ -174,25 +185,51 @@ export class FPSInput {
 
   private readonly onWheel = (event: WheelEvent) => {
     if (!this.enabled || !this.warpHeld) return;
+    const direction = event.deltaY >= 0 ? "down" : "up";
+    const shorter = resolveTraversalAction("landing-shorter").keyboardMouse.wheel;
+    const longer = resolveTraversalAction("landing-longer").keyboardMouse.wheel;
+    if (direction !== shorter && direction !== longer) return;
+
     event.preventDefault();
-    this.wheelDelta += Math.sign(event.deltaY);
+    if (direction === shorter) this.wheelDelta += 1;
+    if (direction === longer) this.wheelDelta -= 1;
   };
 
   private readonly onKeyDown = (event: KeyboardEvent) => {
     if (!this.enabled) return;
     this.keys.add(event.code);
 
-    if (DEFAULT_KEYBOARD_CODES.crouch.includes(event.code as typeof DEFAULT_KEYBOARD_CODES.crouch[number])) {
-      this.crouchHeld = true;
-    }
-    if (event.code === DEFAULT_KEYBOARD_CODES.reset) this.resetQueued = true;
+    const crouchKeys = resolveTraversalAction("crouch").keyboardMouse.keys ?? [];
+    const resetKeys = resolveTraversalAction("reset").keyboardMouse.keys ?? [];
+    const fireKeys = resolveTraversalAction("fire").keyboardMouse.keys ?? [];
+    const warpKeys = resolveTraversalAction("warp").keyboardMouse.keys ?? [];
+    const shorterKeys = resolveTraversalAction("landing-shorter").keyboardMouse.keys ?? [];
+    const longerKeys = resolveTraversalAction("landing-longer").keyboardMouse.keys ?? [];
+
+    if (crouchKeys.includes(event.code)) this.crouchHeld = true;
+    if (!event.repeat && resetKeys.includes(event.code)) this.resetQueued = true;
+    if (!event.repeat && fireKeys.includes(event.code)) this.fireQueued = true;
+    if (warpKeys.includes(event.code)) this.warpHeld = true;
+    if (!event.repeat && this.warpHeld && shorterKeys.includes(event.code)) this.wheelDelta += 1;
+    if (!event.repeat && this.warpHeld && longerKeys.includes(event.code)) this.wheelDelta -= 1;
     if (event.code === "KeyT") this.tutorialSkipQueued = true;
   };
 
   private readonly onKeyUp = (event: KeyboardEvent) => {
     this.keys.delete(event.code);
-    if (DEFAULT_KEYBOARD_CODES.crouch.includes(event.code as typeof DEFAULT_KEYBOARD_CODES.crouch[number])) {
-      this.crouchHeld = false;
+
+    const crouchKeys = resolveTraversalAction("crouch").keyboardMouse.keys ?? [];
+    const warpKeys = resolveTraversalAction("warp").keyboardMouse.keys ?? [];
+
+    if (crouchKeys.includes(event.code)) {
+      this.crouchHeld = crouchKeys.some((code) => this.keys.has(code));
+    }
+    if (warpKeys.includes(event.code)) {
+      const stillHeld = warpKeys.some((code) => this.keys.has(code));
+      if (!stillHeld && this.warpHeld) {
+        this.warpHeld = false;
+        this.warpReleased = true;
+      }
     }
   };
 
