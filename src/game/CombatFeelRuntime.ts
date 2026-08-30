@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { emitTraversalAudio } from "../audio/TraversalAudio";
 
 type WeaponState = {
   group: THREE.Group;
@@ -19,15 +20,6 @@ type RuntimeState = {
   warp: WarpState;
   shoot(): void;
   playShot(): void;
-  toneSweep(
-    startFrequency: number,
-    endFrequency: number,
-    duration: number,
-    type: OscillatorType,
-    volume: number,
-    delay?: number
-  ): void;
-  noiseBurst(duration: number, volume: number, frequency: number, type: BiquadFilterType): void;
 };
 
 const FIRE_INTERVAL_MS = 320;
@@ -39,15 +31,10 @@ export function installCombatFeel(game: object): void {
   const state = game as unknown as RuntimeState;
   let extraKick = 0;
 
+  // Keep the certified rifle timbre, but route its implementation through the
+  // canonical semantic audio layer so final samples can replace it later.
   state.playShot = () => {
-    // Primary report: low body, electrical crack, then a restrained mechanical close.
-    state.toneSweep(138, 44, 0.145, "sine", 0.125);
-    state.toneSweep(510, 150, 0.105, "sawtooth", 0.062, 0.004);
-    state.toneSweep(1680, 690, 0.055, "triangle", 0.027, 0.007);
-    state.noiseBurst(0.105, 0.072, 560, "lowpass");
-    state.noiseBurst(0.045, 0.028, 3000, "highpass");
-    state.toneSweep(230, 120, 0.055, "triangle", 0.032, 0.105);
-    state.toneSweep(820, 410, 0.035, "square", 0.012, 0.132);
+    emitTraversalAudio("rifle.fire");
     rumble(112, 0.72, 0.34);
   };
 
