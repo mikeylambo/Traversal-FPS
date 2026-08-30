@@ -1,3 +1,4 @@
+import { DEFAULT_GAMEPAD_BINDINGS } from "../input/TraversalActions";
 import type { TraversalSettingsStore } from "./TraversalSettings";
 
 type GameplayInput = {
@@ -108,29 +109,31 @@ function pollGamepad(
   if (!pad) return emptyFrame();
 
   const buttons = pad.buttons.map((button) => button.pressed || button.value > 0.55);
-  const leftX = curveMoveAxis(pad.axes[0] ?? 0);
-  const leftY = curveMoveAxis(pad.axes[1] ?? 0);
+  const [moveXIndex, moveYIndex] = DEFAULT_GAMEPAD_BINDINGS.moveAxes;
+  const [lookXIndex, lookYIndex] = DEFAULT_GAMEPAD_BINDINGS.lookAxes;
+  const leftX = curveMoveAxis(pad.axes[moveXIndex] ?? 0);
+  const leftY = curveMoveAxis(pad.axes[moveYIndex] ?? 0);
 
   const aim = settings.value;
   const right = curveLookVector(
-    pad.axes[2] ?? 0,
-    pad.axes[3] ?? 0,
+    pad.axes[lookXIndex] ?? 0,
+    pad.axes[lookYIndex] ?? 0,
     aim.controllerRightDeadzone,
     aim.controllerLookAcceleration
   );
 
-  const fireHeld = buttonValue(pad, 7) > 0.45;
-  const previousFire = previousButtons[7] ?? false;
-  const warpHeld = buttonValue(pad, 6) > 0.32;
+  const fireHeld = buttonValue(pad, DEFAULT_GAMEPAD_BINDINGS.fire) > 0.45;
+  const previousFire = previousButtons[DEFAULT_GAMEPAD_BINDINGS.fire] ?? false;
+  const warpHeld = buttonValue(pad, DEFAULT_GAMEPAD_BINDINGS.warp) > 0.32;
 
   // RB pulls the landing point back; LB extends it toward the written endpoint.
-  const shorten = buttons[5] ?? false;
-  const extend = buttons[4] ?? false;
+  const shorten = buttons[DEFAULT_GAMEPAD_BINDINGS.landingShorter] ?? false;
+  const extend = buttons[DEFAULT_GAMEPAD_BINDINGS.landingLonger] ?? false;
   const now = performance.now();
   let wheelDelta = 0;
   if (warpHeld && shorten !== extend) {
-    const wasShorten = previousButtons[5] ?? false;
-    const wasExtend = previousButtons[4] ?? false;
+    const wasShorten = previousButtons[DEFAULT_GAMEPAD_BINDINGS.landingShorter] ?? false;
+    const wasExtend = previousButtons[DEFAULT_GAMEPAD_BINDINGS.landingLonger] ?? false;
     const newlyPressed = shorten ? !wasShorten : !wasExtend;
     if (newlyPressed || now >= adjustRepeatAt) wheelDelta = shorten ? 1 : -1;
   }
@@ -138,6 +141,7 @@ function pollGamepad(
   const frameScale = dt * 60;
   const horizontalScale = sensitivityScale(aim.controllerSensitivityX);
   const verticalScale = sensitivityScale(aim.controllerSensitivityY);
+  const crouchHeld = DEFAULT_GAMEPAD_BINDINGS.crouch.some((index) => Boolean(buttons[index]));
 
   return {
     moveX: leftX,
@@ -145,12 +149,18 @@ function pollGamepad(
     lookX: right.x * BASE_LOOK_X * horizontalScale * frameScale,
     lookY: right.y * BASE_LOOK_Y * verticalScale * frameScale,
     firePressed: fireHeld && !previousFire,
-    crouchHeld: Boolean((buttons[1] ?? false) || (buttons[10] ?? false)),
+    crouchHeld,
     warpHeld,
     warpReleased: previousWarp && !warpHeld,
     wheelDelta,
-    resetPressed: Boolean(buttons[2] && !(previousButtons[2] ?? false)),
-    scopePressed: Boolean(buttons[11] && !(previousButtons[11] ?? false))
+    resetPressed: Boolean(
+      buttons[DEFAULT_GAMEPAD_BINDINGS.reset] &&
+      !(previousButtons[DEFAULT_GAMEPAD_BINDINGS.reset] ?? false)
+    ),
+    scopePressed: Boolean(
+      buttons[DEFAULT_GAMEPAD_BINDINGS.scope] &&
+      !(previousButtons[DEFAULT_GAMEPAD_BINDINGS.scope] ?? false)
+    )
   };
 }
 
