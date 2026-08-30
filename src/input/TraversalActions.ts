@@ -12,8 +12,16 @@ export type TraversalActionId =
 
 export type TraversalActionKind = "axis-2d" | "button" | "hold";
 
+export type MovementKeys = {
+  forward: string;
+  backward: string;
+  left: string;
+  right: string;
+};
+
 export type KeyboardMouseBinding = {
   keys?: string[];
+  moveKeys?: MovementKeys;
   mouseButtons?: number[];
   wheel?: "up" | "down";
   pointer?: true;
@@ -36,10 +44,9 @@ export interface TraversalActionDefinition {
 }
 
 /**
- * Canonical action manifest. Gameplay may still consume device-specific input,
- * but every player-facing control now has one stable semantic ID. Future
- * remapping changes bindings here/in persisted overrides instead of rewriting
- * gameplay code.
+ * Canonical action manifest. Gameplay consumes these semantic IDs rather than
+ * owning device bindings. Persisted overrides are merged on top by
+ * TraversalBindingsStore; this table remains the immutable default profile.
  */
 export const TRAVERSAL_ACTIONS: readonly TraversalActionDefinition[] = [
   {
@@ -47,7 +54,14 @@ export const TRAVERSAL_ACTIONS: readonly TraversalActionDefinition[] = [
     label: "Move",
     kind: "axis-2d",
     remappable: true,
-    keyboardMouse: { keys: ["KeyW", "KeyA", "KeyS", "KeyD"] },
+    keyboardMouse: {
+      moveKeys: {
+        forward: "KeyW",
+        backward: "KeyS",
+        left: "KeyA",
+        right: "KeyD"
+      }
+    },
     gamepad: { axisPair: [0, 1] },
     touchControl: "move-stick"
   },
@@ -161,3 +175,9 @@ export const DEFAULT_GAMEPAD_BINDINGS = {
   reset: 2,
   pause: 9
 } as const;
+
+export function defaultTraversalAction(id: TraversalActionId): TraversalActionDefinition {
+  const action = TRAVERSAL_ACTIONS.find((candidate) => candidate.id === id);
+  if (!action) throw new Error(`Unknown Traversal action: ${id}`);
+  return action;
+}
