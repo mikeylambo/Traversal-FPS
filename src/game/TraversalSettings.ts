@@ -87,6 +87,11 @@ export class TraversalSettingsStore {
 
     return [
       {
+        id: "traversal-controls",
+        label: "Controls",
+        description: "Keyboard, mouse & controller bindings"
+      },
+      {
         id: "traversal-sensitivity",
         label: `Mouse Sensitivity: ${this.value.mouseSensitivity.toFixed(2)}x`,
         description: "Select, then adjust left / right"
@@ -148,6 +153,10 @@ export class TraversalSettingsStore {
     const direction = this.adjustmentDirection;
     this.adjustmentDirection = 1;
 
+    if (choiceId === "traversal-controls") {
+      window.dispatchEvent(new CustomEvent("traversal:open-controls"));
+      return true;
+    }
     if (choiceId === "traversal-sensitivity") {
       this.value.mouseSensitivity = this.next(SENSITIVITIES, this.value.mouseSensitivity, direction);
     } else if (choiceId === "traversal-controller-x") {
