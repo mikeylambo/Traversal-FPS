@@ -1,3 +1,4 @@
+import { emitTraversalAudio } from "../audio/TraversalAudio";
 import { CAMPAIGN_MAPS } from "../world/campaign";
 import type { ContentRuntime } from "./ContentRuntime";
 
@@ -8,7 +9,6 @@ type RuntimeState = {
 };
 
 const TITLE_DURATION_MS = 2600;
-let titleAudio: AudioContext | null = null;
 
 /** Gives each content family a restrained entrance card. */
 export function installSectorTransitions(game: object, content: ContentRuntime): void {
@@ -69,30 +69,8 @@ function showTransition(
   overlay.classList.remove("show");
   void overlay.offsetWidth;
   overlay.classList.add("show");
-  playTitleTone(state.modeId === "standard");
+  emitTraversalAudio("sector.enter", { campaign: state.modeId === "standard" });
   window.setTimeout(() => {
     if (overlay.dataset.serial === String(serial)) overlay.classList.remove("show");
   }, TITLE_DURATION_MS);
-}
-
-function playTitleTone(campaign: boolean): void {
-  try {
-    titleAudio ??= new AudioContext();
-    const ctx = titleAudio;
-    void ctx.resume();
-    const now = ctx.currentTime + 0.08;
-    const oscillator = ctx.createOscillator();
-    const gain = ctx.createGain();
-    oscillator.type = "sine";
-    oscillator.frequency.setValueAtTime(campaign ? 660 : 560, now);
-    oscillator.frequency.exponentialRampToValueAtTime(campaign ? 880 : 720, now + 0.22);
-    gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.exponentialRampToValueAtTime(campaign ? 0.045 : 0.03, now + 0.035);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.42);
-    oscillator.connect(gain).connect(ctx.destination);
-    oscillator.start(now);
-    oscillator.stop(now + 0.44);
-  } catch {
-    // Title tone is enhancement-only.
-  }
 }
