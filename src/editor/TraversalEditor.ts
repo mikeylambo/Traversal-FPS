@@ -464,7 +464,7 @@ export function installTraversalEditor(game: object, content: ContentRuntime): v
       if (selected.drift) addDriftPath(selected.position, selected.drift.axis, selected.drift.amplitude);
     }
 
-    if (selection.type === "hazard" && "center" in selected && selected.drift) {
+    if (selection.type === "hazard" && "center" in selected && "drift" in selected && selected.drift) {
       addDriftPath(selected.center, selected.drift.axis, selected.drift.amplitude, 0xff8c75);
     }
   }
