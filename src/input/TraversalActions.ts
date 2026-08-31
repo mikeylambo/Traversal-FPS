@@ -7,6 +7,7 @@ export type TraversalActionId =
   | "landing-longer"
   | "crouch"
   | "scope"
+  | "rewind"
   | "reset"
   | "pause";
 
@@ -129,6 +130,14 @@ export const TRAVERSAL_ACTIONS: readonly TraversalActionDefinition[] = [
     touchControl: "mobile-scope"
   },
   {
+    id: "rewind",
+    label: "Rewind Warp",
+    kind: "button",
+    remappable: true,
+    keyboardMouse: { keys: ["KeyZ"] },
+    gamepad: { buttons: [3] }
+  },
+  {
     id: "reset",
     label: "Reset",
     kind: "button",
@@ -160,6 +169,7 @@ export const DEFAULT_KEYBOARD_CODES = {
   moveRight: "KeyD",
   crouch: ["ControlLeft", "ControlRight", "KeyC"],
   scope: "KeyQ",
+  rewind: "KeyZ",
   reset: "KeyR"
 } as const;
 
@@ -172,6 +182,7 @@ export const DEFAULT_GAMEPAD_BINDINGS = {
   landingLonger: 4,
   crouch: [10, 1] as const,
   scope: 11,
+  rewind: 3,
   reset: 2,
   pause: 9
 } as const;
