@@ -5,6 +5,7 @@ import { ROOMS, type EnemySpec } from "../world/stages";
 type ActiveEnemy = {
   spec: EnemySpec;
   mesh: THREE.Mesh;
+  base: THREE.Vector3;
   alive: boolean;
 };
 
@@ -27,6 +28,7 @@ type RuntimeState = {
   warp: { write(origin: THREE.Vector3, target: THREE.Vector3): void };
   shoot(): void;
   updateTargetReticle(): void;
+  updateEnemies(time: number): void;
   loadRoom(index: number): void;
   playShot(): void;
   playShieldReject(): void;
@@ -42,10 +44,8 @@ type RuntimeState = {
 };
 
 /**
- * Replaces the prototype Shield-only targeting branch with the declarative actor
- * schema. Any implemented actor can now carry an origin constraint without adding
- * another hardcoded condition to TraversalGame. Actor identity is also reinforced
- * by silhouette so color is never the only way to read spatial behavior.
+ * Declarative spatial-actor runtime. v0.12 prototypes Orbit and Phase here so
+ * their behavior stays actor-local and Campaign geometry does not own mechanics.
  */
 export function installSpatialActorRuntime(game: object): void {
   const state = game as unknown as RuntimeState;
@@ -102,6 +102,14 @@ export function installSpatialActorRuntime(game: object): void {
       return;
     }
 
+    if (enemy.spec.kind === "phase" && !isPhaseOpen(enemy)) {
+      state.flashMessage("PHASE CLOSED // WAIT FOR SOLID CORE", 1300);
+      state.playShieldReject();
+      state.addImpactFx(hit.point.clone(), 0xa98bff);
+      state.enforceChallengeShotBudget(now);
+      return;
+    }
+
     const deathPosition = enemy.mesh.position.clone();
     enemy.alive = false;
     enemy.mesh.visible = false;
@@ -143,10 +151,21 @@ export function installSpatialActorRuntime(game: object): void {
     const originRule = enemy
       ? evaluateActorOrigin(enemy.spec.kind, enemy.spec.originConstraint, vectorTuple(state.camera.position))
       : { allowed: true };
-    const blocked = Boolean(enemy && !originRule.allowed);
+    const phaseBlocked = Boolean(enemy?.spec.kind === "phase" && !isPhaseOpen(enemy));
+    const blocked = Boolean(enemy && (!originRule.allowed || phaseBlocked));
 
     document.body.classList.toggle("target-hot", Boolean(enemy) && !blocked);
     document.body.classList.toggle("target-blocked", blocked);
+  };
+
+  const originalUpdateEnemies = state.updateEnemies.bind(game);
+  state.updateEnemies = (time: number) => {
+    originalUpdateEnemies(time);
+    for (const enemy of state.enemies) {
+      if (!enemy.alive) continue;
+      if (enemy.spec.kind === "orbit" && enemy.spec.orbit) updateOrbit(enemy, time);
+      if (enemy.spec.kind === "phase" && enemy.spec.phase) updatePhase(enemy, time);
+    }
   };
 
   const originalLoadRoom = state.loadRoom.bind(game);
@@ -156,6 +175,47 @@ export function installSpatialActorRuntime(game: object): void {
   };
 }
 
+function updateOrbit(enemy: ActiveEnemy, time: number): void {
+  const orbit = enemy.spec.orbit;
+  if (!orbit) return;
+  const angle = time * orbit.speed + (orbit.phase ?? 0);
+  enemy.mesh.position.copy(enemy.base);
+  if (orbit.plane === "xy") {
+    enemy.mesh.position.x += Math.cos(angle) * orbit.radius;
+    enemy.mesh.position.y += Math.sin(angle) * orbit.radius;
+  } else {
+    enemy.mesh.position.x += Math.cos(angle) * orbit.radius;
+    enemy.mesh.position.z += Math.sin(angle) * orbit.radius;
+  }
+  const ring = enemy.mesh.userData.orbitRing as THREE.Object3D | undefined;
+  if (ring) ring.rotation.z = -angle * 0.55;
+}
+
+function updatePhase(enemy: ActiveEnemy, time: number): void {
+  const phase = enemy.spec.phase;
+  if (!phase) return;
+  const local = positiveModulo(time + (phase.phase ?? 0), phase.period);
+  const open = local < phase.openFor;
+  enemy.mesh.userData.phaseOpen = open;
+
+  const material = enemy.mesh.material as THREE.MeshStandardMaterial;
+  material.transparent = true;
+  material.opacity = open ? 1 : 0.24;
+  material.emissiveIntensity = open ? 0.72 : 0.12;
+
+  const halo = enemy.mesh.userData.phaseHalo as THREE.Mesh | undefined;
+  if (halo) {
+    const haloMaterial = halo.material as THREE.MeshBasicMaterial;
+    haloMaterial.opacity = open ? 0.92 : 0.28;
+    halo.scale.setScalar(open ? 1.08 : 1.35);
+    halo.rotation.z += open ? 0.045 : 0.012;
+  }
+}
+
+function isPhaseOpen(enemy: ActiveEnemy): boolean {
+  return enemy.spec.kind !== "phase" || enemy.mesh.userData.phaseOpen === true;
+}
+
 function decorateActorVisuals(enemies: ActiveEnemy[]): void {
   for (const enemy of enemies) {
     if (enemy.mesh.userData.traversalActorVisual) continue;
@@ -163,6 +223,8 @@ function decorateActorVisuals(enemies: ActiveEnemy[]): void {
 
     if (enemy.spec.kind === "shield") decorateShield(enemy);
     if (enemy.spec.kind === "drifter") decorateDrifter(enemy);
+    if (enemy.spec.kind === "orbit") decorateOrbit(enemy);
+    if (enemy.spec.kind === "phase") decoratePhase(enemy);
   }
 }
 
@@ -223,8 +285,53 @@ function decorateDrifter(enemy: ActiveEnemy): void {
   enemy.mesh.add(line);
 }
 
+function decorateOrbit(enemy: ActiveEnemy): void {
+  const radius = enemy.spec.radius ?? 0.72;
+  const material = enemy.mesh.material as THREE.MeshStandardMaterial;
+  material.color.setHex(0xffd86d);
+  material.emissive.setHex(0xffb84f);
+
+  const ring = new THREE.Group();
+  const ringMaterial = new THREE.MeshBasicMaterial({
+    color: 0xffe7a0,
+    transparent: true,
+    opacity: 0.82,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  });
+  const a = new THREE.Mesh(new THREE.TorusGeometry(radius * 1.35, radius * 0.045, 7, 36), ringMaterial);
+  const b = new THREE.Mesh(new THREE.TorusGeometry(radius * 1.35, radius * 0.045, 7, 36), ringMaterial.clone());
+  b.rotation.x = Math.PI * 0.5;
+  ring.add(a, b);
+  enemy.mesh.add(ring);
+  enemy.mesh.userData.orbitRing = ring;
+}
+
+function decoratePhase(enemy: ActiveEnemy): void {
+  const radius = enemy.spec.radius ?? 0.72;
+  const material = enemy.mesh.material as THREE.MeshStandardMaterial;
+  material.color.setHex(0xb69cff);
+  material.emissive.setHex(0x8d6cff);
+  material.transparent = true;
+
+  const halo = new THREE.Mesh(
+    new THREE.TorusGeometry(radius * 1.38, radius * 0.06, 8, 40),
+    new THREE.MeshBasicMaterial({
+      color: 0xd3c8ff,
+      transparent: true,
+      opacity: 0.3,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    })
+  );
+  halo.rotation.x = Math.PI * 0.28;
+  halo.rotation.y = Math.PI * 0.18;
+  enemy.mesh.add(halo);
+  enemy.mesh.userData.phaseHalo = halo;
+  enemy.mesh.userData.phaseOpen = false;
+}
+
 function orientDisc(object: THREE.Object3D, axis: "x" | "y" | "z"): void {
-  // Circle/Torus geometries face +Z by default.
   if (axis === "x") object.rotation.y = Math.PI * 0.5;
   if (axis === "y") object.rotation.x = Math.PI * 0.5;
 }
@@ -242,4 +349,8 @@ function axisVector(axis: "x" | "y" | "z"): THREE.Vector3 {
 
 function vectorTuple(vector: THREE.Vector3): [number, number, number] {
   return [vector.x, vector.y, vector.z];
+}
+
+function positiveModulo(value: number, modulus: number): number {
+  return ((value % modulus) + modulus) % modulus;
 }
