@@ -30,7 +30,7 @@ type RuntimeState = {
 
 /**
  * One-step movement undo for Campaign/Training. It reverses only the last Warp:
- * sphere kills, shots, and consumed vectors remain committed. Firing after arrival
+ * sphere kills, shots, and consumed vectors remain committed. Firing after commit
  * invalidates Rewind, preventing shoot-and-retreat scouting loops.
  */
 export function installRewindWarpRuntime(game: object): void {
@@ -67,7 +67,7 @@ export function installRewindWarpRuntime(game: object): void {
   state.shoot = () => {
     const shotsBefore = state.shots;
     originalShoot();
-    if (state.shots > shotsBefore && available) clear();
+    if (state.shots > shotsBefore && (available || pendingArrival)) clear();
   };
 
   const originalLoadRoom = state.loadRoom.bind(game);
