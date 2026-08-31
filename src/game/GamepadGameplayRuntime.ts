@@ -32,7 +32,6 @@ type PadFrame = {
   scopePressed: boolean;
 };
 
-const MOVE_DEADZONE = 0.16;
 const BASE_LOOK_X = 15.5;
 const BASE_LOOK_Y = 13.5;
 
@@ -111,10 +110,12 @@ function pollGamepad(
   const buttons = pad.buttons.map((button) => button.pressed || button.value > 0.55);
   const [moveXIndex, moveYIndex] = axisPair("move", [0, 1]);
   const [lookXIndex, lookYIndex] = axisPair("look", [2, 3]);
-  const leftX = curveMoveAxis(pad.axes[moveXIndex] ?? 0);
-  const leftY = curveMoveAxis(pad.axes[moveYIndex] ?? 0);
-
   const aim = settings.value;
+  const left = curveMoveVector(
+    pad.axes[moveXIndex] ?? 0,
+    pad.axes[moveYIndex] ?? 0,
+    aim.controllerMoveDeadzone
+  );
   const right = curveLookVector(
     pad.axes[lookXIndex] ?? 0,
     pad.axes[lookYIndex] ?? 0,
@@ -134,8 +135,6 @@ function pollGamepad(
   const previousFire = anyPrevious(previousButtons, fireIndices);
   const warpHeld = maxButtonValue(pad, warpIndices) > 0.32;
 
-  // The shorter/longer semantic direction stays stable even when physical
-  // shoulder buttons are remapped.
   const shorten = anyPressed(buttons, shorterIndices);
   const extend = anyPressed(buttons, longerIndices);
   const now = performance.now();
@@ -152,8 +151,8 @@ function pollGamepad(
   const verticalScale = sensitivityScale(aim.controllerSensitivityY);
 
   return {
-    moveX: leftX,
-    moveZ: -leftY,
+    moveX: left.x,
+    moveZ: -left.y,
     lookX: right.x * BASE_LOOK_X * horizontalScale * frameScale,
     lookY: right.y * BASE_LOOK_Y * verticalScale * frameScale,
     firePressed: fireHeld && !previousFire,
@@ -195,12 +194,15 @@ function sensitivityScale(setting: number): number {
   return 0.35 + Math.max(1, Math.min(10, setting)) * 0.13;
 }
 
-function curveMoveAxis(value: number): number {
-  const magnitude = Math.abs(value);
-  if (magnitude <= MOVE_DEADZONE) return 0;
-  const normalized = (magnitude - MOVE_DEADZONE) / (1 - MOVE_DEADZONE);
-  const curved = normalized * normalized * (3 - 2 * normalized);
-  return Math.sign(value) * curved;
+function curveMoveVector(x: number, y: number, deadzone: number): { x: number; y: number } {
+  const dz = Math.max(0.08, Math.min(0.35, deadzone));
+  const magnitude = Math.min(1, Math.hypot(x, y));
+  if (magnitude <= dz || magnitude <= 0.0001) return { x: 0, y: 0 };
+
+  const normalized = Math.min(1, (magnitude - dz) / (1 - dz));
+  const eased = normalized * normalized * (3 - 2 * normalized);
+  const scale = eased / magnitude;
+  return { x: x * scale, y: y * scale };
 }
 
 function curveLookVector(
