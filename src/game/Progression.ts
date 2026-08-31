@@ -181,10 +181,7 @@ export class TraversalProgression {
   }
 
   async completeCampaignSector(sectorId: string, nextSectorId?: string): Promise<void> {
-    const sector = this.data.sectors[sectorId] ?? { completed: false, clears: 0 };
-    sector.completed = true;
-    this.data.sectors[sectorId] = sector;
-    if (!this.data.completedMaps.includes(sectorId)) this.data.completedMaps.push(sectorId);
+    this.markSectorComplete(sectorId);
 
     if (nextSectorId) {
       const now = Date.now();
@@ -203,6 +200,19 @@ export class TraversalProgression {
       this.data.campaign.currentSectorId = null;
       this.data.campaign.checkpoint = null;
     }
+    await this.persist();
+  }
+
+  /**
+   * Marks the last currently playable sector complete without claiming that the
+   * authored Campaign is finished. Used while later planned sectors still exist.
+   */
+  async completeCampaignContentBoundary(sectorId: string): Promise<void> {
+    this.markSectorComplete(sectorId);
+    this.data.campaign.active = false;
+    this.data.campaign.completed = false;
+    this.data.campaign.currentSectorId = null;
+    this.data.campaign.checkpoint = null;
     await this.persist();
   }
 
@@ -240,6 +250,13 @@ export class TraversalProgression {
     if (this.data.secretsFound.includes(secretId)) return;
     this.data.secretsFound.push(secretId);
     await this.persist();
+  }
+
+  private markSectorComplete(sectorId: string): void {
+    const sector = this.data.sectors[sectorId] ?? { completed: false, clears: 0 };
+    sector.completed = true;
+    this.data.sectors[sectorId] = sector;
+    if (!this.data.completedMaps.includes(sectorId)) this.data.completedMaps.push(sectorId);
   }
 
   private discoverSectorInMemory(sectorId: string): void {
