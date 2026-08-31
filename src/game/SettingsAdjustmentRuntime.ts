@@ -11,6 +11,7 @@ const ADJUSTABLE = new Set([
   "traversal-controller-y",
   "traversal-controller-accel",
   "traversal-controller-scope",
+  "traversal-controller-move-deadzone",
   "traversal-controller-deadzone",
   "traversal-fov",
   "traversal-aim-smoothing",
