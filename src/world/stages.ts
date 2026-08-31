@@ -2,7 +2,7 @@ import type { PuzzleGrammarId } from "./puzzleGrammar";
 import type { OriginConstraint } from "./spatialActors";
 
 export type Vec3Tuple = [number, number, number];
-export type EnemyKind = "sentry" | "drifter" | "shield";
+export type EnemyKind = "sentry" | "drifter" | "shield" | "orbit" | "phase";
 export type HazardKind = "lethal-field" | "sweep" | "sightline-gate";
 
 export interface PlatformSpec {
@@ -16,6 +16,8 @@ export interface EnemySpec {
   position: Vec3Tuple;
   radius?: number;
   drift?: { axis: "x" | "y"; amplitude: number; speed: number };
+  orbit?: { plane: "xy" | "xz"; radius: number; speed: number; phase?: number };
+  phase?: { period: number; openFor: number; phase?: number };
   originConstraint?: OriginConstraint;
 }
 
