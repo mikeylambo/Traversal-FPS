@@ -111,7 +111,10 @@ export function achievementChoices(progression: TraversalProgression) {
       id: achievement.id,
       label: `${unlocked ? "✓" : "◇"} ${achievement.label}`,
       description: achievement.description,
-      disabled: true
+      // Locked rows stay visually unavailable. Unlocked rows remain focusable so
+      // the Shell renders them at full strength; main.ts consumes activation as a
+      // no-op because achievements are informational rather than buttons.
+      disabled: !unlocked
     };
   });
 }
