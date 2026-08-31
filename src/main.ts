@@ -24,6 +24,9 @@ import { installGamepadGameplay } from "./game/GamepadGameplayRuntime";
 import { installCombatFeel } from "./game/CombatFeelRuntime";
 import { installScopeRuntime } from "./game/ScopeRuntime";
 import { installGameplayClarity } from "./game/GameplayClarityRuntime";
+import { installExitGateRuntime } from "./game/ExitGateRuntime";
+import { installLandingReadabilityRuntime } from "./game/LandingReadabilityRuntime";
+import { installRewindWarpRuntime } from "./game/RewindWarpRuntime";
 import { installSectorTransitions } from "./game/SectorTransitionRuntime";
 import { installCampaignFlow } from "./game/CampaignFlowRuntime";
 import { installOnboardingRuntime } from "./game/OnboardingRuntime";
@@ -55,7 +58,7 @@ const rendererAdapter = createThreeStarterAdapter(canvas);
 const app = await createGameApp({
   gameId: "traversal-fps",
   gameName: "Traversal FPS",
-  version: "0.11.1",
+  version: "0.11.2",
   renderer: rendererAdapter,
   root: uiRoot,
   assemblies: [
@@ -164,7 +167,6 @@ progression.onUnlock(() => refreshAchievements());
 app.ui.updateScreen("main-menu", {
   choices: [
     { id: "play", label: "Play" },
-    { id: "vector-lab", label: "Map Editor", description: "Build and test Traversal spaces." },
     { id: "achievements", label: "Achievements", description: `${progression.snapshot().achievements.length} / ${ACHIEVEMENTS.length}` },
     { id: "settings", label: "Settings" },
     { id: "credits", label: "Credits" }
@@ -220,13 +222,13 @@ app.ui.updateScreen("stage-select", {
 
 app.ui.updateScreen("credits", {
   title: "Credits",
-  subtitle: "KILL // WRITE // WARP",
+  subtitle: "",
   choices: [
     { id: "credit-design", label: "Design & Development // Mikey Lambo", disabled: true },
     { id: "credit-tech", label: "Technology // Three.js + SLU Web Game Shell", disabled: true },
     { id: "credit-type", label: "Typography // Rajdhani + Sora", disabled: true },
     { id: "credit-tools", label: "Development Assistance // OpenAI + Anthropic", disabled: true },
-    { id: "credit-build", label: "Build // v0.11.1", description: "Campaign Landing + Handoff", disabled: true }
+    { id: "credit-build", label: "Build // v0.11.2", description: "Fairness + Readability", disabled: true }
   ]
 });
 
@@ -235,21 +237,6 @@ app.flow.onActivate = (screenId: string, choiceId: string) => {
   if (screenId === "main-menu" && choiceId === "achievements") {
     refreshAchievements();
     app.ui.show("achievements");
-    return;
-  }
-
-  if (screenId === "main-menu" && choiceId === "vector-lab") {
-    app.shell.modes.activate("standard");
-    app.shell.difficulty.set("standard");
-    contentRuntime.setSelectedMap("map-01");
-    document.body.classList.add("vector-lab-launching");
-    void app.shell.loadLevel("vector-lab").then(() => {
-      app.ui.show("gameplay-placeholder");
-      window.setTimeout(() => {
-        document.getElementById("editor-toggle")?.click();
-        document.body.classList.remove("vector-lab-launching");
-      }, 90);
-    });
     return;
   }
 
@@ -314,6 +301,9 @@ installGamepadGameplay(game, traversalSettings);
 installCombatFeel(game);
 installScopeRuntime(game, traversalSettings);
 installGameplayClarity(game);
+installExitGateRuntime(game);
+installLandingReadabilityRuntime(game);
+installRewindWarpRuntime(game);
 installSectorTransitions(game, contentRuntime);
 installOnboardingRuntime(game, contentRuntime);
 installEditorShortcut();
@@ -322,18 +312,20 @@ game.start();
 console.info("Traversal FPS ready", {
   shellVersion: "1.0.2+settings+mode-replace",
   shellCommit: "d45d5b89b56eb65cf10cc25ef3a89595d63f6b3f",
-  gameVersion: "0.11.1",
+  gameVersion: "0.11.2",
   renderTarget: "Vector Surface",
   typography: "Rajdhani / Sora",
   starfield: "shader-twinkle",
-  movement: "run + crouch + warp",
-  controller: "left move // right look // RT fire // LT warp // RB shorter // LB longer // L3-B crouch // R3 scope // X reset",
-  controllerAim: "horizontal 1-10 // vertical 1-10 // acceleration 0-5 // scope multiplier // right deadzone",
+  movement: "run + crouch + warp + one-step rewind",
+  controller: "left move // right look // RT fire // LT warp // RB shorter // LB longer // L3-B crouch // R3 scope // Y rewind // X reset",
+  controllerAim: "horizontal 1-10 // vertical 1-10 // acceleration 0-5 // scope multiplier // separate move/look deadzones",
   controls: "semantic bindings // persistent overrides // Settings > Controls",
   scope: "R3 / Q / touch toggle // precision look // 36-48 degree FOV",
   campaignScoring: "no live score // sphere progress + completion stats",
-  campaignFlow: "implemented sectors chain with clear pulse + title cue",
-  landingAssist: "warp arrival cushion + audited campaign sphere vectors",
+  campaignFlow: "new-continue before difficulty // implemented sectors chain // build boundary does not fake campaign completion",
+  landingAssist: "warp arrival cushion + ground-below placement cue + audited campaign sphere vectors",
+  exitGate: "dormant until required spheres resolved",
+  rewind: "Campaign/Training only // last movement only // firing cancels",
   settingsFocus: "select row // left-right adjust // selection retained",
   rifleCadenceMs: 320,
   stopShortStepPercent: 4,
@@ -351,7 +343,7 @@ console.info("Traversal FPS ready", {
   achievements: ACHIEVEMENTS.length,
   hazards: ["lethal-field", "sweep", "sightline-gate"],
   spatialActors: "sentry // drifter // shield data-driven; orbit // phase // linked-pair reserved",
-  editor: "Map Editor // main menu // F2 // backquote",
+  editor: "development-only // F2 // backquote; public menu entry deferred",
   mobileControls: true,
   vrStatus: "future-compatible target; not current production scope",
   assemblies: app.composer.listAssemblies()
