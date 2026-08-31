@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { evaluateActorOrigin } from "../world/spatialActors";
+import { evaluateActorOrigin, resolveOriginConstraint } from "../world/spatialActors";
 import { ROOMS, type EnemySpec } from "../world/stages";
 
 type ActiveEnemy = {
@@ -27,6 +27,7 @@ type RuntimeState = {
   warp: { write(origin: THREE.Vector3, target: THREE.Vector3): void };
   shoot(): void;
   updateTargetReticle(): void;
+  loadRoom(index: number): void;
   playShot(): void;
   playShieldReject(): void;
   playKill(): void;
@@ -43,7 +44,8 @@ type RuntimeState = {
 /**
  * Replaces the prototype Shield-only targeting branch with the declarative actor
  * schema. Any implemented actor can now carry an origin constraint without adding
- * another hardcoded condition to TraversalGame.
+ * another hardcoded condition to TraversalGame. Actor identity is also reinforced
+ * by silhouette so color is never the only way to read spatial behavior.
  */
 export function installSpatialActorRuntime(game: object): void {
   const state = game as unknown as RuntimeState;
@@ -146,6 +148,96 @@ export function installSpatialActorRuntime(game: object): void {
     document.body.classList.toggle("target-hot", Boolean(enemy) && !blocked);
     document.body.classList.toggle("target-blocked", blocked);
   };
+
+  const originalLoadRoom = state.loadRoom.bind(game);
+  state.loadRoom = (index: number) => {
+    originalLoadRoom(index);
+    decorateActorVisuals(state.enemies);
+  };
+}
+
+function decorateActorVisuals(enemies: ActiveEnemy[]): void {
+  for (const enemy of enemies) {
+    if (enemy.mesh.userData.traversalActorVisual) continue;
+    enemy.mesh.userData.traversalActorVisual = true;
+
+    if (enemy.spec.kind === "shield") decorateShield(enemy);
+    if (enemy.spec.kind === "drifter") decorateDrifter(enemy);
+  }
+}
+
+function decorateShield(enemy: ActiveEnemy): void {
+  const radius = enemy.spec.radius ?? 0.72;
+  const constraint = resolveOriginConstraint(enemy.spec.kind, enemy.spec.originConstraint);
+  const axis = constraint?.axis ?? "x";
+  const blockedSign = constraint?.min !== undefined ? -1 : 1;
+
+  const material = new THREE.MeshBasicMaterial({
+    color: 0xffc48a,
+    transparent: true,
+    opacity: 0.34,
+    side: THREE.DoubleSide,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  });
+  const plate = new THREE.Mesh(new THREE.CircleGeometry(radius * 1.18, 28), material);
+  orientDisc(plate, axis);
+  setAxisPosition(plate.position, axis, blockedSign * radius * 0.86);
+
+  const rim = new THREE.Mesh(
+    new THREE.TorusGeometry(radius * 1.22, radius * 0.045, 8, 40),
+    new THREE.MeshBasicMaterial({
+      color: 0xffd6ad,
+      transparent: true,
+      opacity: 0.78,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    })
+  );
+  orientDisc(rim, axis);
+  setAxisPosition(rim.position, axis, blockedSign * radius * 0.9);
+
+  enemy.mesh.add(plate, rim);
+}
+
+function decorateDrifter(enemy: ActiveEnemy): void {
+  const drift = enemy.spec.drift;
+  if (!drift) return;
+  const radius = enemy.spec.radius ?? 0.72;
+  const axis = drift.axis;
+  const direction = axisVector(axis).multiplyScalar(radius * 1.75);
+  const geometry = new THREE.BufferGeometry().setFromPoints([
+    direction.clone().multiplyScalar(-1),
+    direction
+  ]);
+  const line = new THREE.Line(
+    geometry,
+    new THREE.LineBasicMaterial({
+      color: 0xffb4e5,
+      transparent: true,
+      opacity: 0.82,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    })
+  );
+  enemy.mesh.add(line);
+}
+
+function orientDisc(object: THREE.Object3D, axis: "x" | "y" | "z"): void {
+  // Circle/Torus geometries face +Z by default.
+  if (axis === "x") object.rotation.y = Math.PI * 0.5;
+  if (axis === "y") object.rotation.x = Math.PI * 0.5;
+}
+
+function setAxisPosition(position: THREE.Vector3, axis: "x" | "y" | "z", value: number): void {
+  position.set(0, 0, 0);
+  position[axis] = value;
+}
+
+function axisVector(axis: "x" | "y" | "z"): THREE.Vector3 {
+  if (axis === "x") return new THREE.Vector3(1, 0, 0);
+  if (axis === "y") return new THREE.Vector3(0, 1, 0);
+  return new THREE.Vector3(0, 0, 1);
 }
 
 function vectorTuple(vector: THREE.Vector3): [number, number, number] {
