@@ -25,9 +25,9 @@ export interface SpatialActorDefinition {
 }
 
 /**
- * Actor vocabulary is data first. Only the first three actor kinds are runtime
- * enabled today; planned entries reserve their spatial role without making them
- * legal RoomSpec content before their behavior is play-tested.
+ * Spatial actors are data-first and only become legal authored content once a
+ * playable prototype exists. Orbit/Phase enter v0.12 as experimental vocabulary;
+ * Linked Pair remains reserved until those prove that another actor adds depth.
  */
 export const SPATIAL_ACTORS: readonly SpatialActorDefinition[] = [
   {
@@ -59,16 +59,16 @@ export const SPATIAL_ACTORS: readonly SpatialActorDefinition[] = [
   {
     id: "orbit",
     label: "Orbit",
-    implemented: false,
+    implemented: true,
     spatialRole: "Endpoint moving around a locus",
-    capabilities: ["planned", "moving-position", "vector-endpoint", "cyclic-route"]
+    capabilities: ["moving-position", "vector-endpoint", "cyclic-route", "two-axis-timing"]
   },
   {
     id: "phase",
     label: "Phase",
-    implemented: false,
+    implemented: true,
     spatialRole: "Periodically targetable endpoint",
-    capabilities: ["planned", "target-window", "vector-endpoint"]
+    capabilities: ["target-window", "vector-endpoint", "timing-state"]
   },
   {
     id: "linked-pair",
