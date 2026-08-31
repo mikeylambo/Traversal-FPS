@@ -63,6 +63,8 @@ function testBindings(): void {
   }, "default WASD movement resolves");
   deepEqual(store.resolve("fire").keyboardMouse.mouseButtons, [0], "default fire remains LMB");
   equal(store.resolve("fire").gamepad.triggerButton, 7, "default controller fire remains RT");
+  deepEqual(store.resolve("rewind").keyboardMouse.keys, ["KeyZ"], "rewind defaults to Z on keyboard");
+  deepEqual(store.resolve("rewind").gamepad.buttons, [3], "rewind defaults to Y on standard gamepad");
 
   assert(store.setKeyboardMouse("fire", { keys: ["KeyF"] }), "fire keyboard override is accepted");
   deepEqual(store.resolve("fire").keyboardMouse.keys, ["KeyF"], "custom fire key resolves");
@@ -118,9 +120,15 @@ async function testProgression(): Promise<void> {
   equal(progression.campaignCheckpoint()?.sectorId, "map-02", "sector handoff advances persisted checkpoint");
   assert(progression.discoveredSectors().includes("map-02"), "sector handoff discovers the next sector");
 
+  await progression.completeCampaignContentBoundary("map-02");
+  assert(!progression.hasCampaignContinue(), "current-build boundary clears stale Continue state");
+  equal(progression.snapshot().campaign.completed, false, "current-build boundary does not claim full campaign completion");
+  equal(progression.snapshot().sectors["map-02"]?.completed, true, "boundary still records the sector clear");
+
+  await progression.startCampaign("map-02");
   await progression.completeCampaignSector("map-02");
-  assert(!progression.hasCampaignContinue(), "final sector completion clears Continue state");
-  equal(progression.snapshot().campaign.completed, true, "campaign completion persists");
+  assert(!progression.hasCampaignContinue(), "true final sector completion clears Continue state");
+  equal(progression.snapshot().campaign.completed, true, "true campaign completion persists");
 }
 
 function testSpatialActors(): void {
