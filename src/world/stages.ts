@@ -122,7 +122,7 @@ export const ROOMS: RoomSpec[] = [
       { id: "r5-left", kind: "sentry", position: [-8, 4.2, -12] },
       { id: "r5-drift", kind: "drifter", position: [0, 7, -22], drift: { axis: "x", amplitude: 7, speed: 1.15 } },
       { id: "r5-right", kind: "sentry", position: [9, 5.7, -25] },
-      { id: "r5-final", kind: "drifter", position: [0, 4, -36], drift: { axis: "y", amplitude: 3, speed: 1.4 } }
+      { id: "r5-final", kind: "drifter", position: [0, 4, -36], drift: { axis: "y", amplitude: 2.5, speed: 1.4 } }
     ]
   },
   {
