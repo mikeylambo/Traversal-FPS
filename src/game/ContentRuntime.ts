@@ -1,10 +1,11 @@
 import { CAMPAIGN_MAPS } from "../world/campaign";
 import { CONTROLS_ROOM } from "../world/onboarding";
 import { ROOMS, type RoomSpec } from "../world/stages";
+import { VOCABULARY_LAB_ROOMS } from "../world/vocabularyLab";
 
-export type TraversalContentId = "controls" | "training" | string;
+export type TraversalContentId = "controls" | "training" | "vocabulary-lab" | string;
 export type TraversalContentForm = "controls" | "training" | "campaign-field" | "course";
-export type TrainingPath = "controls" | "grammar";
+export type TrainingPath = "controls" | "grammar" | "vocabulary";
 
 export interface ContentRuntime {
   selectedContentId(): TraversalContentId;
@@ -25,6 +26,7 @@ export function installContentRuntime(shell: any): ContentRuntime {
   let activeForm: TraversalContentForm = "training";
 
   const loadGrammarRooms = (): RoomSpec[] => structuredClone(trainingRooms) as RoomSpec[];
+  const loadVocabularyRooms = (): RoomSpec[] => structuredClone(VOCABULARY_LAB_ROOMS) as RoomSpec[];
 
   const selectRooms = (): RoomSpec[] => {
     const modeId = shell.modes.active()?.id ?? "training";
@@ -33,6 +35,11 @@ export function installContentRuntime(shell: any): ContentRuntime {
         activeId = "controls";
         activeForm = "controls";
         return [structuredClone(CONTROLS_ROOM) as RoomSpec];
+      }
+      if (selectedTrainingPath === "vocabulary") {
+        activeId = "vocabulary-lab";
+        activeForm = "training";
+        return loadVocabularyRooms();
       }
       activeId = "training";
       activeForm = "training";
