@@ -86,7 +86,10 @@ export function installScopeRuntime(game: object, settings: TraversalSettingsSto
 
     originalUpdate(dt);
 
-    const allowed = scoped && !state.input.isWarpHeld() && !state.warp.isTransiting();
+    // Scope remains available while holding Warp so distant/low landing points
+    // can be placed precisely. Physical transit still suppresses the scope and it
+    // returns automatically afterward if the toggle remains active.
+    const allowed = scoped && !state.warp.isTransiting();
     const targetBlend = allowed ? 1 : 0;
     blend = THREE.MathUtils.lerp(blend, targetBlend, 1 - Math.pow(0.0008, dt));
 
