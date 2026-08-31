@@ -3,6 +3,7 @@ import { registerCampaign02 } from "../src/world/registerCampaign02";
 import { registerCampaign03 } from "../src/world/registerCampaign03";
 import { CONTROLS_ROOM } from "../src/world/onboarding";
 import { ROOMS } from "../src/world/stages";
+import { VOCABULARY_LAB_ROOMS } from "../src/world/vocabularyLab";
 import { validateRoomCatalog, type ContentValidationIssue } from "../src/world/contentValidation";
 
 registerCampaign02();
@@ -11,7 +12,8 @@ registerCampaign03();
 type Catalog = { label: string; rooms: typeof ROOMS };
 
 const catalogs: Catalog[] = [
-  { label: "training", rooms: [CONTROLS_ROOM, ...ROOMS] }
+  { label: "training", rooms: [CONTROLS_ROOM, ...ROOMS] },
+  { label: "vocabulary-lab", rooms: VOCABULARY_LAB_ROOMS }
 ];
 
 for (const map of CAMPAIGN_MAPS.filter((entry) => entry.implemented)) {
