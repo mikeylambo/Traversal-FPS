@@ -47,14 +47,35 @@ export function installCampaignFlow(game: object, content: ContentRuntime): void
 
     const currentId = content.selectedContentId();
     const currentIndex = CAMPAIGN_MAPS.findIndex((entry) => entry.id === currentId);
-    const nextMap = currentIndex >= 0
-      ? CAMPAIGN_MAPS.slice(currentIndex + 1).find((entry) => entry.implemented)
-      : undefined;
+    const laterMaps = currentIndex >= 0 ? CAMPAIGN_MAPS.slice(currentIndex + 1) : [];
+    const nextMap = laterMaps.find((entry) => entry.implemented);
     const activeProgression = activeTraversalProgression();
 
     if (!nextMap) {
       originalFinishRun();
-      void activeProgression?.completeCampaignSector(currentId);
+
+      if (laterMaps.length > 0) {
+        // This preview currently ends before the authored Campaign does. Record
+        // the sector clear without poisoning Continue state with a false ending.
+        void activeProgression?.completeCampaignContentBoundary(currentId);
+        state.ui.updateScreen("results", {
+          title: "Available Sectors Cleared",
+          subtitle: `Sector ${String(currentIndex + 1).padStart(2, "0")} complete · Campaign continues`,
+          choices: [
+            {
+              id: "result-boundary",
+              label: "Campaign Progress",
+              description: `${currentIndex + 1} of ${CAMPAIGN_MAPS.length} planned sectors reached in this build`,
+              disabled: true
+            },
+            { id: "retry", label: "Replay Sector" },
+            { id: "continue", label: "Change Mode" },
+            { id: "menu", label: "Main Menu" }
+          ]
+        });
+      } else {
+        void activeProgression?.completeCampaignSector(currentId);
+      }
       return;
     }
 
