@@ -4,6 +4,7 @@ import { registerCampaign03 } from "../src/world/registerCampaign03";
 import { CONTROLS_ROOM } from "../src/world/onboarding";
 import { ROOMS } from "../src/world/stages";
 import { VOCABULARY_LAB_ROOMS } from "../src/world/vocabularyLab";
+import { endpointSafetyIssues } from "../src/world/endpointSafety";
 import { validateRoomCatalog, type ContentValidationIssue } from "../src/world/contentValidation";
 
 registerCampaign02();
@@ -28,6 +29,11 @@ for (const catalog of catalogs) {
   roomCount += catalog.rooms.length;
   for (const issue of validateRoomCatalog(catalog.label, catalog.rooms)) {
     allIssues.push({ catalog: catalog.label, issue });
+  }
+  for (const room of catalog.rooms) {
+    for (const issue of endpointSafetyIssues(room)) {
+      allIssues.push({ catalog: catalog.label, issue });
+    }
   }
 }
 
