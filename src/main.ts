@@ -59,7 +59,7 @@ const rendererAdapter = createThreeStarterAdapter(canvas);
 const app = await createGameApp({
   gameId: "traversal-fps",
   gameName: "Traversal FPS",
-  version: "0.11.3",
+  version: "0.12.0",
   renderer: rendererAdapter,
   root: uiRoot,
   assemblies: [
@@ -213,6 +213,11 @@ const trainingChoices = [
     id: "training-grammar",
     label: "Grammar 01–08",
     description: "Replay the eight traversal lessons."
+  },
+  {
+    id: "training-vocabulary",
+    label: "Spatial Vocabulary // Experimental",
+    description: "Prototype Orbit + Phase before they enter Campaign."
   }
 ];
 
@@ -229,7 +234,7 @@ app.ui.updateScreen("credits", {
     { id: "credit-tech", label: "Technology // Three.js + SLU Web Game Shell", disabled: true },
     { id: "credit-type", label: "Typography // Rajdhani + Sora", disabled: true },
     { id: "credit-tools", label: "Development Assistance // OpenAI + Anthropic", disabled: true },
-    { id: "credit-build", label: "Build // v0.11.3", description: "Controller + Objective Polish", disabled: true }
+    { id: "credit-build", label: "Build // v0.12.0", description: "World Vocabulary Prototype", disabled: true }
   ]
 });
 
@@ -242,8 +247,6 @@ app.flow.onActivate = (screenId: string, choiceId: string) => {
   }
 
   if (screenId === "achievements" && ACHIEVEMENTS.some((achievement) => achievement.id === choiceId)) {
-    // Unlocked achievement rows stay focusable so they render at full strength,
-    // but the screen is informational; confirming one should not navigate.
     return;
   }
 
@@ -274,6 +277,7 @@ app.flow.onActivate = (screenId: string, choiceId: string) => {
   if (screenId === "stage-select") {
     if (choiceId === "training-full") contentRuntime.setTrainingPath("controls");
     if (choiceId === "training-grammar") contentRuntime.setTrainingPath("grammar");
+    if (choiceId === "training-vocabulary") contentRuntime.setTrainingPath("vocabulary");
     if (choiceId.startsWith("map-")) contentRuntime.setSelectedMap(choiceId);
   }
 
@@ -320,7 +324,7 @@ game.start();
 console.info("Traversal FPS ready", {
   shellVersion: "1.0.2+settings+mode-replace",
   shellCommit: "d45d5b89b56eb65cf10cc25ef3a89595d63f6b3f",
-  gameVersion: "0.11.3",
+  gameVersion: "0.12.0",
   renderTarget: "Vector Surface",
   typography: "Rajdhani / Sora",
   starfield: "shader-twinkle",
@@ -341,6 +345,7 @@ console.info("Traversal FPS ready", {
   autoStepMeters: 0.38,
   puzzleGrammar: PUZZLE_GRAMMAR_V1.map((entry) => entry.id),
   trainingRooms: 8,
+  vocabularyLab: ["orbit", "phase"],
   onboarding: "action-gated controls // keyboard + controller + touch",
   campaignMaps: CAMPAIGN_MAPS.map((map) => ({
     id: map.id,
@@ -350,7 +355,7 @@ console.info("Traversal FPS ready", {
   })),
   achievements: ACHIEVEMENTS.length,
   hazards: ["lethal-field", "sweep", "sightline-gate"],
-  spatialActors: "sentry // drifter // shield data-driven; orbit // phase // linked-pair reserved",
+  spatialActors: "sentry // drifter // shield // orbit experimental // phase experimental // linked-pair reserved",
   editor: "development-only // F2 // backquote; public menu entry deferred",
   mobileControls: true,
   vrStatus: "future-compatible target; not current production scope",
