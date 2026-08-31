@@ -41,12 +41,14 @@ export const MAP_03_FIELD: RoomSpec[] = [
       { id: "occlusion-slot", kind: "sentry", position: [-15, 5.3, -36], radius: 0.52 },
       { id: "occlusion-high", kind: "sentry", position: [16, 6.7, -61], radius: 0.58 },
 
-      // Alternate low route. From the high platform the vector crosses the
-      // -84 landing well inside its footprint before continuing beyond it.
-      { id: "occlusion-low", kind: "drifter", position: [-8, 3.1, -92], radius: 0.55, drift: { axis: "x", amplitude: 3, speed: 0.58 } },
+      // Alternate low route. The endpoint now remains beyond the -91 deck rather
+      // than entering its collision volume; the written line still crosses the
+      // -84 landing before continuing deeper into the construct.
+      { id: "occlusion-low", kind: "drifter", position: [-8, 3.1, -97], radius: 0.55, drift: { axis: "x", amplitude: 3, speed: 0.58 } },
 
-      // Higher alternate route lands directly on the -105 platform.
-      { id: "occlusion-alt", kind: "drifter", position: [11, 6.1, -105], radius: 0.55, drift: { axis: "y", amplitude: 2.8, speed: 0.72 } },
+      // Higher alternate route keeps enough vertical motion to cross the usable
+      // landing height without dipping its sphere volume into the -105 platform.
+      { id: "occlusion-alt", kind: "drifter", position: [11, 6.1, -105], radius: 0.55, drift: { axis: "y", amplitude: 2.0, speed: 0.72 } },
 
       // Both late routes converge on a final vector that passes through the
       // completion platform, making the final Stop Short leg unambiguous.
