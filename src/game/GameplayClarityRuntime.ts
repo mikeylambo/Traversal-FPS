@@ -84,7 +84,7 @@ function updateStopShort(state: RuntimeState): void {
   const hintEl = document.getElementById("stop-short-hint");
   if (!panel || !percentEl || !stateEl || !hintEl) return;
 
-  const trainingStopShort = state.modeId === "training" && state.roomIndex === 1;
+  const trainingStopShort = state.modeId === "training" && ROOMS[state.roomIndex]?.id === "room-02";
   const hasAnchor = state.warp.hasAnchor();
   const held = state.input.isWarpHeld();
   const percent = hasAnchor ? state.warp.selectionPercent() : 100;
@@ -146,7 +146,7 @@ function updateShotBudget(state: RuntimeState): void {
 }
 
 function emphasizeTrainingStopShort(state: RuntimeState): void {
-  if (state.modeId !== "training" || state.roomIndex !== 1) return;
+  if (state.modeId !== "training" || ROOMS[state.roomIndex]?.id !== "room-02") return;
   const tutorial = document.getElementById("tutorial-text");
   const objective = document.getElementById("room-objective");
   if (tutorial) tutorial.textContent = "Choose a landing point before the endpoint.";
