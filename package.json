@@ -11,7 +11,7 @@
     "check": "tsc --noEmit"
   },
   "dependencies": {
-    "@slu/web-shell": "github:mikeylambo/Web-Game-Shell-v1.02#d45d5b89b56eb65cf10cc25ef3a89595d63f6b3f",
+    "@slu/web-shell": "github:mikeylambo/Web-Game-Shell-v1.02#310ee6ca31a0e3b049af293730eb18e9b74407fc",
     "three": "^0.180.0"
   },
   "devDependencies": {
