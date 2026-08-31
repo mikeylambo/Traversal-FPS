@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "content:doctor": "tsx scripts/content-doctor.ts",
-    "test:regression": "tsx scripts/regression-tests.ts",
+    "test:regression": "tsx scripts/regression-tests.ts && tsx scripts/endpoint-safety-tests.ts",
     "build": "npm run content:doctor && npm run test:regression && tsc --noEmit && vite build",
     "check": "tsc --noEmit"
   },
