@@ -21,6 +21,7 @@ import { enhanceGrammarRuntime } from "./game/GrammarRuntimePatch";
 import { installContentRuntime } from "./game/ContentRuntime";
 import { installHazardRuntime } from "./game/HazardRuntime";
 import { installGamepadGameplay } from "./game/GamepadGameplayRuntime";
+import { installMenuGamepadRuntime } from "./game/MenuGamepadRuntime";
 import { installCombatFeel } from "./game/CombatFeelRuntime";
 import { installScopeRuntime } from "./game/ScopeRuntime";
 import { installGameplayClarity } from "./game/GameplayClarityRuntime";
@@ -58,7 +59,7 @@ const rendererAdapter = createThreeStarterAdapter(canvas);
 const app = await createGameApp({
   gameId: "traversal-fps",
   gameName: "Traversal FPS",
-  version: "0.11.2",
+  version: "0.11.3",
   renderer: rendererAdapter,
   root: uiRoot,
   assemblies: [
@@ -228,7 +229,7 @@ app.ui.updateScreen("credits", {
     { id: "credit-tech", label: "Technology // Three.js + SLU Web Game Shell", disabled: true },
     { id: "credit-type", label: "Typography // Rajdhani + Sora", disabled: true },
     { id: "credit-tools", label: "Development Assistance // OpenAI + Anthropic", disabled: true },
-    { id: "credit-build", label: "Build // v0.11.2", description: "Fairness + Readability", disabled: true }
+    { id: "credit-build", label: "Build // v0.11.3", description: "Controller + Objective Polish", disabled: true }
   ]
 });
 
@@ -237,6 +238,12 @@ app.flow.onActivate = (screenId: string, choiceId: string) => {
   if (screenId === "main-menu" && choiceId === "achievements") {
     refreshAchievements();
     app.ui.show("achievements");
+    return;
+  }
+
+  if (screenId === "achievements" && ACHIEVEMENTS.some((achievement) => achievement.id === choiceId)) {
+    // Unlocked achievement rows stay focusable so they render at full strength,
+    // but the screen is informational; confirming one should not navigate.
     return;
   }
 
@@ -284,6 +291,7 @@ app.flow.onBack = (screenId: string) => {
 
 installSettingsFocusRetention(app.flow, app.ui, uiRoot);
 installControlsRuntime(app.flow, app.ui as any);
+installMenuGamepadRuntime(app.ui);
 
 const game = new TraversalGame(canvas, app.shell, app.flow, app.ui, traversalSettings);
 enhanceTraversalMovement(game);
@@ -312,19 +320,19 @@ game.start();
 console.info("Traversal FPS ready", {
   shellVersion: "1.0.2+settings+mode-replace",
   shellCommit: "d45d5b89b56eb65cf10cc25ef3a89595d63f6b3f",
-  gameVersion: "0.11.2",
+  gameVersion: "0.11.3",
   renderTarget: "Vector Surface",
   typography: "Rajdhani / Sora",
   starfield: "shader-twinkle",
   movement: "run + crouch + warp + one-step rewind",
-  controller: "left move // right look // RT fire // LT warp // RB shorter // LB longer // L3-B crouch // R3 scope // Y rewind // X reset",
+  controller: "left stick menus/move // right look // RT fire // LT warp // RB shorter // LB longer // L3-B crouch // R3 scope // Y rewind // X reset",
   controllerAim: "horizontal 1-10 // vertical 1-10 // acceleration 0-5 // scope multiplier // separate move/look deadzones",
   controls: "semantic bindings // persistent overrides // Settings > Controls",
-  scope: "R3 / Q / touch toggle // precision look // 36-48 degree FOV",
+  scope: "R3 / Q / touch toggle // available during endpoint placement // hidden during transit",
   campaignScoring: "no live score // sphere progress + completion stats",
   campaignFlow: "new-continue before difficulty // implemented sectors chain // build boundary does not fake campaign completion",
   landingAssist: "warp arrival cushion + ground-below placement cue + audited campaign sphere vectors",
-  exitGate: "dormant until required spheres resolved",
+  exitGate: "dormant until required spheres resolved // pulse + semantic SFX on activation",
   rewind: "Campaign/Training only // last movement only // firing cancels",
   settingsFocus: "select row // left-right adjust // selection retained",
   rifleCadenceMs: 320,
