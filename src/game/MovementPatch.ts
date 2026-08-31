@@ -11,6 +11,7 @@ const AUTO_STEP_HEIGHT = 0.38;
 const BASE_GRAVITY = 18;
 const WARP_LANDING_EDGE_CUSHION = 0.26;
 const WARP_LANDING_VERTICAL_CUSHION = 0.72;
+const WARP_EMBEDDED_SURFACE_MARGIN = 0.18;
 
 type MovementInput = {
   movement(): { x: number; z: number };
@@ -255,25 +256,48 @@ function hasHeadroom(
   });
 }
 
-function resolveWarpArrival(
+/**
+ * Settles a just-completed Warp onto a legitimate floor surface.
+ *
+ * Two cases count as a landing:
+ * 1) the endpoint is already near normal standing eye height; or
+ * 2) the endpoint itself is embedded in a thin floor/deck (for example, a
+ *    sphere whose center dipped into the platform before it was destroyed).
+ *
+ * The second rule is intentionally limited to actual platform volume. A truly
+ * airborne endpoint below a raised platform remains airborne rather than being
+ * magnetized upward through space.
+ */
+export function resolveWarpArrival(
   position: THREE.Vector3,
   eyeHeight: number,
   platforms: PlatformSpec[]
 ): boolean {
-  let best: { platform: PlatformSpec; standingY: number; deltaY: number } | null = null;
+  let best: { platform: PlatformSpec; standingY: number } | null = null;
 
   for (const platform of platforms) {
     const [cx, cy, cz] = platform.center;
     const [sx, sy, sz] = platform.size;
+
+    // Tall/thin collision slabs are walls/occluders, not floors. Do not turn an
+    // embedded endpoint in a wall into an unintended teleport to the wall top.
+    if (sx < 1.5 || sz < 1.5 || sy > 2.5) continue;
+
     const withinFootprint =
       Math.abs(position.x - cx) <= sx * 0.5 + WARP_LANDING_EDGE_CUSHION &&
       Math.abs(position.z - cz) <= sz * 0.5 + WARP_LANDING_EDGE_CUSHION;
     if (!withinFootprint) continue;
 
-    const standingY = cy + sy * 0.5 + eyeHeight;
-    const deltaY = Math.abs(position.y - standingY);
-    if (deltaY > WARP_LANDING_VERTICAL_CUSHION) continue;
-    if (!best || deltaY < best.deltaY) best = { platform, standingY, deltaY };
+    const platformBottom = cy - sy * 0.5;
+    const platformTop = cy + sy * 0.5;
+    const standingY = platformTop + eyeHeight;
+    const nearStandingHeight = Math.abs(position.y - standingY) <= WARP_LANDING_VERTICAL_CUSHION;
+    const embeddedInSurface =
+      position.y >= platformBottom - WARP_EMBEDDED_SURFACE_MARGIN &&
+      position.y <= platformTop + WARP_EMBEDDED_SURFACE_MARGIN;
+
+    if (!nearStandingHeight && !embeddedInSurface) continue;
+    if (!best || standingY > best.standingY) best = { platform, standingY };
   }
 
   if (!best) return false;
