@@ -66,6 +66,13 @@ const app = await createGameApp({
     (shell) => createFPSAssembly({ shell }),
     (shell) => createArcadeAssembly({ shell })
   ],
+  capabilities: {
+    stageSelect: true,
+    difficulty: true,
+    loadout: false,
+    characterSelect: false,
+    vehicleSelect: false
+  },
   flow: {
     settingsExtension: {
       choices: () => traversalSettings.choices(),
@@ -192,17 +199,6 @@ app.ui.updateScreen("difficulty-select", {
   }))
 });
 
-app.ui.updateScreen("loadout", {
-  title: "Warp Rifle",
-  choices: [
-    {
-      id: "continue",
-      label: "Continue",
-      description: "Run. Crouch. Write a vector. Choose where it ends."
-    }
-  ]
-});
-
 const trainingChoices = [
   {
     id: "training-full",
@@ -275,25 +271,9 @@ app.flow.onActivate = (screenId: string, choiceId: string) => {
   }
 
   if (screenId === "stage-select") {
-    if (choiceId === "training-vocabulary") {
-      // The generic Shell launches the last setup screen asynchronously. Own the
-      // experimental path explicitly so a stale Training menu can never cover the
-      // prototype and a failed load returns to a readable state instead of hanging.
-      contentRuntime.setTrainingPath("vocabulary");
-      app.ui.show("gameplay-placeholder");
-      void app.shell.loadLevel("training").catch((error: unknown) => {
-        console.error("Spatial Vocabulary launch failed", error);
-        app.ui.updateScreen("stage-select", {
-          title: "Training",
-          subtitle: "Spatial Vocabulary failed to load.",
-          choices: trainingChoices
-        });
-        app.ui.show("stage-select");
-      });
-      return;
-    }
     if (choiceId === "training-full") contentRuntime.setTrainingPath("controls");
     if (choiceId === "training-grammar") contentRuntime.setTrainingPath("grammar");
+    if (choiceId === "training-vocabulary") contentRuntime.setTrainingPath("vocabulary");
     if (choiceId.startsWith("map-")) contentRuntime.setSelectedMap(choiceId);
   }
 
@@ -338,8 +318,8 @@ installEditorShortcut();
 game.start();
 
 console.info("Traversal FPS ready", {
-  shellVersion: "1.0.2+settings+mode-replace",
-  shellCommit: "d45d5b89b56eb65cf10cc25ef3a89595d63f6b3f",
+  shellVersion: "1.0.2+flow-capabilities",
+  shellCommit: "310ee6ca31a0e3b049af293730eb18e9b74407fc",
   gameVersion: "0.12.0",
   renderTarget: "Vector Surface",
   typography: "Rajdhani / Sora",
@@ -351,6 +331,7 @@ console.info("Traversal FPS ready", {
   scope: "R3 / Q / touch toggle // available during endpoint placement // hidden during transit",
   campaignScoring: "no live score // sphere progress + completion stats",
   campaignFlow: "new-continue before difficulty // implemented sectors chain // build boundary does not fake campaign completion",
+  setupFlow: "difficulty + stage only // no forced FPS loadout",
   landingAssist: "warp arrival cushion + embedded-endpoint recovery + ground-below placement cue + audited campaign sphere vectors",
   exitGate: "dormant until required spheres resolved // pulse + semantic SFX on activation",
   rewind: "Campaign/Training only // last movement only // firing cancels",
