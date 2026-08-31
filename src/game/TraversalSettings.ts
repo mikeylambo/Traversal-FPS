@@ -19,6 +19,7 @@ export interface TraversalSettingsValue {
   controllerSensitivityY: number;
   controllerLookAcceleration: number;
   controllerScopeSensitivity: number;
+  controllerMoveDeadzone: number;
   controllerRightDeadzone: number;
   visual: TraversalVisualSettings;
 }
@@ -51,7 +52,8 @@ export const DEFAULT_TRAVERSAL_SETTINGS: TraversalSettingsValue = {
   controllerSensitivityY: 5,
   controllerLookAcceleration: 2,
   controllerScopeSensitivity: 0.6,
-  controllerRightDeadzone: 0.08,
+  controllerMoveDeadzone: 0.18,
+  controllerRightDeadzone: 0.10,
   visual: { ...DEFAULT_VISUAL_SETTINGS }
 };
 
@@ -66,7 +68,8 @@ const SENSITIVITIES = [0.5, 0.7, 0.85, 1, 1.15, 1.35, 1.6, 2];
 const CONTROLLER_SENSITIVITIES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 const CONTROLLER_ACCELERATION = [0, 1, 2, 3, 4, 5];
 const SCOPE_SENSITIVITIES = [0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1];
-const RIGHT_DEADZONES = [0.05, 0.08, 0.1, 0.12, 0.14, 0.16, 0.18, 0.2];
+const MOVE_DEADZONES = [0.12, 0.14, 0.16, 0.18, 0.20, 0.22, 0.24, 0.28];
+const RIGHT_DEADZONES = [0.05, 0.08, 0.10, 0.12, 0.14, 0.16, 0.18, 0.20];
 const FOVS = [75, 82, 88, 92, 96, 100, 105, 110];
 const SMOOTHING = [0, 0.12, 0.25];
 const RETICLE_SCALES = [0.8, 1, 1.2, 1.4];
@@ -116,9 +119,14 @@ export class TraversalSettingsStore {
         label: `Scope Sensitivity: ${this.value.controllerScopeSensitivity.toFixed(2)}x`
       },
       {
+        id: "traversal-controller-move-deadzone",
+        label: `Move Stick Deadzone: ${Math.round(this.value.controllerMoveDeadzone * 100)}%`,
+        description: "Raise if movement drifts"
+      },
+      {
         id: "traversal-controller-deadzone",
-        label: `Right Stick Deadzone: ${Math.round(this.value.controllerRightDeadzone * 100)}%`,
-        description: "Raise only if your stick drifts"
+        label: `Look Stick Deadzone: ${Math.round(this.value.controllerRightDeadzone * 100)}%`,
+        description: "Raise if camera drifts"
       },
       {
         id: "traversal-invert-y",
@@ -154,7 +162,11 @@ export class TraversalSettingsStore {
     this.adjustmentDirection = 1;
 
     if (choiceId === "traversal-controls") {
-      window.dispatchEvent(new CustomEvent("traversal:open-controls"));
+      // The Shell redraws Settings after extension handlers. Queue the Controls
+      // screen for the next task so it becomes the final visible screen.
+      window.setTimeout(() => {
+        window.dispatchEvent(new CustomEvent("traversal:open-controls"));
+      }, 0);
       return true;
     }
     if (choiceId === "traversal-sensitivity") {
@@ -167,6 +179,8 @@ export class TraversalSettingsStore {
       this.value.controllerLookAcceleration = this.next(CONTROLLER_ACCELERATION, this.value.controllerLookAcceleration, direction);
     } else if (choiceId === "traversal-controller-scope") {
       this.value.controllerScopeSensitivity = this.next(SCOPE_SENSITIVITIES, this.value.controllerScopeSensitivity, direction);
+    } else if (choiceId === "traversal-controller-move-deadzone") {
+      this.value.controllerMoveDeadzone = this.next(MOVE_DEADZONES, this.value.controllerMoveDeadzone, direction);
     } else if (choiceId === "traversal-controller-deadzone") {
       this.value.controllerRightDeadzone = this.next(RIGHT_DEADZONES, this.value.controllerRightDeadzone, direction);
     } else if (choiceId === "traversal-invert-y") {
@@ -216,8 +230,8 @@ export class TraversalSettingsStore {
       };
 
       // v0.10.1 shipped 5/5/2/12% as the untouched controller defaults. If the
-      // saved profile still exactly matches those values, migrate it to the more
-      // responsive first-play profile without disturbing genuinely tuned setups.
+      // saved profile still exactly matches those values, migrate it without
+      // disturbing genuinely tuned setups.
       if (
         parsed.controllerSensitivityX === 5 &&
         parsed.controllerSensitivityY === 5 &&
@@ -226,7 +240,16 @@ export class TraversalSettingsStore {
       ) {
         merged.controllerSensitivityX = 6;
         merged.controllerSensitivityY = 5;
-        merged.controllerRightDeadzone = 0.08;
+        merged.controllerRightDeadzone = DEFAULT_TRAVERSAL_SETTINGS.controllerRightDeadzone;
+      } else if (
+        parsed.controllerSensitivityX === 6 &&
+        parsed.controllerSensitivityY === 5 &&
+        parsed.controllerLookAcceleration === 2 &&
+        parsed.controllerRightDeadzone === 0.08
+      ) {
+        // v0.10.2's untouched look profile gets the small USB-controller drift
+        // guard. Custom profiles stay untouched.
+        merged.controllerRightDeadzone = DEFAULT_TRAVERSAL_SETTINGS.controllerRightDeadzone;
       }
 
       return merged;
