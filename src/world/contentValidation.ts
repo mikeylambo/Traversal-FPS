@@ -85,11 +85,12 @@ export function validateRoom(room: RoomSpec): RoomValidationReport {
     const options = obviousLandingOptions(room, enemy);
     if (options > 0) continue;
 
+    const moving = enemy.kind === "drifter" || enemy.kind === "orbit";
     push(
       "warning",
-      enemy.kind === "drifter" ? "geometry.moving-endpoint" : "geometry.vector-landing",
-      enemy.kind === "drifter"
-        ? "Moving sphere base position has no obvious safe landing. Verify its drift path intentionally crosses a landing surface."
+      moving ? "geometry.moving-endpoint" : "geometry.vector-landing",
+      moving
+        ? "Moving sphere base position has no obvious safe landing. Verify its motion path intentionally crosses a landing surface."
         : "Sphere has no obvious full-endpoint or Stop Short landing from spawn/platform-center origins.",
       enemy.id
     );
@@ -121,11 +122,6 @@ export function validateRoomCatalog(label: string, rooms: readonly RoomSpec[]): 
   return issues;
 }
 
-/**
- * Finds places along a written vector where the camera can settle onto platform tops.
- * The result uses the same eye-height model as gameplay and intentionally ignores the
- * first 12% of a vector, matching the Warp Rifle's minimum selectable fraction.
- */
 export function analyzeVectorLandings(
   origin: Vec3Tuple,
   target: Vec3Tuple,
@@ -221,6 +217,30 @@ function validateEnemy(
     } else if (!Number.isFinite(enemy.drift.amplitude) || enemy.drift.amplitude < 0 ||
       !Number.isFinite(enemy.drift.speed) || enemy.drift.speed <= 0) {
       push("error", "enemy.drift.values", "Drifter amplitude/speed are invalid.", enemy.id);
+    }
+  }
+
+  if (enemy.kind === "orbit") {
+    if (!enemy.orbit) {
+      push("error", "enemy.orbit", "Orbit requires orbit settings.", enemy.id);
+    } else if (
+      !(["xy", "xz"] as const).includes(enemy.orbit.plane) ||
+      !Number.isFinite(enemy.orbit.radius) || enemy.orbit.radius <= 0 ||
+      !Number.isFinite(enemy.orbit.speed) || enemy.orbit.speed <= 0
+    ) {
+      push("error", "enemy.orbit.values", "Orbit plane/radius/speed are invalid.", enemy.id);
+    }
+  }
+
+  if (enemy.kind === "phase") {
+    if (!enemy.phase) {
+      push("error", "enemy.phase", "Phase requires phase-window settings.", enemy.id);
+    } else if (
+      !Number.isFinite(enemy.phase.period) || enemy.phase.period <= 0 ||
+      !Number.isFinite(enemy.phase.openFor) || enemy.phase.openFor <= 0 ||
+      enemy.phase.openFor >= enemy.phase.period
+    ) {
+      push("error", "enemy.phase.values", "Phase must satisfy 0 < openFor < period.", enemy.id);
     }
   }
 
