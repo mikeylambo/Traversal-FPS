@@ -8,6 +8,7 @@ export type TraversalAudioEvent =
   | "shield.reject"
   | "hazard.hit"
   | "hazard.cycle"
+  | "exit.activate"
   | "sector.clear"
   | "sector.enter"
   | "achievement.unlock"
@@ -65,8 +66,6 @@ function playEvent(
 ): void {
   switch (event) {
     case "rifle.fire":
-      // Preserve the certified rifle report: low body, electrical crack,
-      // restrained mechanical close.
       tone(ctx, 138, 44, 0.145, "sine", 0.125);
       tone(ctx, 510, 150, 0.105, "sawtooth", 0.062, 0.004);
       tone(ctx, 1680, 690, 0.055, "triangle", 0.027, 0.007);
@@ -94,6 +93,13 @@ function playEvent(
       );
       return;
 
+    case "exit.activate":
+      // A restrained 'objective ready' cue: low spatial pulse followed by a
+      // short clean confirmation rise. Distinct from sector completion.
+      tone(ctx, 150, 210, 0.16, "sine", 0.04);
+      tone(ctx, 520, 780, 0.18, "triangle", 0.032, 0.045, 0.24);
+      return;
+
     case "hazard.hit":
       tone(ctx, 104, 46, 0.18, "sawtooth", 0.07);
       noise(ctx, 0.12, 0.04, 760, "bandpass");
@@ -112,8 +118,6 @@ function playEvent(
       tone(ctx, 660, 990, 0.14, "sine", 0.02, 0.09);
       return;
 
-    // These canonical names are reserved now so gameplay can target a stable
-    // vocabulary before final authored audio replaces the procedural layer.
     case "vector.write":
     case "warp.commit":
     case "warp.arrive":
