@@ -6,7 +6,8 @@ export type PuzzleGrammarId =
   | "route-fork"
   | "low-profile"
   | "moving-endpoint"
-  | "reorientation";
+  | "reorientation"
+  | "timing-chain";
 
 export interface PuzzleGrammarEntry {
   id: PuzzleGrammarId;
@@ -40,7 +41,7 @@ export const PUZZLE_GRAMMAR_V1: PuzzleGrammarEntry[] = [
     label: "Airborne Chain",
     revelation: "Warp can create an airborne firing state that exposes the next target before gravity takes over.",
     execution: "medium",
-    combinesWith: ["stop-short", "moving-endpoint", "reorientation"]
+    combinesWith: ["stop-short", "moving-endpoint", "reorientation", "timing-chain"]
   },
   {
     id: "origin-matters",
@@ -54,7 +55,7 @@ export const PUZZLE_GRAMMAR_V1: PuzzleGrammarEntry[] = [
     label: "Route Fork",
     revelation: "Multiple kills may work, but the cleanest sequence uses fewer vectors, shots, or detours.",
     execution: "medium",
-    combinesWith: ["moving-endpoint", "origin-matters", "reorientation"]
+    combinesWith: ["moving-endpoint", "origin-matters", "reorientation", "timing-chain"]
   },
   {
     id: "low-profile",
@@ -68,13 +69,20 @@ export const PUZZLE_GRAMMAR_V1: PuzzleGrammarEntry[] = [
     label: "Moving Endpoint",
     revelation: "A moving target is a moving destination; kill timing determines where the vector points.",
     execution: "medium",
-    combinesWith: ["stop-short", "route-fork", "airborne-chain"]
+    combinesWith: ["stop-short", "route-fork", "airborne-chain", "timing-chain"]
   },
   {
     id: "reorientation",
     label: "Reorientation",
     revelation: "A warp destination can be valuable mainly because it gives you a new line of sight or firing angle.",
     execution: "medium",
-    combinesWith: ["airborne-chain", "origin-matters", "low-profile"]
+    combinesWith: ["airborne-chain", "origin-matters", "low-profile", "timing-chain"]
+  },
+  {
+    id: "timing-chain",
+    label: "Timing Chain",
+    revelation: "A route can be spatially correct but temporally wrong; hazard phases and moving windows must align across successive vectors.",
+    execution: "high",
+    combinesWith: ["moving-endpoint", "airborne-chain", "stop-short", "reorientation"]
   }
 ];
