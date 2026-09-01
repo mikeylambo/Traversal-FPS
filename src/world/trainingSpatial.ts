@@ -68,7 +68,7 @@ export const SPATIAL_ACTOR_TRAINING: RoomSpec[] = [
   {
     id: "training-prism-energy",
     title: "PRISM // ENERGY",
-    lesson: "Prism reroutes energy geometry. Move the aperture into the Sphere line, then cross it.",
+    lesson: "Prism reroutes red energy. White structure is ordinary matter; Warp phases through it. Red energy intersects Warp unless you use its opening.",
     grammar: ["stop-short", "reorientation"],
     spawn: [-6, 2.2, 8],
     goal: [6, 1.1, -34],
@@ -99,7 +99,7 @@ export const SPATIAL_ACTOR_TRAINING: RoomSpec[] = [
   {
     id: "training-machine-sentence",
     title: "SHAPES // SENTENCE",
-    lesson: "Cube changes state. Diamond wakes motion. Prism reroutes energy. Spheres move you. The Gravity Ring ends the sector.",
+    lesson: "Cube changes state. Diamond wakes motion. Prism reroutes energy. Spheres move you. White matter can be phased through; red energy cannot. Gravity Ring ends the sector.",
     grammar: ["stop-short", "moving-endpoint", "reorientation", "airborne-chain"],
     spawn: [0, 2.2, 10],
     goal: [0, 1.1, -64],
