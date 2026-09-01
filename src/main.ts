@@ -43,6 +43,7 @@ import { installEditorShortcut } from "./editor/EditorShortcutRuntime";
 import { installMapEditorNaming } from "./editor/MapEditorNamingRuntime";
 import { PUZZLE_GRAMMAR_V1 } from "./world/puzzleGrammar";
 import { CAMPAIGN_MAPS } from "./world/campaign";
+import { CHALLENGE_ENTRIES, TIME_TRIAL_ENTRIES } from "./world/modeSuites";
 import { registerCampaign02 } from "./world/registerCampaign02";
 import { registerCampaign03 } from "./world/registerCampaign03";
 import { registerCampaign04 } from "./world/registerCampaign04";
@@ -60,7 +61,7 @@ const rendererAdapter = createThreeStarterAdapter(canvas);
 const app = await createGameApp({
   gameId: "traversal-fps",
   gameName: "Traversal FPS",
-  version: "0.12.0",
+  version: "0.13.0-alpha-content-complete",
   renderer: rendererAdapter,
   root: uiRoot,
   assemblies: [
@@ -91,7 +92,7 @@ const traversalModes = [
   {
     id: "time-trial",
     label: "Time Trial",
-    description: "Find the fastest route.",
+    description: "16-course optimization suite. Find the fastest route.",
     leaderboardKey: "time",
     rules: {
       grading: false,
@@ -104,7 +105,7 @@ const traversalModes = [
   {
     id: "challenge",
     label: "Challenge // Clean Route",
-    description: "Clear the route under constraint.",
+    description: "24 chambers across precision, logic, flow and synthesis.",
     leaderboardKey: "score",
     rules: { grading: true, exactKills: true, shotAllowance: 1, airGraceScale: 0.8 }
   }
@@ -208,12 +209,12 @@ const trainingChoices = [
   {
     id: "training-full",
     label: "Full Training",
-    description: "Controls + eight traversal lessons."
+    description: "Controls + traversal grammar + spatial actor lessons."
   },
   {
     id: "training-grammar",
-    label: "Grammar 01–08",
-    description: "Replay the eight traversal lessons."
+    label: "Grammar Replay",
+    description: "Replay the complete traversal and spatial actor curriculum."
   }
 ];
 
@@ -230,9 +231,20 @@ app.ui.updateScreen("credits", {
     { id: "credit-tech", label: "Technology // Three.js + SLU Web Game Shell", disabled: true },
     { id: "credit-type", label: "Typography // Rajdhani + Sora", disabled: true },
     { id: "credit-tools", label: "Development Assistance // OpenAI + Anthropic", disabled: true },
-    { id: "credit-build", label: "Build // v0.12.0", description: "Sector 04 // Crosscurrent", disabled: true }
+    { id: "credit-build", label: "Build // v0.13 Alpha Content Complete", description: "32 Campaign sectors // 24 Challenges // 16 Time Trials", disabled: true }
   ]
 });
+
+const sectorChoices = (choiceId: string) => CAMPAIGN_MAPS.map((map) => ({
+  id: map.id,
+  label: map.label,
+  description: !map.implemented
+    ? "In development"
+    : choiceId === "standard"
+      ? map.subtitle
+      : `${map.courseRooms.length} sector course`,
+  disabled: !map.implemented
+}));
 
 const originalActivate = app.flow.onActivate.bind(app.flow);
 app.flow.onActivate = (screenId: string, choiceId: string) => {
@@ -249,19 +261,34 @@ app.flow.onActivate = (screenId: string, choiceId: string) => {
         title: "Training",
         choices: trainingChoices
       });
+    } else if (choiceId === "time-trial") {
+      app.ui.updateScreen("stage-select", {
+        title: "Time Trial",
+        choices: [
+          {
+            id: "suite-time-trial",
+            label: "Full Time Trial Suite // 01–16",
+            description: "Canonical back-to-back optimization run. Provisional medal pars are shown inside each course."
+          },
+          ...sectorChoices(choiceId)
+        ]
+      });
+    } else if (choiceId === "challenge") {
+      app.ui.updateScreen("stage-select", {
+        title: "Challenge",
+        choices: [
+          {
+            id: "suite-challenge",
+            label: "Full Challenge Suite // 01–24",
+            description: "Canonical back-to-back mastery run: Precision → Logic → Flow → Synthesis."
+          },
+          ...sectorChoices(choiceId)
+        ]
+      });
     } else {
       app.ui.updateScreen("stage-select", {
-        title: choiceId === "standard" ? "Campaign" : choiceId === "time-trial" ? "Time Trial" : "Challenge",
-        choices: CAMPAIGN_MAPS.map((map) => ({
-          id: map.id,
-          label: map.label,
-          description: !map.implemented
-            ? "In development"
-            : choiceId === "standard"
-              ? map.subtitle
-              : `${map.courseRooms.length} chamber course`,
-          disabled: !map.implemented
-        }))
+        title: "Campaign",
+        choices: sectorChoices(choiceId)
       });
     }
   }
@@ -269,6 +296,8 @@ app.flow.onActivate = (screenId: string, choiceId: string) => {
   if (screenId === "stage-select") {
     if (choiceId === "training-full") contentRuntime.setTrainingPath("controls");
     if (choiceId === "training-grammar") contentRuntime.setTrainingPath("grammar");
+    if (choiceId === "suite-time-trial") contentRuntime.setModeSuite("time-trial");
+    if (choiceId === "suite-challenge") contentRuntime.setModeSuite("challenge");
     if (choiceId.startsWith("map-")) contentRuntime.setSelectedMap(choiceId);
   }
 
@@ -314,7 +343,7 @@ game.start();
 console.info("Traversal FPS ready", {
   shellVersion: "1.0.2+settings+mode-replace",
   shellCommit: "d45d5b89b56eb65cf10cc25ef3a89595d63f6b3f",
-  gameVersion: "0.12.0",
+  gameVersion: "0.13.0-alpha-content-complete",
   renderTarget: "Vector Surface",
   typography: "Rajdhani / Sora",
   starfield: "shader-twinkle",
@@ -334,7 +363,8 @@ console.info("Traversal FPS ready", {
   feelPass: "provisionally certified",
   autoStepMeters: 0.38,
   puzzleGrammar: PUZZLE_GRAMMAR_V1.map((entry) => entry.id),
-  trainingRooms: 8,
+  trainingRooms: 12,
+  modeSuites: { timeTrials: TIME_TRIAL_ENTRIES.length, challenges: CHALLENGE_ENTRIES.length },
   onboarding: "action-gated controls // keyboard + controller + touch",
   campaignMaps: CAMPAIGN_MAPS.map((map) => ({
     id: map.id,
@@ -343,8 +373,8 @@ console.info("Traversal FPS ready", {
     courseRooms: map.courseRooms.length
   })),
   achievements: ACHIEVEMENTS.length,
-  hazards: ["lethal-field", "sweep", "sightline-gate"],
-  spatialActors: "sentry // drifter // shield // orbit data-driven; phase // linked-pair reserved",
+  hazards: ["lethal-field", "sweep", "sightline-gate", "aperture-wall"],
+  spatialActors: "sphere movement // cube state // diamond motion // prism energy // gravity ring progression",
   editor: "development-only // F2 // backquote; public menu entry deferred",
   mobileControls: true,
   vrStatus: "future-compatible target; not current production scope",
