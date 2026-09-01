@@ -4,8 +4,11 @@ import type { OriginConstraint } from "./spatialActors";
 export type Vec3Tuple = [number, number, number];
 export type EnemyKind = "sentry" | "drifter" | "shield";
 export type HazardKind = "lethal-field" | "sweep" | "sightline-gate";
+export type SpatialDeviceKind = "cube" | "diamond" | "prism";
 
 export interface PlatformSpec {
+  id?: string;
+  group?: string;
   center: Vec3Tuple;
   size: Vec3Tuple;
 }
@@ -21,11 +24,29 @@ export interface EnemySpec {
 
 export interface HazardSpec {
   id: string;
+  group?: string;
   kind: HazardKind;
   center: Vec3Tuple;
   size: Vec3Tuple;
   drift?: { axis: "x" | "y" | "z"; amplitude: number; speed: number; phase?: number };
   cycle?: { period: number; openFor: number; phase?: number };
+}
+
+/**
+ * Non-sphere spatial actors never write a Warp vector. They change the state of
+ * the room around the player. Sphere remains the movement verb; these are puzzle
+ * verbs with silhouette-first readability.
+ */
+export interface SpatialDeviceSpec {
+  id: string;
+  kind: SpatialDeviceKind;
+  position: Vec3Tuple;
+  radius?: number;
+  targetGroup: string;
+  startsOn?: boolean;
+  /** Diamond: offset applied to every platform in targetGroup while active. */
+  moveOffset?: Vec3Tuple;
+  moveDuration?: number;
 }
 
 export interface RoomSpec {
@@ -39,6 +60,7 @@ export interface RoomSpec {
   platforms: PlatformSpec[];
   enemies: EnemySpec[];
   hazards?: HazardSpec[];
+  actors?: SpatialDeviceSpec[];
 }
 
 export const ROOMS: RoomSpec[] = [
