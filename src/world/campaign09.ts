@@ -13,7 +13,7 @@ export const MAP_09_FIELD: RoomSpec[] = [
     grammar: ["direct-anchor", "stop-short", "reorientation", "origin-matters", "route-fork", "airborne-chain"],
     spawn: [0, 2.2, 22],
     goal: [0, 1.1, -116],
-    requiredKills: 5,
+    requiredKills: 7,
     platforms: [
       { center: [0, 0, 20], size: [16, 1, 14] },
       { center: [-9, 1, -7], size: [8, 1, 8] },
@@ -59,7 +59,8 @@ export const MAP_09_FIELD: RoomSpec[] = [
       },
       { id: "machine-aperture-sphere", kind: "sentry", position: [6, 3.2, -66] },
       { id: "machine-down-sphere", kind: "sentry", position: [-10, -2.8, -84], radius: 0.66 },
-      { id: "machine-rise-sphere", kind: "sentry", position: [0, 4.2, -103], radius: 0.68 }
+      { id: "machine-rise-sphere", kind: "sentry", position: [0, 4.2, -103], radius: 0.68 },
+      { id: "machine-final-sphere", kind: "sentry", position: [4, 2.2, -116], radius: 0.68 }
     ],
     hazards: [
       {
