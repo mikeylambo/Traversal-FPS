@@ -43,17 +43,19 @@ export function validateRoom(room: RoomSpec): RoomValidationReport {
   if (!Array.isArray(room.platforms) || room.platforms.length === 0) {
     push("error", "room.platforms", "Room needs at least one platform.");
   }
-  if (!Array.isArray(room.enemies)) push("error", "room.enemies", "Room enemies must be an array.");
+  if (!Array.isArray(room.enemies)) push("error", "room.enemies", "Room actors must be an array.");
   if (!isFiniteVec3(room.spawn)) push("error", "room.spawn", "Spawn must contain three finite numbers.");
   if (!isFiniteVec3(room.goal)) push("error", "room.goal", "Goal must contain three finite numbers.");
   if (!Number.isInteger(room.requiredKills) || room.requiredKills < 0) {
     push("error", "room.requiredKills", "requiredKills must be a non-negative integer.");
   }
-  if (room.requiredKills > room.enemies.length) {
+
+  const vectorEndpoints = room.enemies.filter(isVectorEndpoint).length;
+  if (room.requiredKills > vectorEndpoints) {
     push(
       "error",
       "room.requiredKills.capacity",
-      `requiredKills (${room.requiredKills}) exceeds target count (${room.enemies.length}).`
+      `requiredKills (${room.requiredKills}) exceeds Sphere/vector-endpoint count (${vectorEndpoints}).`
     );
   }
 
@@ -75,10 +77,11 @@ export function validateRoom(room: RoomSpec): RoomValidationReport {
     push("warning", "geometry.spawn-support", "Spawn has no obvious standing surface beneath it.");
   }
   if (isFiniteVec3(room.goal) && !goalHasSurface(room.goal, room.platforms)) {
-    push("warning", "geometry.goal-support", "Goal has no obvious platform beneath its X/Z position.");
+    push("warning", "geometry.goal-support", "Gravity Ring has no obvious platform beneath its X/Z position.");
   }
 
   for (const enemy of room.enemies) {
+    if (!isVectorEndpoint(enemy)) continue;
     if (!isFiniteVec3(enemy.position) || room.platforms.length === 0) continue;
     if (pointHasStandingSurface(enemy.position, room.platforms)) continue;
 
@@ -89,7 +92,7 @@ export function validateRoom(room: RoomSpec): RoomValidationReport {
       "warning",
       enemy.kind === "drifter" ? "geometry.moving-endpoint" : "geometry.vector-landing",
       enemy.kind === "drifter"
-        ? "Moving sphere base position has no obvious safe landing. Verify its drift path intentionally crosses a landing surface."
+        ? "Moving Sphere base position has no obvious safe landing. Verify its drift path intentionally crosses a landing surface."
         : "Sphere has no obvious full-endpoint or Stop Short landing from spawn/platform-center origins.",
       enemy.id
     );
@@ -198,16 +201,29 @@ function validatePlatform(
   if (!isFiniteVec3(platform.size) || platform.size.some((value) => value <= 0)) {
     push("error", "platform.size", `Platform ${index + 1} size must contain positive finite values.`);
   }
+  if (platform.motion) {
+    const motion = platform.motion;
+    if (!(["x", "y", "z"] as const).includes(motion.axis)) {
+      push("error", "platform.motion.axis", `Platform ${index + 1} motion axis must be x, y, or z.`, platform.id);
+    }
+    if (!Number.isFinite(motion.amplitude) || motion.amplitude < 0 ||
+      !Number.isFinite(motion.speed) || motion.speed <= 0) {
+      push("error", "platform.motion.values", `Platform ${index + 1} motion amplitude/speed are invalid.`, platform.id);
+    }
+    if (!platform.id?.trim()) {
+      push("warning", "platform.motion.id", `Moving platform ${index + 1} has no id and cannot be targeted by a Diamond.`);
+    }
+  }
 }
 
 function validateEnemy(
   enemy: EnemySpec,
   push: (severity: ValidationSeverity, code: string, message: string, entityId?: string) => void
 ): void {
-  if (!enemy.id?.trim()) push("error", "enemy.id", "Sphere id is required.");
-  if (!isFiniteVec3(enemy.position)) push("error", "enemy.position", "Sphere position is invalid.", enemy.id);
+  if (!enemy.id?.trim()) push("error", "enemy.id", "Actor id is required.");
+  if (!isFiniteVec3(enemy.position)) push("error", "enemy.position", "Actor position is invalid.", enemy.id);
   if (enemy.radius !== undefined && (!Number.isFinite(enemy.radius) || enemy.radius <= 0)) {
-    push("error", "enemy.radius", "Sphere radius must be positive.", enemy.id);
+    push("error", "enemy.radius", "Actor radius must be positive.", enemy.id);
   }
 
   const actor = spatialActorDefinition(enemy.kind);
@@ -233,6 +249,14 @@ function validateEnemy(
       !Number.isFinite(enemy.orbit.speed) || enemy.orbit.speed <= 0
     ) {
       push("error", "enemy.orbit.values", "Orbit radii and speed must be positive.", enemy.id);
+    }
+  }
+
+  if (["cube", "diamond", "prism"].includes(enemy.kind)) {
+    if (!enemy.effect) {
+      push("error", "enemy.utility.effect", `${enemy.kind} requires a puzzle effect.`, enemy.id);
+    } else if (!Array.isArray(enemy.effect.targetIds) || enemy.effect.targetIds.length === 0) {
+      push("error", "enemy.utility.targets", `${enemy.kind} effect requires at least one target id.`, enemy.id);
     }
   }
 
@@ -289,6 +313,18 @@ function validateHazard(
       push("error", "hazard.gate.cycle-values", "Sightline gate cycle must satisfy 0 < openFor < period.", hazard.id);
     }
   }
+  if (hazard.kind === "aperture-wall") {
+    if (!hazard.aperture) {
+      push("error", "hazard.aperture", "Aperture wall requires a safe aperture definition.", hazard.id);
+    } else if (!Number.isFinite(hazard.aperture.center) ||
+      !Number.isFinite(hazard.aperture.span) || hazard.aperture.span <= 0) {
+      push("error", "hazard.aperture.values", "Aperture center/span are invalid.", hazard.id);
+    }
+  }
+}
+
+function isVectorEndpoint(enemy: EnemySpec): boolean {
+  return Boolean(spatialActorDefinition(enemy.kind)?.capabilities.includes("vector-endpoint"));
 }
 
 function goalHasSurface(goal: Vec3Tuple, platforms: readonly PlatformSpec[]): boolean {
