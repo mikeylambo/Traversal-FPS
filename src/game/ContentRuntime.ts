@@ -1,4 +1,5 @@
 import { CAMPAIGN_MAPS } from "../world/campaign";
+import { ACT_II_MAPS } from "../world/act02";
 import { CONTROLS_ROOM } from "../world/onboarding";
 import { ROOMS, type RoomSpec } from "../world/stages";
 
@@ -17,7 +18,14 @@ export interface ContentRuntime {
   enterGrammar(): void;
 }
 
+function registerActII(): void {
+  for (const map of ACT_II_MAPS) {
+    if (!CAMPAIGN_MAPS.some((existing) => existing.id === map.id)) CAMPAIGN_MAPS.push(map);
+  }
+}
+
 export function installContentRuntime(shell: any): ContentRuntime {
+  registerActII();
   const trainingRooms = structuredClone(ROOMS) as RoomSpec[];
   let selectedMapId = "map-01";
   let selectedTrainingPath: TrainingPath = "controls";
