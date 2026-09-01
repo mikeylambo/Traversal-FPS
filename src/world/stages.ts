@@ -2,12 +2,25 @@ import type { PuzzleGrammarId } from "./puzzleGrammar";
 import type { OriginConstraint } from "./spatialActors";
 
 export type Vec3Tuple = [number, number, number];
-export type EnemyKind = "sentry" | "drifter" | "shield" | "orbit";
-export type HazardKind = "lethal-field" | "sweep" | "sightline-gate";
+export type EnemyKind = "sentry" | "drifter" | "shield" | "orbit" | "cube" | "diamond" | "prism";
+export type HazardKind = "lethal-field" | "sweep" | "sightline-gate" | "aperture-wall";
+
+export type PuzzleEffect =
+  | { type: "disable-hazard"; targetIds: string[] }
+  | { type: "activate-platform"; targetIds: string[] }
+  | { type: "shift-aperture"; targetIds: string[]; offset: number };
 
 export interface PlatformSpec {
+  id?: string;
   center: Vec3Tuple;
   size: Vec3Tuple;
+  motion?: {
+    axis: "x" | "y" | "z";
+    amplitude: number;
+    speed: number;
+    phase?: number;
+    active?: boolean;
+  };
 }
 
 export interface EnemySpec {
@@ -24,6 +37,7 @@ export interface EnemySpec {
     phase?: number;
   };
   originConstraint?: OriginConstraint;
+  effect?: PuzzleEffect;
 }
 
 export interface HazardSpec {
@@ -33,6 +47,7 @@ export interface HazardSpec {
   size: Vec3Tuple;
   drift?: { axis: "x" | "y" | "z"; amplitude: number; speed: number; phase?: number };
   cycle?: { period: number; openFor: number; phase?: number };
+  aperture?: { axis: "x" | "y"; center: number; span: number };
 }
 
 export interface RoomSpec {
