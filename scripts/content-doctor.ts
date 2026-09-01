@@ -2,6 +2,7 @@ import { CAMPAIGN_MAPS, type CampaignMapDefinition } from "../src/world/campaign
 import { registerCampaign02 } from "../src/world/registerCampaign02";
 import { registerCampaign03 } from "../src/world/registerCampaign03";
 import { registerCampaign04 } from "../src/world/registerCampaign04";
+import { buildChallengeSuite, buildTimeTrialSuite } from "../src/world/modeSuites";
 import { CONTROLS_ROOM } from "../src/world/onboarding";
 import { SPATIAL_ACTOR_TRAINING } from "../src/world/trainingSpatial";
 import { ROOMS, type RoomSpec } from "../src/world/stages";
@@ -17,8 +18,16 @@ type ExtendedCampaignMap = CampaignMapDefinition & {
   challengeRooms?: RoomSpec[];
 };
 
+const timeTrialSuite = buildTimeTrialSuite();
+const challengeSuite = buildChallengeSuite();
+
+if (timeTrialSuite.length !== 16) throw new Error(`Canonical Time Trial suite must contain 16 courses; found ${timeTrialSuite.length}.`);
+if (challengeSuite.length !== 24) throw new Error(`Canonical Challenge suite must contain 24 chambers; found ${challengeSuite.length}.`);
+
 const catalogs: Catalog[] = [
-  { label: "training", rooms: [CONTROLS_ROOM, ...ROOMS, ...SPATIAL_ACTOR_TRAINING] }
+  { label: "training", rooms: [CONTROLS_ROOM, ...ROOMS, ...SPATIAL_ACTOR_TRAINING] },
+  { label: "canonical:time-trial", rooms: timeTrialSuite },
+  { label: "canonical:challenge", rooms: challengeSuite }
 ];
 
 for (const baseMap of CAMPAIGN_MAPS.filter((entry) => entry.implemented)) {
@@ -50,7 +59,7 @@ for (const { catalog, issue } of allIssues) {
 
 console.log("");
 console.log(
-  `Traversal content doctor: ${roomCount} rooms // ${errors.length} errors // ${warnings.length} warnings`
+  `Traversal content doctor: ${roomCount} rooms // ${errors.length} errors // ${warnings.length} warnings // 16 TT // 24 Challenge`
 );
 
 if (errors.length > 0) {
