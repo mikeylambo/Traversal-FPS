@@ -232,10 +232,13 @@ function createApertureFrame(spec: HazardSpec): THREE.Object3D {
 }
 
 function apertureSecondarySpan(spec: HazardSpec): number {
-  if (!spec.aperture) return 4.8;
+  if (!spec.aperture) return 6.2;
+  // Apertures are judged against the player's body path, which sits below camera
+  // height. Keep the rendered void and collision-safe void identical, with enough
+  // vertical clearance that a visually centered warp cannot clip an invisible rim.
   return spec.aperture.axis === "x"
-    ? Math.min(spec.size[1] * 0.5, 4.8)
-    : Math.min(spec.size[0] * 0.42, 4.8);
+    ? Math.min(spec.size[1] * 0.62, 6.2)
+    : Math.min(spec.size[0] * 0.5, 6.2);
 }
 
 function syncApertureFrame(hazard: ActiveHazard): void {
