@@ -12,6 +12,9 @@ export type SpatialActorSchemaId =
   | "drifter"
   | "shield"
   | "orbit"
+  | "cube"
+  | "diamond"
+  | "prism"
   | "phase"
   | "linked-pair";
 
@@ -25,57 +28,78 @@ export interface SpatialActorDefinition {
 }
 
 /**
- * Actor vocabulary is data first. Only the first three actor kinds are runtime
- * enabled today; planned entries reserve their spatial role without making them
- * legal RoomSpec content before their behavior is play-tested.
+ * Sphere-family actors are the only vector endpoints. Utility geometry changes the
+ * world but never writes Warp Rifle movement. Silhouette and motion carry meaning;
+ * color remains presentation, never the sole semantic channel.
  */
 export const SPATIAL_ACTORS: readonly SpatialActorDefinition[] = [
   {
     id: "sentry",
-    label: "Sentry",
+    label: "Sphere // Fixed",
     implemented: true,
-    spatialRole: "Fixed endpoint",
-    capabilities: ["fixed-position", "vector-endpoint"]
+    spatialRole: "Fixed vector endpoint",
+    capabilities: ["sphere", "fixed-position", "vector-endpoint"]
   },
   {
     id: "drifter",
-    label: "Drifter",
+    label: "Sphere // Drift",
     implemented: true,
-    spatialRole: "Moving endpoint",
-    capabilities: ["moving-position", "vector-endpoint", "timing-window"]
+    spatialRole: "Moving vector endpoint",
+    capabilities: ["sphere", "moving-position", "vector-endpoint", "timing-window"]
   },
   {
     id: "shield",
-    label: "Shield",
+    label: "Sphere // Origin Gate",
     implemented: true,
-    spatialRole: "Origin-gated endpoint",
-    capabilities: ["fixed-position", "vector-endpoint", "origin-gate"],
+    spatialRole: "Origin-gated vector endpoint",
+    capabilities: ["sphere", "fixed-position", "vector-endpoint", "origin-gate"],
     defaultOriginConstraint: {
       axis: "x",
       min: 2.5,
-      rejectMessage: "SHIELD REJECT // CHANGE YOUR FIRING ORIGIN"
+      rejectMessage: "SPHERE REJECT // CHANGE YOUR FIRING ORIGIN"
     }
   },
   {
     id: "orbit",
-    label: "Orbit",
+    label: "Sphere // Orbit",
     implemented: true,
     spatialRole: "Endpoint moving around a locus",
-    capabilities: ["moving-position", "vector-endpoint", "cyclic-route", "arrival-angle"]
+    capabilities: ["sphere", "moving-position", "vector-endpoint", "cyclic-route", "arrival-angle"]
+  },
+  {
+    id: "cube",
+    label: "Cube",
+    implemented: true,
+    spatialRole: "World-state switch",
+    capabilities: ["utility", "hazard-control", "no-vector"]
+  },
+  {
+    id: "diamond",
+    label: "Diamond",
+    implemented: true,
+    spatialRole: "Motion activator",
+    capabilities: ["utility", "platform-control", "no-vector"]
+  },
+  {
+    id: "prism",
+    label: "Prism",
+    implemented: true,
+    spatialRole: "Energy-path router",
+    capabilities: ["utility", "field-routing", "no-vector"]
   },
   {
     id: "phase",
     label: "Phase",
     implemented: false,
     spatialRole: "Periodically targetable endpoint",
-    capabilities: ["planned", "target-window", "vector-endpoint"]
+    capabilities: ["planned", "sphere", "target-window", "vector-endpoint"]
   },
   {
     id: "linked-pair",
     label: "Linked Pair",
     implemented: false,
     spatialRole: "Two endpoints whose state changes together",
-    capabilities: ["planned", "linked-state", "route-choice"]
+    capabilities: ["planned", "sphere", "linked-state", "route-choice"]
   }
 ] as const;
 
