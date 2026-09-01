@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { emitTraversalAudio } from "../audio/TraversalAudio";
 import { ROOMS, type HazardSpec, type PuzzleEffect } from "../world/stages";
+import { installMovingPlatformRuntime } from "./MovingPlatformRuntime";
 
 type ActiveHazard = {
   spec: HazardSpec;
@@ -46,6 +47,7 @@ export function installHazardRuntime(game: object): void {
         if (!effect.targetIds.includes(hazard.spec.id)) continue;
         hazard.disabled = true;
         hazard.mesh.visible = false;
+        hazard.mesh.layers.set(1);
       }
     }
 
@@ -98,6 +100,8 @@ export function installHazardRuntime(game: object): void {
     state.roomRestarts += 1;
     state.loadRoom(state.roomIndex);
   };
+
+  installMovingPlatformRuntime(game);
 }
 
 function createHazard(root: THREE.Group, spec: HazardSpec): ActiveHazard {
@@ -229,6 +233,7 @@ function updateHazards(hazards: ActiveHazard[], time: number): void {
   for (const hazard of hazards) {
     if (hazard.disabled) {
       hazard.mesh.visible = false;
+      hazard.mesh.layers.set(1);
       continue;
     }
 
@@ -251,6 +256,7 @@ function updateHazards(hazards: ActiveHazard[], time: number): void {
     }
 
     hazard.mesh.visible = true;
+    hazard.mesh.layers.set(0);
     const pulse = 0.78 + Math.sin(time * 7.5 + hazard.base.z * 0.13) * 0.22;
     hazard.mesh.material.opacity = hazard.spec.kind === "aperture-wall"
       ? 0.08 + pulse * 0.035
