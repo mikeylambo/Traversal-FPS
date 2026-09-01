@@ -3,6 +3,7 @@ import { ACT_II_MAPS } from "../world/act02";
 import { ACT_III_MAPS } from "../world/act03";
 import { ACT_IV_MAPS } from "../world/act04";
 import { CONTROLS_ROOM } from "../world/onboarding";
+import { SPATIAL_ACTOR_TRAINING } from "../world/trainingSpatial";
 import { ROOMS, type RoomSpec } from "../world/stages";
 
 export type TraversalContentId = "controls" | "training" | string;
@@ -33,7 +34,7 @@ function registerExpansion(): void {
 
 export function installContentRuntime(shell: any): ContentRuntime {
   registerExpansion();
-  const trainingRooms = structuredClone(ROOMS) as RoomSpec[];
+  const trainingRooms = structuredClone([...ROOMS, ...SPATIAL_ACTOR_TRAINING]) as RoomSpec[];
   let selectedMapId = "map-01";
   let selectedTrainingPath: TrainingPath = "controls";
   let activeId: TraversalContentId = "training";
