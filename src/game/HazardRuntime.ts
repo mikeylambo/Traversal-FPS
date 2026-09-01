@@ -83,6 +83,7 @@ function createHazard(root: THREE.Group, spec: HazardSpec): ActiveHazard {
   const mesh = new THREE.Mesh(new THREE.BoxGeometry(...spec.size), material);
   mesh.position.set(...spec.center);
   mesh.userData.traversalHazard = spec.kind;
+  mesh.userData.traversalHazardActive = true;
 
   const edges = new THREE.LineSegments(
     new THREE.EdgesGeometry(mesh.geometry),
@@ -147,13 +148,22 @@ function updateHazards(hazards: ActiveHazard[], time: number): void {
 
     if (hazard.spec.kind === "sightline-gate") {
       const cycle = hazard.spec.cycle ?? { period: 2.4, openFor: 0.85, phase: 0 };
-      const period = Math.max(0.25, cycle.period);
-      const phase = ((time + (cycle.phase ?? 0)) % period + period) % period;
-      const open = phase < Math.min(period, Math.max(0.05, cycle.openFor));
+      const open = cycleIsOpen(cycle, time);
       hazard.mesh.visible = !open;
+      hazard.mesh.userData.traversalHazardActive = !open;
       hazard.mesh.layers.set(open ? 1 : 0);
       hazard.mesh.material.opacity = 0.42 + Math.sin(time * 8) * 0.06;
       continue;
+    }
+
+    if (hazard.spec.kind === "lethal-field" && hazard.spec.cycle) {
+      const safeWindow = cycleIsOpen(hazard.spec.cycle, time);
+      hazard.mesh.visible = !safeWindow;
+      hazard.mesh.userData.traversalHazardActive = !safeWindow;
+      if (safeWindow) continue;
+    } else {
+      hazard.mesh.visible = true;
+      hazard.mesh.userData.traversalHazardActive = true;
     }
 
     const pulse = 0.78 + Math.sin(time * 7.5 + hazard.base.z * 0.13) * 0.22;
@@ -163,7 +173,15 @@ function updateHazards(hazards: ActiveHazard[], time: number): void {
   }
 }
 
+function cycleIsOpen(cycle: NonNullable<HazardSpec["cycle"]>, time: number): boolean {
+  const period = Math.max(0.25, cycle.period);
+  const phase = ((time + (cycle.phase ?? 0)) % period + period) % period;
+  return phase < Math.min(period, Math.max(0.05, cycle.openFor));
+}
+
 function intersectsPlayerPath(from: THREE.Vector3, to: THREE.Vector3, hazard: ActiveHazard): boolean {
+  if (!hazard.mesh.userData.traversalHazardActive) return false;
+
   const half = new THREE.Vector3(
     hazard.spec.size[0] * 0.5 + 0.34,
     hazard.spec.size[1] * 0.5 + 0.82,
