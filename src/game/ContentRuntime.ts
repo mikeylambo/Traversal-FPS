@@ -1,11 +1,18 @@
 import { CAMPAIGN_MAPS } from "../world/campaign";
 import { ACT_II_MAPS } from "../world/act02";
+import { ACT_III_MAPS } from "../world/act03";
+import { ACT_IV_MAPS } from "../world/act04";
 import { CONTROLS_ROOM } from "../world/onboarding";
 import { ROOMS, type RoomSpec } from "../world/stages";
 
 export type TraversalContentId = "controls" | "training" | string;
 export type TraversalContentForm = "controls" | "training" | "campaign-field" | "course";
 export type TrainingPath = "controls" | "grammar";
+
+type ModeSpecificMap = (typeof CAMPAIGN_MAPS)[number] & {
+  timeTrialRooms?: RoomSpec[];
+  challengeRooms?: RoomSpec[];
+};
 
 export interface ContentRuntime {
   selectedContentId(): TraversalContentId;
@@ -18,14 +25,14 @@ export interface ContentRuntime {
   enterGrammar(): void;
 }
 
-function registerActII(): void {
-  for (const map of ACT_II_MAPS) {
+function registerExpansion(): void {
+  for (const map of [...ACT_II_MAPS, ...ACT_III_MAPS, ...ACT_IV_MAPS]) {
     if (!CAMPAIGN_MAPS.some((existing) => existing.id === map.id)) CAMPAIGN_MAPS.push(map);
   }
 }
 
 export function installContentRuntime(shell: any): ContentRuntime {
-  registerActII();
+  registerExpansion();
   const trainingRooms = structuredClone(ROOMS) as RoomSpec[];
   let selectedMapId = "map-01";
   let selectedTrainingPath: TrainingPath = "controls";
@@ -47,8 +54,8 @@ export function installContentRuntime(shell: any): ContentRuntime {
       return loadGrammarRooms();
     }
 
-    const map = CAMPAIGN_MAPS.find((entry) => entry.id === selectedMapId && entry.implemented)
-      ?? CAMPAIGN_MAPS.find((entry) => entry.implemented);
+    const map = (CAMPAIGN_MAPS.find((entry) => entry.id === selectedMapId && entry.implemented)
+      ?? CAMPAIGN_MAPS.find((entry) => entry.implemented)) as ModeSpecificMap | undefined;
     activeId = map?.id ?? "map-01";
 
     if (modeId === "standard") {
@@ -57,7 +64,12 @@ export function installContentRuntime(shell: any): ContentRuntime {
     }
 
     activeForm = "course";
-    return structuredClone(map?.courseRooms ?? []) as RoomSpec[];
+    const modeRooms = modeId === "time-trial"
+      ? map?.timeTrialRooms
+      : modeId === "challenge"
+        ? map?.challengeRooms
+        : undefined;
+    return structuredClone(modeRooms?.length ? modeRooms : map?.courseRooms ?? []) as RoomSpec[];
   };
 
   const reloadSelected = () => {
