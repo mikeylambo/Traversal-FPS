@@ -11,6 +11,7 @@ type ActiveHazard = {
   disabled: boolean;
   apertureOffset: number;
   apertureFrame?: THREE.Object3D;
+  active: boolean;
 };
 
 type RuntimeState = {
@@ -46,6 +47,7 @@ export function installHazardRuntime(game: object): void {
       for (const hazard of hazards) {
         if (!effect.targetIds.includes(hazard.spec.id)) continue;
         hazard.disabled = true;
+        hazard.active = false;
         hazard.mesh.visible = false;
         hazard.mesh.layers.set(1);
       }
@@ -88,6 +90,7 @@ export function installHazardRuntime(game: object): void {
     const after = state.camera.position.clone();
     const hit = hazards.some((hazard) =>
       !hazard.disabled &&
+      hazard.active &&
       hazard.spec.kind !== "sightline-gate" &&
       intersectsPlayerPath(before, after, hazard)
     );
@@ -183,7 +186,8 @@ function createHazard(root: THREE.Group, spec: HazardSpec): ActiveHazard {
     edges,
     disabled: false,
     apertureOffset: 0,
-    apertureFrame
+    apertureFrame,
+    active: true
   };
 }
 
@@ -194,9 +198,6 @@ function createApertureFrame(spec: HazardSpec): THREE.Object3D {
   const height = aperture.axis === "y" ? aperture.span : apertureSecondarySpan(spec);
   const depth = Math.max(0.08, spec.size[2] * 1.35);
 
-  // The safe region must visually read as absence, not merely another colored
-  // rectangle painted over a lethal plane. This mask occludes the hazard fill while
-  // the bright frame communicates the exact collision-safe bounds.
   const voidPanel = new THREE.Mesh(
     new THREE.BoxGeometry(width * 0.96, height * 0.96, depth * 1.02),
     new THREE.MeshBasicMaterial({
@@ -256,9 +257,16 @@ function setApertureFramePosition(
   frame.position[axis] = value;
 }
 
+function cycleIsOpen(cycle: NonNullable<HazardSpec["cycle"]>, time: number): boolean {
+  const period = Math.max(0.25, cycle.period);
+  const phase = ((time + (cycle.phase ?? 0)) % period + period) % period;
+  return phase < Math.min(period, Math.max(0.05, cycle.openFor));
+}
+
 function updateHazards(hazards: ActiveHazard[], time: number): void {
   for (const hazard of hazards) {
     if (hazard.disabled) {
+      hazard.active = false;
       hazard.mesh.visible = false;
       hazard.mesh.layers.set(1);
       continue;
@@ -273,17 +281,26 @@ function updateHazards(hazards: ActiveHazard[], time: number): void {
 
     if (hazard.spec.kind === "sightline-gate") {
       const cycle = hazard.spec.cycle ?? { period: 2.4, openFor: 0.85, phase: 0 };
-      const period = Math.max(0.25, cycle.period);
-      const phase = ((time + (cycle.phase ?? 0)) % period + period) % period;
-      const open = phase < Math.min(period, Math.max(0.05, cycle.openFor));
+      const open = cycleIsOpen(cycle, time);
+      hazard.active = !open;
       hazard.mesh.visible = !open;
       hazard.mesh.layers.set(open ? 1 : 0);
       hazard.mesh.material.opacity = 0.42 + Math.sin(time * 8) * 0.06;
       continue;
     }
 
-    hazard.mesh.visible = true;
-    hazard.mesh.layers.set(0);
+    if (hazard.spec.kind === "lethal-field" && hazard.spec.cycle) {
+      const safeWindow = cycleIsOpen(hazard.spec.cycle, time);
+      hazard.active = !safeWindow;
+      hazard.mesh.visible = !safeWindow;
+      hazard.mesh.layers.set(safeWindow ? 1 : 0);
+      if (safeWindow) continue;
+    } else {
+      hazard.active = true;
+      hazard.mesh.visible = true;
+      hazard.mesh.layers.set(0);
+    }
+
     const pulse = 0.78 + Math.sin(time * 7.5 + hazard.base.z * 0.13) * 0.22;
     hazard.mesh.material.opacity = hazard.spec.kind === "aperture-wall"
       ? 0.1 + pulse * 0.045
