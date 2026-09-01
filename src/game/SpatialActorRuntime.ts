@@ -41,11 +41,12 @@ type RuntimeState = {
   flashMessage(message: string, duration: number): void;
 };
 
+const UTILITY_KINDS = new Set<EnemySpec["kind"]>(["cube", "diamond", "prism"]);
+
 /**
- * Replaces the prototype Shield-only targeting branch with the declarative actor
- * schema. Any implemented actor can now carry an origin constraint without adding
- * another hardcoded condition to TraversalGame. Actor identity is also reinforced
- * by silhouette so color is never the only way to read spatial behavior.
+ * Sphere-family actors are movement currency. Cubes, Diamonds, and Prisms are
+ * spatial machinery: shooting them changes world state but never writes a vector.
+ * Identity is carried by geometry, motion, and silhouette rather than color alone.
  */
 export function installSpatialActorRuntime(game: object): void {
   const state = game as unknown as RuntimeState;
@@ -102,12 +103,31 @@ export function installSpatialActorRuntime(game: object): void {
       return;
     }
 
-    const deathPosition = enemy.mesh.position.clone();
+    const hitPosition = enemy.mesh.position.clone();
     enemy.alive = false;
     enemy.mesh.visible = false;
+
+    if (UTILITY_KINDS.has(enemy.spec.kind)) {
+      // Utility hits are intentional puzzle actions, not challenge-mode misses.
+      state.roomShots = Math.max(0, state.roomShots - 1);
+      state.addImpactFx(hitPosition, utilityImpactColor(enemy.spec.kind));
+      state.playKill();
+      const message = utilityMessage(enemy.spec.kind);
+      state.flashMessage(message, 1500);
+      window.dispatchEvent(new CustomEvent("traversal:puzzle-actor", {
+        detail: {
+          roomId: room.id,
+          actorId: enemy.spec.id,
+          kind: enemy.spec.kind,
+          effect: enemy.spec.effect
+        }
+      }));
+      return;
+    }
+
     state.roomKills += 1;
     state.totalKills += 1;
-    state.addKillFx(deathPosition, enemy.spec.kind);
+    state.addKillFx(hitPosition, enemy.spec.kind);
     state.playKill();
 
     if (state.exactKills && state.roomKills > room.requiredKills) {
@@ -117,11 +137,11 @@ export function installSpatialActorRuntime(game: object): void {
 
     if (state.enforceChallengeShotBudget(now)) return;
 
-    state.warp.write(state.camera.position.clone(), deathPosition);
+    state.warp.write(state.camera.position.clone(), hitPosition);
     state.playVectorWritten();
     state.flashMessage(
       state.roomKills > room.requiredKills
-        ? "EXTRA KILL // ROUTE EFFICIENCY DOWN"
+        ? "EXTRA SPHERE // ROUTE EFFICIENCY DOWN"
         : "WARP VECTOR WRITTEN",
       state.roomKills > room.requiredKills ? 1800 : 1000
     );
@@ -147,6 +167,7 @@ export function installSpatialActorRuntime(game: object): void {
 
     document.body.classList.toggle("target-hot", Boolean(enemy) && !blocked);
     document.body.classList.toggle("target-blocked", blocked);
+    document.body.classList.toggle("target-utility", Boolean(enemy && UTILITY_KINDS.has(enemy.spec.kind)));
   };
 
   const originalLoadRoom = state.loadRoom.bind(game);
@@ -164,7 +185,27 @@ function decorateActorVisuals(enemies: ActiveEnemy[]): void {
     if (enemy.spec.kind === "shield") decorateShield(enemy);
     if (enemy.spec.kind === "drifter") decorateDrifter(enemy);
     if (enemy.spec.kind === "orbit") decorateOrbit(enemy);
+    if (enemy.spec.kind === "cube") decorateUtility(enemy, "cube");
+    if (enemy.spec.kind === "diamond") decorateUtility(enemy, "diamond");
+    if (enemy.spec.kind === "prism") decorateUtility(enemy, "prism");
   }
+}
+
+function decorateUtility(enemy: ActiveEnemy, kind: "cube" | "diamond" | "prism"): void {
+  const radius = enemy.spec.radius ?? 0.72;
+  const ring = new THREE.Mesh(
+    new THREE.TorusGeometry(radius * 1.42, radius * 0.045, 8, kind === "prism" ? 3 : 36),
+    new THREE.MeshBasicMaterial({
+      color: 0xf2fbff,
+      transparent: true,
+      opacity: 0.78,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    })
+  );
+  ring.rotation.x = kind === "diamond" ? Math.PI * 0.5 : 0;
+  ring.rotation.z = kind === "prism" ? Math.PI / 6 : 0;
+  enemy.mesh.add(ring);
 }
 
 function decorateOrbit(enemy: ActiveEnemy): void {
@@ -243,8 +284,21 @@ function decorateDrifter(enemy: ActiveEnemy): void {
   enemy.mesh.add(line);
 }
 
+function utilityMessage(kind: EnemySpec["kind"]): string {
+  if (kind === "cube") return "CUBE RESOLVED // BARRIER STATE CHANGED";
+  if (kind === "diamond") return "DIAMOND RESOLVED // MOTION ONLINE";
+  if (kind === "prism") return "PRISM RESOLVED // ENERGY REROUTED";
+  return "WORLD STATE CHANGED";
+}
+
+function utilityImpactColor(kind: EnemySpec["kind"]): number {
+  if (kind === "cube") return 0xf2f4ff;
+  if (kind === "diamond") return 0xc8fff0;
+  if (kind === "prism") return 0xffe8b2;
+  return 0xd9feff;
+}
+
 function orientDisc(object: THREE.Object3D, axis: "x" | "y" | "z"): void {
-  // Circle/Torus geometries face +Z by default.
   if (axis === "x") object.rotation.y = Math.PI * 0.5;
   if (axis === "y") object.rotation.x = Math.PI * 0.5;
 }
