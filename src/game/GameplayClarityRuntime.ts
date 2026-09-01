@@ -54,11 +54,34 @@ export function installGameplayClarity(game: object): void {
   const originalHUD = state.updateHUD.bind(game);
   state.updateHUD = () => {
     originalHUD();
+    normalizeSpatialLanguage();
     simplifyCampaignHUD(state);
     updateStopShort(state);
     updateShotBudget(state);
     emphasizeTrainingStopShort(state);
   };
+}
+
+function normalizeSpatialLanguage(): void {
+  const objective = document.getElementById("room-objective");
+  const tutorial = document.getElementById("tutorial-text");
+  const anchor = document.getElementById("anchor-status");
+
+  if (objective) {
+    objective.textContent = objective.textContent
+      ?.replaceAll("KILLS", "SPHERES")
+      .replaceAll("KILL", "SPHERE") ?? "";
+  }
+  if (tutorial) {
+    tutorial.textContent = tutorial.textContent
+      ?.replaceAll(" KILLS", " SPHERES")
+      .replaceAll(" KILL", " SPHERE") ?? "";
+  }
+  if (anchor) {
+    anchor.textContent = anchor.textContent
+      ?.replace("KILL A TARGET TO WRITE", "RESOLVE A SPHERE TO WRITE")
+      .replace("EXTRA KILL", "EXTRA SPHERE") ?? "";
+  }
 }
 
 function simplifyCampaignHUD(state: RuntimeState): void {
@@ -98,7 +121,7 @@ function updateStopShort(state: RuntimeState): void {
 
   const pad = document.body.classList.contains("gamepad-active");
   hintEl.textContent = !hasAnchor
-    ? "KILL TO WRITE VECTOR"
+    ? "SPHERE WRITES VECTOR"
     : held
       ? pad
         ? "RB SHORTER · LB LONGER · RELEASE LT"
@@ -137,7 +160,7 @@ function updateShotBudget(state: RuntimeState): void {
   const missLeft = Math.max(0, Math.floor(state.shotAllowance) - misses);
 
   count.textContent = `${left} SHOT${left === 1 ? "" : "S"}`;
-  sub.textContent = `${missLeft} MISS · ${Math.max(0, room.requiredKills - state.roomKills)} KILLS`;
+  sub.textContent = `${missLeft} MISS · ${Math.max(0, room.requiredKills - state.roomKills)} SPHERES`;
   panel.classList.toggle("danger", left <= 1);
 
   pips.innerHTML = Array.from({ length: total }, (_, index) =>
