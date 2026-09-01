@@ -1,11 +1,13 @@
 import { CAMPAIGN_MAPS, type CampaignMapDefinition } from "../world/campaign";
+import { buildChallengeSuite, buildTimeTrialSuite } from "../world/modeSuites";
 import { CONTROLS_ROOM } from "../world/onboarding";
 import { SPATIAL_ACTOR_TRAINING } from "../world/trainingSpatial";
 import { ROOMS, type RoomSpec } from "../world/stages";
 
-export type TraversalContentId = "controls" | "training" | string;
+export type TraversalContentId = "controls" | "training" | "suite-time-trial" | "suite-challenge" | string;
 export type TraversalContentForm = "controls" | "training" | "campaign-field" | "course";
 export type TrainingPath = "controls" | "grammar";
+export type ModeSuite = "time-trial" | "challenge" | null;
 
 type ExtendedCampaignMap = CampaignMapDefinition & {
   timeTrialRooms?: RoomSpec[];
@@ -18,6 +20,7 @@ export interface ContentRuntime {
   activeRooms(): RoomSpec[];
   activeParKills(): number;
   setSelectedMap(id: string): void;
+  setModeSuite(suite: ModeSuite): void;
   reloadSelected(): void;
   setTrainingPath(path: TrainingPath): void;
   enterGrammar(): void;
@@ -27,6 +30,7 @@ export function installContentRuntime(shell: any): ContentRuntime {
   const trainingRooms = structuredClone([...ROOMS, ...SPATIAL_ACTOR_TRAINING]) as RoomSpec[];
   let selectedMapId = "map-01";
   let selectedTrainingPath: TrainingPath = "controls";
+  let selectedModeSuite: ModeSuite = null;
   let activeId: TraversalContentId = "training";
   let activeForm: TraversalContentForm = "training";
 
@@ -43,6 +47,18 @@ export function installContentRuntime(shell: any): ContentRuntime {
       activeId = "training";
       activeForm = "training";
       return loadGrammarRooms();
+    }
+
+    if (modeId === "time-trial" && selectedModeSuite === "time-trial") {
+      activeId = "suite-time-trial";
+      activeForm = "course";
+      return buildTimeTrialSuite();
+    }
+
+    if (modeId === "challenge" && selectedModeSuite === "challenge") {
+      activeId = "suite-challenge";
+      activeForm = "course";
+      return buildChallengeSuite();
     }
 
     const map = (CAMPAIGN_MAPS.find((entry) => entry.id === selectedMapId && entry.implemented)
@@ -77,16 +93,24 @@ export function installContentRuntime(shell: any): ContentRuntime {
     activeParKills: () => ROOMS.reduce((sum, room) => sum + room.requiredKills, 0),
     setSelectedMap(id: string) {
       const map = CAMPAIGN_MAPS.find((entry) => entry.id === id);
-      if (map?.implemented) selectedMapId = id;
+      if (map?.implemented) {
+        selectedMapId = id;
+        selectedModeSuite = null;
+      }
+    },
+    setModeSuite(suite: ModeSuite) {
+      selectedModeSuite = suite;
     },
     reloadSelected,
     setTrainingPath(path: TrainingPath) {
       selectedTrainingPath = path;
+      selectedModeSuite = null;
     },
     enterGrammar() {
       activeId = "training";
       activeForm = "training";
       selectedTrainingPath = "grammar";
+      selectedModeSuite = null;
       ROOMS.splice(0, ROOMS.length, ...loadGrammarRooms());
     }
   };
