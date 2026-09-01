@@ -83,16 +83,30 @@ export function installMovingPlatformRuntime(game: object): void {
       const [sx, sy, sz] = platform.size;
       const center = mesh?.position ?? new THREE.Vector3(...platform.center);
       const inside =
-        Math.abs(state.camera.position.x - center.x) <= sx * 0.5 - 0.15 &&
-        Math.abs(state.camera.position.z - center.z) <= sz * 0.5 - 0.15;
+        Math.abs(state.camera.position.x - center.x) <= sx * 0.5 - 0.12 &&
+        Math.abs(state.camera.position.z - center.z) <= sz * 0.5 - 0.12;
       if (!inside) continue;
 
       const standingY = center.y + sy * 0.5 + 1.7;
-      if (
+      const movingEntry = moving.find((candidate) => candidate.mesh === mesh);
+      const previousStandingY = movingEntry
+        ? movingEntry.previous.y + sy * 0.5 + 1.7
+        : standingY;
+      const highestTop = Math.max(standingY, previousStandingY);
+      const lowestTop = Math.min(standingY, previousStandingY);
+
+      // Resolve against the swept deck instead of a single-frame top plane. This
+      // prevents the player from tunneling through an elevator while both the player
+      // and deck are moving vertically in opposite directions.
+      const crossedDeck =
         state.velocityY <= 0 &&
-        state.camera.position.y <= standingY + 0.24 &&
-        previousY >= standingY - 0.58
-      ) {
+        previousY >= lowestTop - 0.72 &&
+        state.camera.position.y <= highestTop + 0.36;
+      const alreadyOnDeck =
+        Math.abs(state.camera.position.y - standingY) <= 0.42 &&
+        previousY >= lowestTop - 0.72;
+
+      if (crossedDeck || alreadyOnDeck) {
         state.camera.position.y = standingY;
         state.velocityY = 0;
         return;
@@ -123,9 +137,9 @@ function updateMovingPlatforms(
     const [sx, sy, sz] = platform.spec.size;
     const oldStandingY = platform.previous.y + sy * 0.5 + 1.7;
     const onDeck =
-      Math.abs(state.camera.position.x - platform.previous.x) <= sx * 0.5 - 0.2 &&
-      Math.abs(state.camera.position.z - platform.previous.z) <= sz * 0.5 - 0.2 &&
-      Math.abs(state.camera.position.y - oldStandingY) <= 0.32;
+      Math.abs(state.camera.position.x - platform.previous.x) <= sx * 0.5 - 0.18 &&
+      Math.abs(state.camera.position.z - platform.previous.z) <= sz * 0.5 - 0.18 &&
+      Math.abs(state.camera.position.y - oldStandingY) <= 0.48;
 
     if (onDeck) state.camera.position.add(delta);
   }
