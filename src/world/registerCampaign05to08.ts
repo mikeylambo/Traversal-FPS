@@ -11,6 +11,15 @@ import {
 } from "./campaign05to08";
 
 export function registerCampaign05to08(): void {
+  // Playtest fix: Reconfiguration's final drifter was centered in front of the
+  // last platform, so a full warp could resolve into empty space. Keep the
+  // horizontal timing read, but move the endpoint locus onto the exit deck.
+  const reconfigFinal = MAP_05_FIELD[0]?.enemies.find((enemy) => enemy.id === "reconfig-final");
+  if (reconfigFinal) {
+    reconfigFinal.position = [0, 3.2, -153];
+    if (reconfigFinal.drift) reconfigFinal.drift.amplitude = 4.5;
+  }
+
   const definitions = [
     ["map-05", MAP_05_FIELD, MAP_05_COURSE],
     ["map-06", MAP_06_FIELD, MAP_06_COURSE],
