@@ -20,6 +20,7 @@ type MovementInput = {
 type RuntimeState = {
   camera: THREE.PerspectiveCamera;
   input: MovementInput;
+  platformMeshes: THREE.Mesh[];
   roomIndex: number;
   roomRestarts: number;
   yaw: number;
@@ -50,10 +51,11 @@ export function enhanceTraversalMovement(game: object): void {
 
   state.updateMovement = (dt: number, now: number) => {
     const room = ROOMS[state.roomIndex];
+    const platforms = resolveLivePlatforms(room.platforms, state.platformMeshes);
     const requestedCrouch = state.input.isCrouchHeld();
     const currentFootY = state.camera.position.y - eyeHeight;
     const standingBlocked = !requestedCrouch && !hasHeadroom(
-      room.platforms,
+      platforms,
       state.camera.position.x,
       state.camera.position.z,
       currentFootY
@@ -83,7 +85,7 @@ export function enhanceTraversalMovement(game: object): void {
       direction.z * speed * dt,
       eyeHeight,
       bodyHeight,
-      room.platforms,
+      platforms,
       grounded && now >= state.airGraceUntil
     );
 
@@ -96,7 +98,7 @@ export function enhanceTraversalMovement(game: object): void {
         previousY,
         eyeHeight,
         state.velocityY,
-        room.platforms
+        platforms
       );
       grounded = landed;
       if (landed) state.velocityY = 0;
@@ -104,7 +106,7 @@ export function enhanceTraversalMovement(game: object): void {
       // Warp phase-hang is allowed when the endpoint is truly airborne, but an
       // endpoint visibly over a platform should settle cleanly instead of missing
       // because its center is a few centimeters outside the collision inset.
-      const settled = resolveWarpArrival(state.camera.position, eyeHeight, room.platforms);
+      const settled = resolveWarpArrival(state.camera.position, eyeHeight, platforms);
       if (settled) {
         state.velocityY = 0;
         state.airGraceUntil = 0;
@@ -117,11 +119,31 @@ export function enhanceTraversalMovement(game: object): void {
 
     document.body.classList.toggle("airborne", !grounded);
 
-    if (state.camera.position.y < -9.5) {
+    // Deep authored spaces are valid level geometry. Reset only after the player
+    // falls well below the lowest platform in the current construct.
+    const lowestGeometry = platforms.reduce(
+      (lowest, platform) => Math.min(lowest, platform.center[1] - platform.size[1] * 0.5),
+      0
+    );
+    if (state.camera.position.y < lowestGeometry - 12) {
       state.roomRestarts += 1;
       state.loadRoom(state.roomIndex);
     }
   };
+}
+
+function resolveLivePlatforms(
+  specs: PlatformSpec[],
+  meshes: THREE.Mesh[]
+): PlatformSpec[] {
+  return specs.map((spec, index) => {
+    const mesh = meshes[index];
+    if (!mesh) return spec;
+    return {
+      ...spec,
+      center: [mesh.position.x, mesh.position.y, mesh.position.z]
+    };
+  });
 }
 
 function moveWithBodyCollision(
@@ -308,8 +330,8 @@ function resolveFloor(
 
     const standingY = cy + sy * 0.5 + eyeHeight;
     if (
-      position.y <= standingY + 0.22 &&
-      previousY >= standingY - 0.52 &&
+      position.y <= standingY + 0.32 &&
+      previousY >= standingY - 0.72 &&
       standingY > bestStandingY
     ) {
       bestStandingY = standingY;
