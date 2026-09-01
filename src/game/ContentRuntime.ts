@@ -1,4 +1,4 @@
-import { CAMPAIGN_MAPS } from "../world/campaign";
+import { CAMPAIGN_MAPS, type CampaignMapDefinition } from "../world/campaign";
 import { CONTROLS_ROOM } from "../world/onboarding";
 import { SPATIAL_ACTOR_TRAINING } from "../world/trainingSpatial";
 import { ROOMS, type RoomSpec } from "../world/stages";
@@ -6,6 +6,11 @@ import { ROOMS, type RoomSpec } from "../world/stages";
 export type TraversalContentId = "controls" | "training" | string;
 export type TraversalContentForm = "controls" | "training" | "campaign-field" | "course";
 export type TrainingPath = "controls" | "grammar";
+
+type ExtendedCampaignMap = CampaignMapDefinition & {
+  timeTrialRooms?: RoomSpec[];
+  challengeRooms?: RoomSpec[];
+};
 
 export interface ContentRuntime {
   selectedContentId(): TraversalContentId;
@@ -40,8 +45,8 @@ export function installContentRuntime(shell: any): ContentRuntime {
       return loadGrammarRooms();
     }
 
-    const map = CAMPAIGN_MAPS.find((entry) => entry.id === selectedMapId && entry.implemented)
-      ?? CAMPAIGN_MAPS.find((entry) => entry.implemented);
+    const map = (CAMPAIGN_MAPS.find((entry) => entry.id === selectedMapId && entry.implemented)
+      ?? CAMPAIGN_MAPS.find((entry) => entry.implemented)) as ExtendedCampaignMap | undefined;
     activeId = map?.id ?? "map-01";
 
     if (modeId === "standard") {
@@ -50,7 +55,12 @@ export function installContentRuntime(shell: any): ContentRuntime {
     }
 
     activeForm = "course";
-    return structuredClone(map?.courseRooms ?? []) as RoomSpec[];
+    const modeRooms = modeId === "time-trial"
+      ? map?.timeTrialRooms
+      : modeId === "challenge"
+        ? map?.challengeRooms
+        : undefined;
+    return structuredClone(modeRooms?.length ? modeRooms : map?.courseRooms ?? []) as RoomSpec[];
   };
 
   const reloadSelected = () => {
