@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { evaluateActorOrigin, resolveOriginConstraint } from "../world/spatialActors";
 import { ROOMS, type EnemySpec } from "../world/stages";
+import { installActorGeometryRuntime } from "./ActorGeometryRuntime";
 
 type ActiveEnemy = {
   spec: EnemySpec;
@@ -108,12 +109,10 @@ export function installSpatialActorRuntime(game: object): void {
     enemy.mesh.visible = false;
 
     if (UTILITY_KINDS.has(enemy.spec.kind)) {
-      // Utility hits are intentional puzzle actions, not challenge-mode misses.
       state.roomShots = Math.max(0, state.roomShots - 1);
       state.addImpactFx(hitPosition, utilityImpactColor(enemy.spec.kind));
       state.playKill();
-      const message = utilityMessage(enemy.spec.kind);
-      state.flashMessage(message, 1500);
+      state.flashMessage(utilityMessage(enemy.spec.kind), 1500);
       window.dispatchEvent(new CustomEvent("traversal:puzzle-actor", {
         detail: {
           roomId: room.id,
@@ -175,6 +174,8 @@ export function installSpatialActorRuntime(game: object): void {
     originalLoadRoom(index);
     decorateActorVisuals(state.enemies);
   };
+
+  installActorGeometryRuntime(game);
 }
 
 function decorateActorVisuals(enemies: ActiveEnemy[]): void {
