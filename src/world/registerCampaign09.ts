@@ -1,5 +1,6 @@
 import { CAMPAIGN_MAPS } from "./campaign";
 import { MAP_09_COURSE, MAP_09_FIELD } from "./campaign09";
+import { registerCampaign10 } from "./registerCampaign10";
 
 export function registerCampaign09(): void {
   const existing = CAMPAIGN_MAPS.find((entry) => entry.id === "map-09");
@@ -19,15 +20,5 @@ export function registerCampaign09(): void {
     });
   }
 
-  if (!CAMPAIGN_MAPS.some((entry) => entry.id === "map-10")) {
-    CAMPAIGN_MAPS.push({
-      id: "map-10",
-      label: "SECTOR 10 // VERTICAL RETURN",
-      subtitle: "Planned ACT II sector: descend, double back, and reclaim elevation through a simple high-count space.",
-      focus: ["High Sphere Count", "Descent", "Backtracking", "Elevation Recovery", "Simple Geometry"],
-      implemented: false,
-      campaignRooms: [],
-      courseRooms: []
-    });
-  }
+  registerCampaign10();
 }
