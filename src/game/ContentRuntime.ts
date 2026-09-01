@@ -1,5 +1,6 @@
 import { CAMPAIGN_MAPS } from "../world/campaign";
 import { CONTROLS_ROOM } from "../world/onboarding";
+import { SPATIAL_ACTOR_TRAINING } from "../world/trainingSpatial";
 import { ROOMS, type RoomSpec } from "../world/stages";
 
 export type TraversalContentId = "controls" | "training" | string;
@@ -18,7 +19,7 @@ export interface ContentRuntime {
 }
 
 export function installContentRuntime(shell: any): ContentRuntime {
-  const trainingRooms = structuredClone(ROOMS) as RoomSpec[];
+  const trainingRooms = structuredClone([...ROOMS, ...SPATIAL_ACTOR_TRAINING]) as RoomSpec[];
   let selectedMapId = "map-01";
   let selectedTrainingPath: TrainingPath = "controls";
   let activeId: TraversalContentId = "training";
