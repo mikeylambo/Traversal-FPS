@@ -112,7 +112,7 @@ function createHazard(root: THREE.Group, spec: HazardSpec): ActiveHazard {
   const material = new THREE.MeshBasicMaterial({
     color,
     transparent: true,
-    opacity: aperture ? 0.1 : gate ? 0.5 : sweep ? 0.32 : 0.14,
+    opacity: aperture ? 0.13 : gate ? 0.5 : sweep ? 0.32 : 0.14,
     blending: THREE.AdditiveBlending,
     depthWrite: false
   });
@@ -126,7 +126,7 @@ function createHazard(root: THREE.Group, spec: HazardSpec): ActiveHazard {
     new THREE.LineBasicMaterial({
       color: gate ? 0xd7fbff : aperture ? 0xffd7df : sweep ? 0xffd0d8 : 0xffb476,
       transparent: true,
-      opacity: gate ? 0.9 : sweep ? 0.92 : aperture ? 0.8 : 0.62,
+      opacity: gate ? 0.9 : sweep ? 0.92 : aperture ? 0.82 : 0.62,
       blending: THREE.AdditiveBlending
     })
   );
@@ -190,24 +190,51 @@ function createHazard(root: THREE.Group, spec: HazardSpec): ActiveHazard {
 function createApertureFrame(spec: HazardSpec): THREE.Object3D {
   const aperture = spec.aperture!;
   const group = new THREE.Group();
-  const width = aperture.axis === "x" ? aperture.span : Math.min(spec.size[0] * 0.42, 4.8);
-  const height = aperture.axis === "y" ? aperture.span : Math.min(spec.size[1] * 0.55, 4.8);
-  const depth = Math.max(0.06, spec.size[2] * 1.08);
+  const width = aperture.axis === "x" ? aperture.span : apertureSecondarySpan(spec);
+  const height = aperture.axis === "y" ? aperture.span : apertureSecondarySpan(spec);
+  const depth = Math.max(0.08, spec.size[2] * 1.35);
+
+  // The safe region must visually read as absence, not merely another colored
+  // rectangle painted over a lethal plane. This mask occludes the hazard fill while
+  // the bright frame communicates the exact collision-safe bounds.
+  const voidPanel = new THREE.Mesh(
+    new THREE.BoxGeometry(width * 0.96, height * 0.96, depth * 1.02),
+    new THREE.MeshBasicMaterial({
+      color: 0x0b1420,
+      transparent: true,
+      opacity: 0.96,
+      depthTest: false,
+      depthWrite: false
+    })
+  );
+  voidPanel.renderOrder = 20;
+  group.add(voidPanel);
+
   const geometry = new THREE.BoxGeometry(width, height, depth);
   const frame = new THREE.LineSegments(
     new THREE.EdgesGeometry(geometry),
     new THREE.LineBasicMaterial({
       color: 0xffffff,
       transparent: true,
-      opacity: 0.96,
+      opacity: 1,
+      depthTest: false,
       blending: THREE.AdditiveBlending
     })
   );
+  frame.renderOrder = 21;
   group.add(frame);
+
   group.userData.apertureAxis = aperture.axis;
   group.userData.apertureCenter = aperture.center;
   setApertureFramePosition(group, aperture.axis, aperture.center);
   return group;
+}
+
+function apertureSecondarySpan(spec: HazardSpec): number {
+  if (!spec.aperture) return 4.8;
+  return spec.aperture.axis === "x"
+    ? Math.min(spec.size[1] * 0.5, 4.8)
+    : Math.min(spec.size[0] * 0.42, 4.8);
 }
 
 function syncApertureFrame(hazard: ActiveHazard): void {
@@ -259,11 +286,11 @@ function updateHazards(hazards: ActiveHazard[], time: number): void {
     hazard.mesh.layers.set(0);
     const pulse = 0.78 + Math.sin(time * 7.5 + hazard.base.z * 0.13) * 0.22;
     hazard.mesh.material.opacity = hazard.spec.kind === "aperture-wall"
-      ? 0.08 + pulse * 0.035
+      ? 0.1 + pulse * 0.045
       : (hazard.spec.kind === "sweep" ? 0.28 : 0.12) * pulse;
     const lineMaterial = hazard.edges.material as THREE.LineBasicMaterial;
     lineMaterial.opacity = hazard.spec.kind === "aperture-wall"
-      ? 0.68 + pulse * 0.18
+      ? 0.72 + pulse * 0.18
       : (hazard.spec.kind === "sweep" ? 0.78 : 0.48) + pulse * 0.16;
   }
 }
@@ -285,9 +312,13 @@ function intersectsPlayerPath(from: THREE.Vector3, to: THREE.Vector3, hazard: Ac
     const crossing = wallCrossingPoint(playerFrom, playerTo, center, hazard.spec.size);
     if (crossing) {
       const aperture = hazard.spec.aperture;
-      const local = crossing[aperture.axis] - center[aperture.axis];
+      const primaryLocal = crossing[aperture.axis] - center[aperture.axis];
       const safeCenter = aperture.center + hazard.apertureOffset;
-      if (Math.abs(local - safeCenter) <= aperture.span * 0.5) return false;
+      const primarySafe = Math.abs(primaryLocal - safeCenter) <= aperture.span * 0.5;
+      const secondaryAxis = aperture.axis === "x" ? "y" : "x";
+      const secondaryLocal = crossing[secondaryAxis] - center[secondaryAxis];
+      const secondarySafe = Math.abs(secondaryLocal) <= apertureSecondarySpan(hazard.spec) * 0.5;
+      if (primarySafe && secondarySafe) return false;
     }
   }
 
