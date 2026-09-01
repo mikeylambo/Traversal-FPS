@@ -19,6 +19,7 @@ type ActiveMovingPlatform = {
   previous: THREE.Vector3;
   edge?: THREE.Object3D;
   active: boolean;
+  startedAt: number;
 };
 
 type PuzzleActorEvent = CustomEvent<{ effect?: PuzzleEffect }>;
@@ -33,6 +34,7 @@ export function installMovingPlatformRuntime(game: object): void {
     for (const platform of moving) {
       if (!platform.spec.id || !effect.targetIds.includes(platform.spec.id)) continue;
       platform.active = true;
+      platform.startedAt = performance.now() * 0.001;
       platform.mesh.userData.motionActive = true;
     }
   }) as EventListener);
@@ -50,6 +52,7 @@ export function installMovingPlatformRuntime(game: object): void {
       if (!mesh) return;
       const edge = nearestEdgeAtPosition(state.roomRoot, mesh.position, mesh);
       const active = spec.motion.active ?? true;
+      const now = performance.now() * 0.001;
       mesh.userData.motionActive = active;
       mesh.userData.traversalPlatformId = spec.id;
       moving.push({
@@ -58,7 +61,8 @@ export function installMovingPlatformRuntime(game: object): void {
         base: mesh.position.clone(),
         previous: mesh.position.clone(),
         edge,
-        active
+        active,
+        startedAt: now
       });
     });
   };
@@ -107,13 +111,13 @@ function updateMovingPlatforms(
     if (!platform.active || !platform.spec.motion) continue;
 
     const motion = platform.spec.motion;
-    const offset = Math.sin(time * motion.speed * Math.PI * 2 + (motion.phase ?? 0)) * motion.amplitude;
+    const localTime = Math.max(0, time - platform.startedAt);
+    const offset = Math.sin(localTime * motion.speed * Math.PI * 2 + (motion.phase ?? 0)) * motion.amplitude;
     platform.mesh.position.copy(platform.base);
     platform.mesh.position[motion.axis] += offset;
 
-    if (platform.edge) platform.edge.position.add(platform.mesh.position.clone().sub(platform.previous));
-
     const delta = platform.mesh.position.clone().sub(platform.previous);
+    if (platform.edge) platform.edge.position.add(delta);
     if (delta.lengthSq() <= 0.0000001) continue;
 
     const [sx, sy, sz] = platform.spec.size;
