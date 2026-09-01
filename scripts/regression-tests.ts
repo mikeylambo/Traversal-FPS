@@ -3,6 +3,7 @@ import { TraversalProgression } from "../src/game/Progression";
 import { CAMPAIGN_MAPS } from "../src/world/campaign";
 import { registerCampaign02 } from "../src/world/registerCampaign02";
 import { registerCampaign03 } from "../src/world/registerCampaign03";
+import { registerCampaign04 } from "../src/world/registerCampaign04";
 import { evaluateActorOrigin } from "../src/world/spatialActors";
 import { ROOMS, type RoomSpec } from "../src/world/stages";
 import { validateRoom, validateRoomCatalog } from "../src/world/contentValidation";
@@ -132,6 +133,7 @@ async function testProgression(): Promise<void> {
 }
 
 function testSpatialActors(): void {
+  registerCampaign04();
   const rejected = evaluateActorOrigin("shield", undefined, [0, 2.2, 0]);
   const accepted = evaluateActorOrigin("shield", undefined, [3, 2.2, 0]);
   equal(rejected.allowed, false, "shield default origin gate preserves current left-side rejection");
@@ -141,11 +143,19 @@ function testSpatialActors(): void {
   const authoredRejected = evaluateActorOrigin("sentry", { axis: "z", max: -5 }, [0, 2.2, 0]);
   equal(authored.allowed, true, "origin constraints can be authored on non-shield actors");
   equal(authoredRejected.allowed, false, "authored generic origin constraint rejects invalid origin");
+
+  const orbitMap = CAMPAIGN_MAPS.find((map) => map.id === "map-04");
+  assert(orbitMap?.implemented, "Crosscurrent is registered as playable content");
+  assert(
+    orbitMap.campaignRooms.some((room) => room.enemies.some((enemy) => enemy.kind === "orbit")),
+    "Crosscurrent campaign field uses the Orbit actor"
+  );
 }
 
 function testContentValidation(): void {
   registerCampaign02();
   registerCampaign03();
+  registerCampaign04();
 
   const issues = [
     ...validateRoomCatalog("training", ROOMS),

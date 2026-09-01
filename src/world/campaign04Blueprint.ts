@@ -20,7 +20,8 @@ export interface CleanGeometryBeat {
 }
 
 /**
- * Sector 04 is intentionally authored as route logic before coordinates.
+ * CLEAN GEOMETRY was originally drafted as Sector 04. It is now reserved for
+ * Sector 06 so CROSSCURRENT can occupy the campaign's missing combination step.
  * The player already understands how to make vectors; CLEAN GEOMETRY asks whether
  * they can recognize which valid vectors are unnecessary.
  *
@@ -28,7 +29,7 @@ export interface CleanGeometryBeat {
  * contract for the eventual campaign field/course authoring pass.
  */
 export const CLEAN_GEOMETRY_BLUEPRINT = {
-  id: "map-04",
+  id: "map-06",
   title: "CLEAN GEOMETRY",
   thesis: "Several routes work. Mastery is visible in the spheres you leave alive.",
   centralQuestion: "Which valid target should I deliberately ignore?",
@@ -112,7 +113,7 @@ export const CLEAN_GEOMETRY_BLUEPRINT = {
 
   courseBeats: [
     {
-      id: "map-04-01",
+      id: "map-06-01",
       title: "BYPASS",
       question: "Can you recognize a useful-looking sphere that costs an unnecessary kill?",
       grammar: ["route-fork", "stop-short"],
@@ -123,7 +124,7 @@ export const CLEAN_GEOMETRY_BLUEPRINT = {
       ]
     },
     {
-      id: "map-04-02",
+      id: "map-06-02",
       title: "EQUIVALENT",
       question: "Can two routes be equally clean but demand different skills?",
       grammar: ["route-fork", "origin-matters", "moving-endpoint"],
@@ -135,7 +136,7 @@ export const CLEAN_GEOMETRY_BLUEPRINT = {
       ]
     },
     {
-      id: "map-04-03",
+      id: "map-06-03",
       title: "CLEAN CUT",
       question: "Can Stop Short replace an entire intermediate target?",
       grammar: ["stop-short", "reorientation"],
@@ -146,7 +147,7 @@ export const CLEAN_GEOMETRY_BLUEPRINT = {
       ]
     },
     {
-      id: "map-04-04",
+      id: "map-06-04",
       title: "ROUTE PROOF",
       question: "Can you preserve efficiency when timing and occlusion compete for attention?",
       grammar: ["route-fork", "moving-endpoint", "origin-matters", "reorientation"],
@@ -157,7 +158,7 @@ export const CLEAN_GEOMETRY_BLUEPRINT = {
       ]
     },
     {
-      id: "map-04-05",
+      id: "map-06-05",
       title: "CLEAN GEOMETRY",
       question: "Can you read the whole route before spending the first vector?",
       grammar: ["route-fork", "stop-short", "origin-matters", "moving-endpoint", "reorientation"],

@@ -1,12 +1,14 @@
 import { CAMPAIGN_MAPS } from "../src/world/campaign";
 import { registerCampaign02 } from "../src/world/registerCampaign02";
 import { registerCampaign03 } from "../src/world/registerCampaign03";
+import { registerCampaign04 } from "../src/world/registerCampaign04";
 import { CONTROLS_ROOM } from "../src/world/onboarding";
 import { ROOMS } from "../src/world/stages";
 import { validateRoomCatalog, type ContentValidationIssue } from "../src/world/contentValidation";
 
 registerCampaign02();
 registerCampaign03();
+registerCampaign04();
 
 type Catalog = { label: string; rooms: typeof ROOMS };
 

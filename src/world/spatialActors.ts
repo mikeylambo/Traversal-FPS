@@ -59,9 +59,9 @@ export const SPATIAL_ACTORS: readonly SpatialActorDefinition[] = [
   {
     id: "orbit",
     label: "Orbit",
-    implemented: false,
+    implemented: true,
     spatialRole: "Endpoint moving around a locus",
-    capabilities: ["planned", "moving-position", "vector-endpoint", "cyclic-route"]
+    capabilities: ["moving-position", "vector-endpoint", "cyclic-route", "arrival-angle"]
   },
   {
     id: "phase",

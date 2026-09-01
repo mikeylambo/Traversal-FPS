@@ -163,7 +163,27 @@ function decorateActorVisuals(enemies: ActiveEnemy[]): void {
 
     if (enemy.spec.kind === "shield") decorateShield(enemy);
     if (enemy.spec.kind === "drifter") decorateDrifter(enemy);
+    if (enemy.spec.kind === "orbit") decorateOrbit(enemy);
   }
+}
+
+function decorateOrbit(enemy: ActiveEnemy): void {
+  const orbit = enemy.spec.orbit;
+  if (!orbit) return;
+  const radius = enemy.spec.radius ?? 0.72;
+  const ring = new THREE.Mesh(
+    new THREE.TorusGeometry(radius * 1.45, radius * 0.055, 8, 44),
+    new THREE.MeshBasicMaterial({
+      color: 0xb9ffe8,
+      transparent: true,
+      opacity: 0.9,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    })
+  );
+  if (orbit.plane === "xy") ring.rotation.x = Math.PI * 0.5;
+  if (orbit.plane === "yz") ring.rotation.y = Math.PI * 0.5;
+  enemy.mesh.add(ring);
 }
 
 function decorateShield(enemy: ActiveEnemy): void {

@@ -188,7 +188,25 @@ export const CAMPAIGN_MAPS: CampaignMapDefinition[] = [
   },
   {
     id: "map-04",
-    label: "SECTOR 04 // CLEAN GEOMETRY",
+    label: "SECTOR 04 // CROSSCURRENT",
+    subtitle: "Moving endpoints and world hazards intersect. Read the whole line.",
+    focus: ["Orbit", "Sweep Timing", "Stop Short", "Reorientation", "Combination Play"],
+    implemented: false,
+    campaignRooms: [],
+    courseRooms: []
+  },
+  {
+    id: "map-05",
+    label: "SECTOR 05 // RECONFIGURATION",
+    subtitle: "The construct changes the spatial hypothesis.",
+    focus: ["Reconfiguration", "Phase", "Collapsing Geometry"],
+    implemented: false,
+    campaignRooms: [],
+    courseRooms: []
+  },
+  {
+    id: "map-06",
+    label: "SECTOR 06 // CLEAN GEOMETRY",
     subtitle: "Several routes work. Only a few are elegant.",
     focus: ["Route Fork", "Efficiency", "Constraint Play"],
     implemented: false,
@@ -196,8 +214,17 @@ export const CAMPAIGN_MAPS: CampaignMapDefinition[] = [
     courseRooms: []
   },
   {
-    id: "map-05",
-    label: "SECTOR 05 // TERMINAL VECTOR",
+    id: "map-07",
+    label: "SECTOR 07 // VECTOR FOUNDRY",
+    subtitle: "Place the endpoint before writing the vector.",
+    focus: ["Placed Endpoint", "Authored Routes", "Synthesis"],
+    implemented: false,
+    campaignRooms: [],
+    courseRooms: []
+  },
+  {
+    id: "map-08",
+    label: "SECTOR 08 // TERMINAL VECTOR",
     subtitle: "The full traversal language under pressure.",
     focus: ["Synthesis", "Long Chains", "Mastery"],
     implemented: false,

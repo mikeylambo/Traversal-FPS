@@ -9,7 +9,7 @@ type ActiveFx = {
 };
 
 const colorFor = (kind: EnemySpec["kind"]): number =>
-  kind === "shield" ? 0xffa45e : kind === "drifter" ? 0xff72c5 : 0x78f7ff;
+  kind === "shield" ? 0xffa45e : kind === "orbit" ? 0x7dffd2 : kind === "drifter" ? 0xff72c5 : 0x78f7ff;
 
 export class TargetResolveFx {
   private readonly active: ActiveFx[] = [];

@@ -224,6 +224,18 @@ function validateEnemy(
     }
   }
 
+  if (enemy.kind === "orbit") {
+    if (!enemy.orbit) {
+      push("error", "enemy.orbit", "Orbit actor requires orbit settings.", enemy.id);
+    } else if (
+      !Number.isFinite(enemy.orbit.radiusA) || enemy.orbit.radiusA <= 0 ||
+      !Number.isFinite(enemy.orbit.radiusB) || enemy.orbit.radiusB <= 0 ||
+      !Number.isFinite(enemy.orbit.speed) || enemy.orbit.speed <= 0
+    ) {
+      push("error", "enemy.orbit.values", "Orbit radii and speed must be positive.", enemy.id);
+    }
+  }
+
   if (enemy.originConstraint) {
     const constraint = enemy.originConstraint;
     if (!(["x", "y", "z"] as const).includes(constraint.axis)) {

@@ -45,6 +45,7 @@ import { PUZZLE_GRAMMAR_V1 } from "./world/puzzleGrammar";
 import { CAMPAIGN_MAPS } from "./world/campaign";
 import { registerCampaign02 } from "./world/registerCampaign02";
 import { registerCampaign03 } from "./world/registerCampaign03";
+import { registerCampaign04 } from "./world/registerCampaign04";
 
 const canvas = document.getElementById("game-canvas") as HTMLCanvasElement | null;
 const uiRoot = document.getElementById("ui");
@@ -52,13 +53,14 @@ if (!canvas || !uiRoot) throw new Error("Traversal FPS boot DOM is incomplete");
 
 registerCampaign02();
 registerCampaign03();
+registerCampaign04();
 
 const traversalSettings = new TraversalSettingsStore();
 const rendererAdapter = createThreeStarterAdapter(canvas);
 const app = await createGameApp({
   gameId: "traversal-fps",
   gameName: "Traversal FPS",
-  version: "0.11.2",
+  version: "0.12.0",
   renderer: rendererAdapter,
   root: uiRoot,
   assemblies: [
@@ -228,7 +230,7 @@ app.ui.updateScreen("credits", {
     { id: "credit-tech", label: "Technology // Three.js + SLU Web Game Shell", disabled: true },
     { id: "credit-type", label: "Typography // Rajdhani + Sora", disabled: true },
     { id: "credit-tools", label: "Development Assistance // OpenAI + Anthropic", disabled: true },
-    { id: "credit-build", label: "Build // v0.11.2", description: "Fairness + Readability", disabled: true }
+    { id: "credit-build", label: "Build // v0.12.0", description: "Sector 04 // Crosscurrent", disabled: true }
   ]
 });
 
@@ -312,7 +314,7 @@ game.start();
 console.info("Traversal FPS ready", {
   shellVersion: "1.0.2+settings+mode-replace",
   shellCommit: "d45d5b89b56eb65cf10cc25ef3a89595d63f6b3f",
-  gameVersion: "0.11.2",
+  gameVersion: "0.12.0",
   renderTarget: "Vector Surface",
   typography: "Rajdhani / Sora",
   starfield: "shader-twinkle",
@@ -342,7 +344,7 @@ console.info("Traversal FPS ready", {
   })),
   achievements: ACHIEVEMENTS.length,
   hazards: ["lethal-field", "sweep", "sightline-gate"],
-  spatialActors: "sentry // drifter // shield data-driven; orbit // phase // linked-pair reserved",
+  spatialActors: "sentry // drifter // shield // orbit data-driven; phase // linked-pair reserved",
   editor: "development-only // F2 // backquote; public menu entry deferred",
   mobileControls: true,
   vrStatus: "future-compatible target; not current production scope",

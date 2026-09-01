@@ -477,6 +477,18 @@ export class TraversalGame {
         enemy.mesh.position[enemy.spec.drift.axis] += offset;
       }
 
+
+      if (enemy.spec.orbit) {
+        const orbit = enemy.spec.orbit;
+        const angle = time * orbit.speed * this.enemySpeedScalar + (orbit.phase ?? 0);
+        const a = Math.cos(angle) * orbit.radiusA;
+        const b = Math.sin(angle) * orbit.radiusB;
+        enemy.mesh.position.copy(enemy.base);
+        if (orbit.plane === "xy") enemy.mesh.position.add(new THREE.Vector3(a, b, 0));
+        if (orbit.plane === "xz") enemy.mesh.position.add(new THREE.Vector3(a, 0, b));
+        if (orbit.plane === "yz") enemy.mesh.position.add(new THREE.Vector3(0, a, b));
+      }
+
       enemy.mesh.rotation.x += 0.012 * this.enemySpeedScalar;
       enemy.mesh.rotation.y += 0.018 * this.enemySpeedScalar;
     }
@@ -779,6 +791,8 @@ export class TraversalGame {
   private addEnemy(spec: EnemySpec): void {
     const color = spec.kind === "shield"
       ? 0xffad66
+      : spec.kind === "orbit"
+        ? 0x8effd4
       : spec.kind === "drifter"
         ? 0xff78c8
         : 0x7cefff;
@@ -981,6 +995,8 @@ export class TraversalGame {
   private addKillFx(position: THREE.Vector3, kind: EnemySpec["kind"]): void {
     const color = kind === "shield"
       ? 0xffa45e
+      : kind === "orbit"
+        ? 0x7dffd2
       : kind === "drifter"
         ? 0xff72c5
         : 0x78f7ff;
