@@ -131,7 +131,7 @@ export const MAP_09_COURSE: RoomSpec[] = [
   {
     id: "map-09-03",
     title: "PRISM",
-    lesson: "A Prism reroutes energy. Move the safe aperture into your vector before committing.",
+    lesson: "The opening begins deliberately off-line. Reroute it with the Prism, then write the only safe crossing.",
     grammar: ["stop-short", "reorientation"],
     spawn: [-6, 2.2, 7],
     goal: [6, 1.1, -31],
@@ -141,11 +141,11 @@ export const MAP_09_COURSE: RoomSpec[] = [
       { center: [6, 0, -31], size: [10, 1, 10] }
     ],
     enemies: [
-      { id: "m9-prism", kind: "prism", position: [-2, 3, -2], effect: { type: "shift-aperture", targetIds: ["m9-aperture"], offset: 11 } },
+      { id: "m9-prism", kind: "prism", position: [-2, 3, -2], effect: { type: "shift-aperture", targetIds: ["m9-aperture"], offset: 8 } },
       { id: "m9-prism-sphere", kind: "sentry", position: [6, 2.2, -31] }
     ],
     hazards: [
-      { id: "m9-aperture", kind: "aperture-wall", center: [0, 4, -12], size: [20, 10, 0.45], aperture: { axis: "x", center: -6, span: 5 } }
+      { id: "m9-aperture", kind: "aperture-wall", center: [0, 4, -12], size: [22, 10, 0.45], aperture: { axis: "x", center: -8, span: 3 } }
     ]
   },
   {
@@ -168,12 +168,12 @@ export const MAP_09_COURSE: RoomSpec[] = [
       { id: "m9-final-a", kind: "sentry", position: [-8, 4.2, -13] },
       { id: "m9-final-diamond", kind: "diamond", position: [-8, 5.4, -16], effect: { type: "activate-platform", targetIds: ["m9-final-lift"] } },
       { id: "m9-final-b", kind: "sentry", position: [8, 6.2, -27] },
-      { id: "m9-final-prism", kind: "prism", position: [5, 5, -32], effect: { type: "shift-aperture", targetIds: ["m9-final-aperture"], offset: 10 } },
+      { id: "m9-final-prism", kind: "prism", position: [5, 5, -32], effect: { type: "shift-aperture", targetIds: ["m9-final-aperture"], offset: 14 } },
       { id: "m9-final-c", kind: "sentry", position: [6, 4.2, -39] }
     ],
     hazards: [
       { id: "m9-final-gate", kind: "sightline-gate", center: [0, 4, -5], size: [13, 8, 0.4], cycle: { period: 999, openFor: 0.05, phase: 1 } },
-      { id: "m9-final-aperture", kind: "aperture-wall", center: [0, 4, -34], size: [18, 10, 0.45], aperture: { axis: "x", center: -5, span: 4.5 } }
+      { id: "m9-final-aperture", kind: "aperture-wall", center: [0, 4, -34], size: [22, 10, 0.45], aperture: { axis: "x", center: -7, span: 3 } }
     ]
   }
 ];
