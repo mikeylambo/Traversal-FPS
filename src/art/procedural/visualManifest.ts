@@ -16,10 +16,6 @@ import { registeredProceduralVisualKeys } from "./ProceduralVisualRegistry";
  *   });
  */
 export function bootProceduralVisualManifest(): void {
-  // Registration imports live above this function. Calling this boot point makes the
-  // manifest an explicit part of app startup and provides a stable diagnostics hook.
-  if (import.meta.env.DEV) {
-    const keys = registeredProceduralVisualKeys();
-    if (keys.length > 0) console.info(`Traversal procedural visuals // ${keys.join(", ")}`);
-  }
+  const keys = registeredProceduralVisualKeys();
+  if (keys.length > 0) console.info(`Traversal procedural visuals // ${keys.join(", ")}`);
 }
