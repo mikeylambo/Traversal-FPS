@@ -6,9 +6,9 @@ export interface WarpRifleVisualState {
   transiting?: boolean;
 }
 
-const WHITE = 0xe8edf0;
-const GRAPHITE = 0x10151b;
-const DARK = 0x070b10;
+const WHITE = 0xf1f4f5;
+const GRAPHITE = 0x1a232c;
+const DARK = 0x0a1017;
 const CYAN = 0x61efff;
 
 function standardMaterial(color: number, metalness: number, roughness: number): THREE.MeshStandardMaterial {
@@ -98,14 +98,26 @@ export function createWarpRifleModel(): THREE.Group {
   const root = new THREE.Group();
   root.name = "warp-rifle-approved-v1";
 
-  const white = standardMaterial(WHITE, 0.56, 0.24);
-  const graphite = standardMaterial(GRAPHITE, 0.82, 0.2);
-  const dark = standardMaterial(DARK, 0.72, 0.3);
+  const white = new THREE.MeshStandardMaterial({
+    color: WHITE,
+    emissive: 0x27333d,
+    emissiveIntensity: 0.32,
+    metalness: 0.5,
+    roughness: 0.22
+  });
+  const graphite = new THREE.MeshStandardMaterial({
+    color: GRAPHITE,
+    emissive: 0x0b141c,
+    emissiveIntensity: 0.18,
+    metalness: 0.78,
+    roughness: 0.24
+  });
+  const dark = standardMaterial(DARK, 0.7, 0.32);
   const energy = emissiveMaterial();
   const energySoft = new THREE.MeshBasicMaterial({
     color: CYAN,
     transparent: true,
-    opacity: 0.72,
+    opacity: 0.78,
     blending: THREE.AdditiveBlending,
     depthWrite: false,
     toneMapped: false
@@ -115,20 +127,17 @@ export function createWarpRifleModel(): THREE.Group {
   recoilPivot.name = "recoil-pivot";
   root.add(recoilPivot);
 
-  // Rear stock and receiver: broad immaculate white masses over a dark structural spine.
   box(recoilPivot, [0.33, 0.24, 0.48], [0, 0.03, 0.35], dark);
   wedge(recoilPivot, [0.41, 0.22, 0.52], [0, 0.12, 0.26], white, 0, "receiver-shell");
   box(recoilPivot, [0.38, 0.19, 0.36], [0, 0.065, 0.68], white, [0.02, 0, 0], "rear-stock");
   box(recoilPivot, [0.28, 0.055, 0.34], [0, -0.075, 0.68], graphite);
   box(recoilPivot, [0.22, 0.035, 0.18], [0, 0.205, 0.32], graphite);
 
-  // Grip and lower support rail.
   box(recoilPivot, [0.15, 0.31, 0.17], [0, -0.245, 0.36], graphite, [-0.18, 0, 0], "grip");
   box(recoilPivot, [0.11, 0.25, 0.12], [0, -0.255, 0.35], dark, [-0.18, 0, 0]);
   box(recoilPivot, [0.035, 0.045, 0.58], [-0.16, -0.25, 0.47], white, [0.02, 0.08, -0.14]);
   box(recoilPivot, [0.035, 0.045, 0.58], [0.16, -0.25, 0.47], white, [0.02, -0.08, 0.14]);
 
-  // Warp core housing.
   const corePivot = new THREE.Group();
   corePivot.name = "core-spin-pivot";
   corePivot.position.set(0, 0.045, -0.18);
@@ -151,7 +160,6 @@ export function createWarpRifleModel(): THREE.Group {
   hub.rotation.x = Math.PI / 2;
   corePivot.add(hub);
 
-  // Four suspended armor arcs surrounding the core.
   const ringSegments = new THREE.Group();
   ringSegments.name = "floating-ring-segments";
   corePivot.add(ringSegments);
@@ -164,7 +172,6 @@ export function createWarpRifleModel(): THREE.Group {
     ringSegments.add(segment);
   }
 
-  // Forward chassis creates the distinctive forked, precision-instrument silhouette.
   box(recoilPivot, [0.22, 0.13, 0.64], [0, 0.035, -0.58], graphite);
   wedge(recoilPivot, [0.24, 0.1, 0.55], [0, 0.17, -0.58], white, 0);
 
@@ -175,12 +182,10 @@ export function createWarpRifleModel(): THREE.Group {
     box(recoilPivot, [0.018, 0.022, 0.53], [side * 0.091, 0.058, -0.88], energySoft);
   });
 
-  // Central energy channel.
   box(recoilPivot, [0.105, 0.064, 0.83], [0, 0.01, -0.72], dark, [0, 0, 0], "energy-channel-housing");
   box(recoilPivot, [0.048, 0.035, 0.78], [0, 0.014, -0.75], energy, [0, 0, 0], "energy-channel");
   box(recoilPivot, [0.025, 0.014, 0.88], [0, 0.075, -0.71], energySoft);
 
-  // Small restrained side accents.
   box(recoilPivot, [0.025, 0.045, 0.16], [-0.205, 0.09, 0.14], energySoft);
   box(recoilPivot, [0.025, 0.045, 0.16], [0.205, 0.09, 0.14], energySoft);
   addTraversalMark(recoilPivot);
@@ -220,7 +225,7 @@ export function updateWarpRifleModel(visual: THREE.Group, dt: number, time: numb
         ? 4.8 + Math.sin(time * 10) * 0.8
         : state.anchorReady
           ? 3.7 + Math.sin(time * 4.5) * 0.25
-          : 2.6;
+          : 2.8;
   }
-  if (materials?.energySoft) materials.energySoft.opacity = state.transiting ? 1 : preview ? 0.92 : state.anchorReady ? 0.76 : 0.58;
+  if (materials?.energySoft) materials.energySoft.opacity = state.transiting ? 1 : preview ? 0.95 : state.anchorReady ? 0.8 : 0.62;
 }
