@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { mountRegisteredVisual, type ProceduralVisualKey } from "../art/procedural/ProceduralVisualRegistry";
 import { ROOMS, type PlatformSpec, type PuzzleEffect } from "../world/stages";
 
 type RuntimeState = {
@@ -47,9 +48,12 @@ export function installMovingPlatformRuntime(game: object): void {
     if (!room) return;
 
     room.platforms.forEach((spec, platformIndex) => {
-      if (!spec.motion) return;
       const mesh = state.platformMeshes[platformIndex];
       if (!mesh) return;
+
+      mountPlatformVisual(mesh, spec);
+      if (!spec.motion) return;
+
       const edge = nearestEdgeAtPosition(state.roomRoot, mesh.position, mesh);
       const active = spec.motion.active ?? true;
       const now = performance.now() * 0.001;
@@ -95,9 +99,6 @@ export function installMovingPlatformRuntime(game: object): void {
       const highestTop = Math.max(standingY, previousStandingY);
       const lowestTop = Math.min(standingY, previousStandingY);
 
-      // Resolve against the swept deck instead of a single-frame top plane. This
-      // prevents the player from tunneling through an elevator while both the player
-      // and deck are moving vertically in opposite directions.
       const crossedDeck =
         state.velocityY <= 0 &&
         previousY >= lowestTop - 0.72 &&
@@ -113,6 +114,15 @@ export function installMovingPlatformRuntime(game: object): void {
       }
     }
   };
+}
+
+function mountPlatformVisual(mesh: THREE.Mesh, spec: PlatformSpec): void {
+  const [sx, sy, sz] = spec.size;
+  const key = (spec.motion ? "platform.moving.default" : "platform.standard.default") as ProceduralVisualKey;
+  mesh.userData.traversalPlatformVisualKey = key;
+  mountRegisteredVisual(mesh, key, {
+    scale: [sx, Math.max(0.22, sy), sz]
+  });
 }
 
 function updateMovingPlatforms(
