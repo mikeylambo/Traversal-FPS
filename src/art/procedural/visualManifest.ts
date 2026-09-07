@@ -1,4 +1,11 @@
-import { registeredProceduralVisualKeys } from "./ProceduralVisualRegistry";
+import { registeredProceduralVisualKeys, registerProceduralVisual } from "./ProceduralVisualRegistry";
+import { createWarpRifleModel, updateWarpRifleModel } from "./models/createWarpRifleModel";
+
+registerProceduralVisual("weapon.warp-rifle.default", {
+  factory: createWarpRifleModel,
+  update: updateWarpRifleModel,
+  tier: "hero"
+});
 
 /**
  * Single boot point for generated/procedural Traversal art.
@@ -6,14 +13,6 @@ import { registeredProceduralVisualKeys } from "./ProceduralVisualRegistry";
  * When an img2threejs output is accepted, place its factory under
  * `src/art/procedural/models/`, import it here, and register its stable visual key.
  * Gameplay modules never import generated model files directly.
- *
- * Example:
- *   import { createWarpRifleModel } from "./models/createWarpRifleModel";
- *   import { registerProceduralVisual } from "./ProceduralVisualRegistry";
- *   registerProceduralVisual("weapon.warp-rifle.default", {
- *     factory: createWarpRifleModel,
- *     tier: "hero"
- *   });
  */
 export function bootProceduralVisualManifest(): void {
   const keys = registeredProceduralVisualKeys();
