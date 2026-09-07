@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { mountRegisteredVisual, updateRegisteredVisual } from "../art/procedural/ProceduralVisualRegistry";
+import { hasProceduralVisual, mountRegisteredVisual, updateRegisteredVisual } from "../art/procedural/ProceduralVisualRegistry";
 
 export interface WarpRifleState {
   anchorReady: boolean;
@@ -26,8 +26,14 @@ export class WarpRifle {
   private time = 0;
 
   constructor(camera: THREE.Camera) {
-    this.build();
-    mountRegisteredVisual(this.group, "weapon.warp-rifle.default");
+    const procedural = hasProceduralVisual("weapon.warp-rifle.default");
+    if (procedural) {
+      mountRegisteredVisual(this.group, "weapon.warp-rifle.default");
+      this.muzzle.position.set(0, 0.01, -1.18);
+      this.group.add(this.muzzle);
+    } else {
+      this.build();
+    }
     this.group.position.copy(this.rest);
     this.group.rotation.set(-0.035, -0.025, -0.045);
     camera.add(this.group);
@@ -77,6 +83,7 @@ export class WarpRifle {
       segment.scale.y = 0.94 + Math.sin(this.time * 8 - index * 0.6) * (preview ? 0.08 : 0.025) + capturePulse * 0.12;
     });
 
+    this.group.userData.traversalWeaponState = state;
     updateRegisteredVisual(this.group, dt, this.time);
   }
 
