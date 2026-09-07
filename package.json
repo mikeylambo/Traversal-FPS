@@ -8,7 +8,8 @@
     "content:doctor": "tsx scripts/content-doctor.ts",
     "test:regression": "tsx scripts/regression-tests.ts",
     "build": "npm run content:doctor && npm run test:regression && tsc --noEmit && vite build",
-    "check": "tsc --noEmit"
+    "check": "tsc --noEmit",
+    "setup:img2threejs": "powershell -ExecutionPolicy Bypass -File tools/setup-img2threejs.ps1"
   },
   "dependencies": {
     "@slu/web-shell": "github:mikeylambo/Web-Game-Shell-v1.02#d45d5b89b56eb65cf10cc25ef3a89595d63f6b3f",
