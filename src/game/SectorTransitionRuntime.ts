@@ -12,10 +12,10 @@ type RuntimeState = {
 
 const TITLE_DURATION_MS = 2600;
 const ACT_BOUNDARIES: Record<string, { kicker: string; title: string }> = {
-  "map-08": { kicker: "ACT I // COMPLETE", title: "THE CONSTRUCT OPENS" },
-  "map-16": { kicker: "ACT II // COMPLETE", title: "DESCEND INTO THE MACHINE" },
-  "map-24": { kicker: "ACT III // COMPLETE", title: "THE SYSTEM TURNS HOSTILE" },
-  "map-32": { kicker: "ACT IV // COMPLETE", title: "THE VECTOR RETURNS" }
+  "map-08": { kicker: "ACT I // FINALE", title: "THE CONSTRUCT OPENS" },
+  "map-16": { kicker: "ACT II // FINALE", title: "DESCEND INTO THE MACHINE" },
+  "map-24": { kicker: "ACT III // FINALE", title: "THE SYSTEM TURNS HOSTILE" },
+  "map-32": { kicker: "ACT IV // FINALE", title: "THE VECTOR RETURNS" }
 };
 
 /** Gives each content family a restrained entrance card and stronger Act-boundary punctuation. */
