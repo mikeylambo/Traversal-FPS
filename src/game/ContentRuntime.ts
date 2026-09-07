@@ -1,13 +1,14 @@
 import { CAMPAIGN_MAPS, type CampaignMapDefinition } from "../world/campaign";
 import { buildChallengeSuite, buildTimeTrialSuite } from "../world/modeSuites";
 import { CONTROLS_ROOM } from "../world/onboarding";
+import { buildReversalLabyrinth } from "../world/reversalLabyrinth";
 import { SPATIAL_ACTOR_TRAINING } from "../world/trainingSpatial";
 import { ROOMS, type RoomSpec } from "../world/stages";
 
-export type TraversalContentId = "controls" | "training" | "suite-time-trial" | "suite-challenge" | string;
-export type TraversalContentForm = "controls" | "training" | "campaign-field" | "course";
+export type TraversalContentId = "controls" | "training" | "suite-time-trial" | "suite-challenge" | "suite-reversal" | string;
+export type TraversalContentForm = "controls" | "training" | "campaign-field" | "course" | "postgame";
 export type TrainingPath = "controls" | "grammar";
-export type ModeSuite = "time-trial" | "challenge" | null;
+export type ModeSuite = "time-trial" | "challenge" | "reversal" | null;
 
 type ExtendedCampaignMap = CampaignMapDefinition & {
   timeTrialRooms?: RoomSpec[];
@@ -61,6 +62,12 @@ export function installContentRuntime(shell: any): ContentRuntime {
       return buildChallengeSuite();
     }
 
+    if (modeId === "reversal" && selectedModeSuite === "reversal") {
+      activeId = "suite-reversal";
+      activeForm = "postgame";
+      return buildReversalLabyrinth();
+    }
+
     const map = (CAMPAIGN_MAPS.find((entry) => entry.id === selectedMapId && entry.implemented)
       ?? CAMPAIGN_MAPS.find((entry) => entry.implemented)) as ExtendedCampaignMap | undefined;
     activeId = map?.id ?? "map-01";
@@ -68,6 +75,12 @@ export function installContentRuntime(shell: any): ContentRuntime {
     if (modeId === "standard") {
       activeForm = "campaign-field";
       return structuredClone(map?.campaignRooms ?? []) as RoomSpec[];
+    }
+
+    if (modeId === "reversal") {
+      activeId = "suite-reversal";
+      activeForm = "postgame";
+      return buildReversalLabyrinth();
     }
 
     activeForm = "course";
