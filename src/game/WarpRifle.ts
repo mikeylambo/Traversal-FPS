@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import "../art/procedural/visualManifest";
 import { hasProceduralVisual, mountRegisteredVisual, updateRegisteredVisual } from "../art/procedural/ProceduralVisualRegistry";
 
 export interface WarpRifleState {
