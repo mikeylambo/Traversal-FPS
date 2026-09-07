@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { mountRegisteredVisual, type ProceduralVisualKey } from "../art/procedural/ProceduralVisualRegistry";
 import type { EnemySpec } from "../world/stages";
 
 type ActiveEnemy = {
@@ -14,8 +15,8 @@ type RuntimeState = {
 const SPHERE_COLOR = 0x7cefff;
 
 /**
- * Shape is the semantic channel. Color can reinforce presentation, but every actor
- * remains readable in monochrome and under common color-vision deficiencies.
+ * Shape is the semantic channel. Procedural visuals are presentation-only children;
+ * the authoritative enemy mesh remains simple, stable, and gameplay-safe.
  */
 export function installActorGeometryRuntime(game: object): void {
   const state = game as unknown as RuntimeState;
@@ -36,28 +37,24 @@ function applyGeometry(enemy: ActiveEnemy): void {
     replaceWireShell(enemy, new THREE.BoxGeometry(radius * 2.02, radius * 2.02, radius * 2.02));
     setMaterialColor(material, 0xeef4ff);
     enemy.mesh.rotation.set(0.22, 0.35, 0.12);
-    return;
-  }
-
-  if (enemy.spec.kind === "diamond") {
+  } else if (enemy.spec.kind === "diamond") {
     replaceGeometry(enemy, new THREE.OctahedronGeometry(radius * 1.22, 0));
     replaceWireShell(enemy, new THREE.OctahedronGeometry(radius * 1.42, 0));
     setMaterialColor(material, 0xd7fff1);
     enemy.mesh.rotation.set(0, 0, Math.PI * 0.25);
-    return;
-  }
-
-  if (enemy.spec.kind === "prism") {
+  } else if (enemy.spec.kind === "prism") {
     replaceGeometry(enemy, new THREE.CylinderGeometry(radius, radius, radius * 2.05, 3, 1, false));
     replaceWireShell(enemy, new THREE.CylinderGeometry(radius * 1.17, radius * 1.17, radius * 2.36, 3, 1, false));
     setMaterialColor(material, 0xffedc7);
     enemy.mesh.rotation.set(Math.PI * 0.5, 0, 0);
-    return;
+  } else {
+    setMaterialColor(material, SPHERE_COLOR);
   }
 
-  // All vector endpoints remain visibly spherical; behavior is communicated by
-  // rails, shields, orbit rings, and motion rather than hue changes.
-  setMaterialColor(material, SPHERE_COLOR);
+  // No registration means no change: current primitives remain the guaranteed fallback.
+  mountRegisteredVisual(enemy.mesh, `actor.${enemy.spec.kind}.default` as ProceduralVisualKey, {
+    scale: radius / 0.72
+  });
 }
 
 function replaceGeometry(enemy: ActiveEnemy, geometry: THREE.BufferGeometry): void {
