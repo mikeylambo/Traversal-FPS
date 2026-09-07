@@ -9,8 +9,14 @@ type RuntimeState = {
 };
 
 const TITLE_DURATION_MS = 2600;
+const ACT_BOUNDARIES: Record<string, { kicker: string; title: string }> = {
+  "map-08": { kicker: "ACT I // COMPLETE", title: "THE CONSTRUCT OPENS" },
+  "map-16": { kicker: "ACT II // COMPLETE", title: "DESCEND INTO THE MACHINE" },
+  "map-24": { kicker: "ACT III // COMPLETE", title: "THE SYSTEM TURNS HOSTILE" },
+  "map-32": { kicker: "ACT IV // COMPLETE", title: "THE VECTOR RETURNS" }
+};
 
-/** Gives each content family a restrained entrance card. */
+/** Gives each content family a restrained entrance card and stronger Act-boundary punctuation. */
 export function installSectorTransitions(game: object, content: ContentRuntime): void {
   const state = game as unknown as RuntimeState;
   const overlay = document.createElement("div");
@@ -47,8 +53,14 @@ function showTransition(
   const map = CAMPAIGN_MAPS.find((entry) => entry.id === contentId);
   const sectorNumber = map?.id.match(/(\d+)/)?.[1]?.padStart(2, "0") ?? "01";
   const mapTitle = map?.label.replace(/^SECTOR \d+ \/\/ /, "") ?? "THE SPAN";
+  const boundary = state.modeId === "standard" ? ACT_BOUNDARIES[contentId] : undefined;
 
-  if (contentId === "controls") {
+  document.body.classList.toggle("act-boundary", Boolean(boundary));
+
+  if (boundary) {
+    kicker.textContent = boundary.kicker;
+    title.textContent = boundary.title;
+  } else if (contentId === "controls") {
     kicker.textContent = "TRAINING";
     title.textContent = "CONTROLS";
   } else if (contentId === "training") {
@@ -60,6 +72,9 @@ function showTransition(
   } else if (state.modeId === "time-trial") {
     kicker.textContent = "TIME TRIAL";
     title.textContent = mapTitle;
+  } else if (state.modeId === "reversal") {
+    kicker.textContent = "THE REVERSE";
+    title.textContent = content.activeRooms()[state.roomIndex]?.title ?? "LABYRINTH";
   } else {
     kicker.textContent = "CHALLENGE";
     title.textContent = mapTitle;
@@ -71,6 +86,9 @@ function showTransition(
   overlay.classList.add("show");
   emitTraversalAudio("sector.enter", { campaign: state.modeId === "standard" });
   window.setTimeout(() => {
-    if (overlay.dataset.serial === String(serial)) overlay.classList.remove("show");
-  }, TITLE_DURATION_MS);
+    if (overlay.dataset.serial === String(serial)) {
+      overlay.classList.remove("show");
+      document.body.classList.remove("act-boundary");
+    }
+  }, boundary ? TITLE_DURATION_MS + 700 : TITLE_DURATION_MS);
 }
