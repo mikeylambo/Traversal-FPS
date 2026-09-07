@@ -19,6 +19,8 @@ namespace SLU.Traversal
         float _pitch;
         float _verticalVelocity;
         bool _wasSelecting;
+        float _phaseHangUntil;
+        bool _wasTransiting;
 
         public void Initialize(Camera camera, WarpSystem warpSystem)
         {
@@ -53,10 +55,21 @@ namespace SLU.Traversal
             Vector3 eyePos = transform.position + Vector3.up * EyeHeight();
             if (warp.IsTransiting)
             {
+                _wasTransiting = true;
                 _body.enabled = false;
                 if (warp.TickTransit(Time.deltaTime, ref eyePos)) transform.position = eyePos - Vector3.up * EyeHeight();
                 _body.enabled = true;
                 return;
+            }
+
+            if (_wasTransiting)
+            {
+                _wasTransiting = false;
+                if (!TraversalLandingResolver.TrySettle(_body, EyeHeight()))
+                    _phaseHangUntil = Time.time + TraversalLandingResolver.PhaseHangDuration;
+                else
+                    _phaseHangUntil = 0f;
+                _verticalVelocity = 0f;
             }
 
             Look();
@@ -94,8 +107,15 @@ namespace SLU.Traversal
             view.transform.localPosition = camLocal;
 
             Vector3 planar = (transform.right * input.x + transform.forward * input.y) * (crouch ? CrouchSpeed : RunSpeed);
-            if (_body.isGrounded && _verticalVelocity < 0f) _verticalVelocity = -1f;
-            _verticalVelocity -= Gravity * Time.deltaTime;
+            if (Time.time < _phaseHangUntil)
+            {
+                _verticalVelocity = 0f;
+            }
+            else
+            {
+                if (_body.isGrounded && _verticalVelocity < 0f) _verticalVelocity = -1f;
+                _verticalVelocity -= Gravity * Time.deltaTime;
+            }
             planar.y = _verticalVelocity;
             _body.Move(planar * Time.deltaTime);
 
