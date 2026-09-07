@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { mountRegisteredVisual } from "../art/procedural/ProceduralVisualRegistry";
 import { ROOMS } from "../world/stages";
 
 type RuntimeState = {
@@ -17,13 +18,14 @@ const READY_COLOR = 0x78ffb2;
 const LOCKED_COLOR = 0x263b46;
 
 /**
- * Gravity Rings are the only sector exits. They remain dormant until the required
- * sphere count is resolved, then visibly spool up as the destination to advance.
+ * Gravity Rings are the only sector exits. The semantic torus remains authoritative;
+ * generated visuals are presentation-only children mounted through the registry.
  */
 export function installExitGateRuntime(game: object): void {
   const state = game as unknown as RuntimeState;
   let wasReady = false;
   decorateGravityRing(state.goal);
+  mountRegisteredVisual(state.goal, "exit.gravity-ring.default");
 
   const sync = () => {
     const room = ROOMS[state.roomIndex];
@@ -39,15 +41,13 @@ export function installExitGateRuntime(game: object): void {
     state.goal.userData.gravityRingReady = ready;
     document.body.classList.toggle("gravity-ring-ready", ready);
     document.body.classList.toggle("gravity-ring-locked", !ready);
-    // Compatibility for existing presentation CSS.
     document.body.classList.toggle("exit-ready", ready);
     document.body.classList.toggle("exit-locked", !ready);
 
     for (const child of state.goal.children) {
+      if (child.userData.traversalPresentationOnly) continue;
       const material = child instanceof THREE.Mesh ? child.material : undefined;
-      if (material instanceof THREE.MeshBasicMaterial) {
-        material.opacity = ready ? 0.7 : 0.08;
-      }
+      if (material instanceof THREE.MeshBasicMaterial) material.opacity = ready ? 0.7 : 0.08;
     }
 
     if (ready && !wasReady) {
