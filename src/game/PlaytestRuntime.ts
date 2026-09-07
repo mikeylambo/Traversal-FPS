@@ -1,3 +1,4 @@
+import { CAMPAIGN_MAPS } from "../world/campaign";
 import type { ContentRuntime } from "./ContentRuntime";
 
 export type PlaytestFlag = "good" | "issue" | "revisit";
@@ -15,7 +16,7 @@ type RuntimeState = {
   roomRestarts: number;
   runStartedAt: number;
   camera: { position: Vec3Like };
-  warp: { progress?: number; hasAnchor?: () => boolean };
+  warp: { selectionPercent(): number; hasAnchor(): boolean };
   beginRun(): void;
   finishRun(): void;
   loadRoom(index: number): void;
@@ -23,7 +24,7 @@ type RuntimeState = {
 
 type PlaytestEvent = {
   at: number;
-  kind: "run-start" | "run-finish" | "failure" | "flag" | "skip" | "restart";
+  kind: "run-start" | "run-finish" | "failure" | "flag" | "skip" | "restart" | "utility";
   contentId: string;
   modeId: string;
   roomIndex: number;
@@ -34,6 +35,8 @@ type PlaytestEvent = {
   warps?: number;
   flag?: PlaytestFlag;
   note?: string;
+  actorId?: string;
+  effect?: string;
 };
 
 const STORAGE_KEY = "traversal-playtest:v1";
@@ -49,11 +52,13 @@ export function installPlaytestRuntime(game: object, content: ContentRuntime): v
 
   const state = game as unknown as RuntimeState;
   const hud = buildHud();
+  const firedUtility = new Set<string>();
   let visible = localStorage.getItem("traversal-playtest-hud") !== "0";
   let lastRestarts = state.roomRestarts ?? 0;
   let lastContentId = content.selectedContentId();
   let lastRoomIndex = state.roomIndex ?? 0;
   let lastTick = 0;
+  let suppressFailureOnce = false;
 
   const setVisible = (next: boolean) => {
     visible = next;
@@ -92,11 +97,11 @@ export function installPlaytestRuntime(game: object, content: ContentRuntime): v
     const note = window.prompt(`${value.toUpperCase()} // optional note`, "") ?? "";
     record({ kind: "flag", flag: value, note: note.trim(), position: position() });
     flash(`${value.toUpperCase()} SAVED`);
-    state.camera && document.body.requestPointerLock?.();
   };
 
   const restart = () => {
     record({ kind: "restart", position: position() });
+    suppressFailureOnce = true;
     state.roomRestarts += 1;
     state.loadRoom(state.roomIndex);
     flash("ROOM RESTARTED");
@@ -110,6 +115,22 @@ export function installPlaytestRuntime(game: object, content: ContentRuntime): v
       flash("NEXT ROOM");
       return;
     }
+
+    if (state.modeId === "standard" && content.activeForm() === "campaign-field") {
+      const currentIndex = CAMPAIGN_MAPS.findIndex((entry) => entry.id === content.selectedContentId());
+      const nextMap = currentIndex >= 0
+        ? CAMPAIGN_MAPS.slice(currentIndex + 1).find((entry) => entry.implemented)
+        : undefined;
+      if (nextMap) {
+        record({ kind: "skip", position: position() });
+        content.setSelectedMap(nextMap.id);
+        content.reloadSelected();
+        state.beginRun();
+        flash(`NEXT // ${nextMap.label}`);
+        return;
+      }
+    }
+
     flash("END OF ACTIVE CONTENT");
   };
 
@@ -134,9 +155,35 @@ export function installPlaytestRuntime(game: object, content: ContentRuntime): v
     if (key === "3") flag("revisit");
   }, true);
 
+  window.addEventListener("traversal:puzzle-actor", ((event: CustomEvent) => {
+    const detail = event.detail ?? {};
+    if (detail.actorId) firedUtility.add(String(detail.actorId));
+    record({
+      kind: "utility",
+      actorId: detail.actorId ? String(detail.actorId) : undefined,
+      effect: detail.effect?.type ? String(detail.effect.type) : undefined,
+      position: position()
+    });
+  }) as EventListener);
+
+  const originalLoadRoom = state.loadRoom.bind(game);
+  state.loadRoom = (index: number) => {
+    const sameRoom = index === state.roomIndex;
+    const failurePosition = position();
+    const restartCount = state.roomRestarts ?? 0;
+    if (sameRoom && restartCount > lastRestarts) {
+      if (!suppressFailureOnce) record({ kind: "failure", position: failurePosition });
+      suppressFailureOnce = false;
+      lastRestarts = restartCount;
+    }
+    if (!sameRoom) firedUtility.clear();
+    originalLoadRoom(index);
+  };
+
   const originalBeginRun = state.beginRun.bind(game);
   state.beginRun = () => {
     originalBeginRun();
+    firedUtility.clear();
     lastRestarts = state.roomRestarts;
     lastContentId = content.selectedContentId();
     lastRoomIndex = state.roomIndex;
@@ -162,15 +209,11 @@ export function installPlaytestRuntime(game: object, content: ContentRuntime): v
       lastTick = now;
       const currentContentId = content.selectedContentId();
       const room = content.activeRooms()[state.roomIndex];
-      const restartCount = state.roomRestarts ?? 0;
-      if (restartCount > lastRestarts) {
-        record({ kind: "failure", position: position() });
-        lastRestarts = restartCount;
-      }
       if (currentContentId !== lastContentId || state.roomIndex !== lastRoomIndex) {
         lastContentId = currentContentId;
         lastRoomIndex = state.roomIndex;
         lastRestarts = state.roomRestarts;
+        firedUtility.clear();
       }
 
       const p = state.camera?.position ?? { x: 0, y: 0, z: 0 };
@@ -178,16 +221,16 @@ export function installPlaytestRuntime(game: object, content: ContentRuntime): v
       const hazards = room?.hazards?.map((entry) => entry.kind).join(", ") || "none";
       const effects = room?.enemies
         ?.filter((entry) => Boolean(entry.effect))
-        .map((entry) => `${entry.kind}:${entry.effect?.type}`)
+        .map((entry) => `${firedUtility.has(entry.id) ? "✓" : "·"}${entry.kind}:${entry.effect?.type}`)
         .join(", ") || "none";
-      const progress = Number((state.warp as any)?.progress ?? 0);
+      const selectionPercent = state.warp?.selectionPercent?.() ?? 100;
 
       hud.readout.textContent = [
         `PLAYTEST // ${currentContentId} // room ${state.roomIndex + 1}/${content.activeRooms().length}`,
         `${room?.title ?? "NO ROOM"}`,
         `pos ${round(p.x)}, ${round(p.y)}, ${round(p.z)}   time ${elapsed.toFixed(1)}s`,
         `kills ${state.roomKills ?? 0}/${room?.requiredKills ?? 0}   shots ${state.shots ?? 0}   hits ${state.targetHits ?? 0}   warps ${state.warps ?? 0}`,
-        `warp ${(progress * 100).toFixed(0)}%   anchor ${Boolean(state.warp?.hasAnchor?.()) ? "ready" : "none"}`,
+        `warp ${selectionPercent}%   anchor ${state.warp?.hasAnchor?.() ? "ready" : "none"}`,
         `hazards ${hazards}`,
         `utility ${effects}`,
         `ALT+D HUD  ALT+R retry  ALT+N next  ALT+1 good  ALT+2 issue  ALT+3 revisit`
