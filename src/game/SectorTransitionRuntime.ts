@@ -1,6 +1,8 @@
+import "../playtest.css";
 import { emitTraversalAudio } from "../audio/TraversalAudio";
 import { CAMPAIGN_MAPS } from "../world/campaign";
 import type { ContentRuntime } from "./ContentRuntime";
+import { installPlaytestRuntime } from "./PlaytestRuntime";
 
 type RuntimeState = {
   modeId: string;
@@ -37,6 +39,8 @@ export function installSectorTransitions(game: object, content: ContentRuntime):
     if (index !== 0 || document.body.classList.contains("vector-lab-launching")) return;
     showTransition(overlay, state, content, ++serial);
   };
+
+  installPlaytestRuntime(game, content);
 }
 
 function showTransition(
