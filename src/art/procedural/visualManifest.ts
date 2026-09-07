@@ -4,7 +4,12 @@ import { createWarpRifleModel, updateWarpRifleModel } from "./models/createWarpR
 registerProceduralVisual("weapon.warp-rifle.default", {
   factory: createWarpRifleModel,
   update: updateWarpRifleModel,
-  tier: "hero"
+  tier: "hero",
+  options: {
+    scale: 0.58,
+    position: [0.06, -0.035, 0.08],
+    rotation: [-0.015, -0.055, 0.01]
+  }
 });
 
 /**
