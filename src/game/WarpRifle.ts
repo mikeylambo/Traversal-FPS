@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { mountRegisteredVisual, updateRegisteredVisual } from "../art/procedural/ProceduralVisualRegistry";
 
 export interface WarpRifleState {
   anchorReady: boolean;
@@ -11,41 +12,11 @@ export class WarpRifle {
   readonly muzzle = new THREE.Object3D();
 
   private readonly rest = new THREE.Vector3(0.43, -0.34, -0.78);
-  private readonly coreMaterial = new THREE.MeshStandardMaterial({
-    color: 0xbffcff,
-    emissive: 0x20dfff,
-    emissiveIntensity: 2.2,
-    metalness: 0.18,
-    roughness: 0.12
-  });
-  private readonly glowMaterial = new THREE.MeshBasicMaterial({
-    color: 0x69efff,
-    transparent: true,
-    opacity: 0.72,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false
-  });
-  private readonly blueMaterial = new THREE.MeshStandardMaterial({
-    color: 0x1767c9,
-    emissive: 0x0b3f79,
-    emissiveIntensity: 0.18,
-    metalness: 0.68,
-    roughness: 0.2
-  });
-  private readonly whiteMaterial = new THREE.MeshStandardMaterial({
-    color: 0xeaf4ff,
-    emissive: 0x183451,
-    emissiveIntensity: 0.08,
-    metalness: 0.64,
-    roughness: 0.19
-  });
-  private readonly graphiteMaterial = new THREE.MeshStandardMaterial({
-    color: 0x101b2a,
-    emissive: 0x06101b,
-    emissiveIntensity: 0.12,
-    metalness: 0.84,
-    roughness: 0.24
-  });
+  private readonly coreMaterial = new THREE.MeshStandardMaterial({ color: 0xbffcff, emissive: 0x20dfff, emissiveIntensity: 2.2, metalness: 0.18, roughness: 0.12 });
+  private readonly glowMaterial = new THREE.MeshBasicMaterial({ color: 0x69efff, transparent: true, opacity: 0.72, blending: THREE.AdditiveBlending, depthWrite: false });
+  private readonly blueMaterial = new THREE.MeshStandardMaterial({ color: 0x1767c9, emissive: 0x0b3f79, emissiveIntensity: 0.18, metalness: 0.68, roughness: 0.2 });
+  private readonly whiteMaterial = new THREE.MeshStandardMaterial({ color: 0xeaf4ff, emissive: 0x183451, emissiveIntensity: 0.08, metalness: 0.64, roughness: 0.19 });
+  private readonly graphiteMaterial = new THREE.MeshStandardMaterial({ color: 0x101b2a, emissive: 0x06101b, emissiveIntensity: 0.12, metalness: 0.84, roughness: 0.24 });
   private readonly cellMaterials: THREE.MeshStandardMaterial[] = [];
   private readonly sideFins: Array<{ mesh: THREE.Mesh; baseX: number; side: number }> = [];
   private readonly coreSegments: THREE.Mesh[] = [];
@@ -56,18 +27,14 @@ export class WarpRifle {
 
   constructor(camera: THREE.Camera) {
     this.build();
+    mountRegisteredVisual(this.group, "weapon.warp-rifle.default");
     this.group.position.copy(this.rest);
     this.group.rotation.set(-0.035, -0.025, -0.045);
     camera.add(this.group);
   }
 
-  fire(): void {
-    this.kick = 1;
-  }
-
-  vectorWritten(): void {
-    this.capture = 1;
-  }
+  fire(): void { this.kick = 1; }
+  vectorWritten(): void { this.capture = 1; }
 
   update(dt: number, state: WarpRifleState): void {
     this.time += dt;
@@ -82,34 +49,21 @@ export class WarpRifle {
     this.group.position.copy(this.rest);
     this.group.position.z += this.kick * 0.11 - capturePulse * 0.018;
     this.group.position.y -= this.kick * 0.025;
-    if (preview) {
-      this.group.position.x -= 0.035;
-      this.group.position.y += 0.012;
-    }
+    if (preview) { this.group.position.x -= 0.035; this.group.position.y += 0.012; }
     if (state.transiting) this.group.position.x -= 0.08;
 
     this.group.rotation.x = -0.035 + this.kick * 0.055 - capturePulse * 0.014;
     this.group.rotation.y = -0.025 + (preview ? 0.02 : 0);
     this.group.rotation.z = -0.045 - this.kick * 0.022 + (preview ? 0.012 : 0) + capturePulse * 0.008;
 
-    this.coreMaterial.emissiveIntensity = state.transiting
-      ? 7.2
-      : capturePulse > 0.02
-        ? 5.4 + capturePulse * 5.8
-        : preview
-          ? 4.8 + pulse * 1.4
-          : loaded
-            ? 3.4 + pulse * 0.55
-            : 1.8 + pulse * 0.28;
+    this.coreMaterial.emissiveIntensity = state.transiting ? 7.2 : capturePulse > 0.02 ? 5.4 + capturePulse * 5.8 : preview ? 4.8 + pulse * 1.4 : loaded ? 3.4 + pulse * 0.55 : 1.8 + pulse * 0.28;
     this.glowMaterial.opacity = state.transiting ? 1 : capturePulse > 0.02 ? 1 : preview ? 0.98 : loaded ? 0.78 : 0.42;
     this.blueMaterial.emissiveIntensity = state.transiting ? 0.85 : capturePulse > 0.02 ? 0.9 : preview ? 0.48 : loaded ? 0.3 : 0.18;
 
     this.cellMaterials.forEach((material, index) => {
       const phase = Math.max(0, Math.sin(this.time * 7.5 - index * 0.55));
       const captureWave = Math.max(0, 1 - Math.abs((1 - this.capture) * 5 - index));
-      material.emissiveIntensity = capturePulse > 0.02
-        ? 3.2 + captureWave * 5.5
-        : loaded ? 2.8 + phase * (preview ? 2.4 : 0.8) : 0.32;
+      material.emissiveIntensity = capturePulse > 0.02 ? 3.2 + captureWave * 5.5 : loaded ? 2.8 + phase * (preview ? 2.4 : 0.8) : 0.32;
       material.color.setHex(loaded || capturePulse > 0.02 ? 0xa7fbff : 0x31566d);
     });
 
@@ -120,9 +74,10 @@ export class WarpRifle {
     });
 
     this.coreSegments.forEach((segment, index) => {
-      const scale = 0.94 + Math.sin(this.time * 8 - index * 0.6) * (preview ? 0.08 : 0.025) + capturePulse * 0.12;
-      segment.scale.y = scale;
+      segment.scale.y = 0.94 + Math.sin(this.time * 8 - index * 0.6) * (preview ? 0.08 : 0.025) + capturePulse * 0.12;
     });
+
+    updateRegisteredVisual(this.group, dt, this.time);
   }
 
   muzzleWorldPosition(target = new THREE.Vector3()): THREE.Vector3 {
@@ -131,12 +86,7 @@ export class WarpRifle {
   }
 
   private build(): void {
-    const makeBox = (
-      size: [number, number, number],
-      position: [number, number, number],
-      material: THREE.Material,
-      rotation: [number, number, number] = [0, 0, 0]
-    ): THREE.Mesh => {
+    const makeBox = (size: [number, number, number], position: [number, number, number], material: THREE.Material, rotation: [number, number, number] = [0, 0, 0]): THREE.Mesh => {
       const mesh = new THREE.Mesh(new THREE.BoxGeometry(...size), material);
       mesh.position.set(...position);
       mesh.rotation.set(...rotation);
@@ -147,12 +97,10 @@ export class WarpRifle {
     makeBox([0.19, 0.15, 1.18], [0, 0.005, -0.18], this.graphiteMaterial);
     makeBox([0.15, 0.23, 0.28], [0, -0.17, 0.19], this.graphiteMaterial, [-0.22, 0, 0]);
     makeBox([0.09, 0.09, 0.42], [0, 0.005, -0.91], this.graphiteMaterial);
-
     makeBox([0.31, 0.09, 0.54], [0, 0.115, 0.12], this.whiteMaterial, [0.015, 0, 0]);
     makeBox([0.34, 0.075, 0.46], [0, 0.095, -0.34], this.blueMaterial, [-0.015, 0, 0]);
     makeBox([0.25, 0.08, 0.35], [0, 0.07, -0.72], this.whiteMaterial, [0.025, 0, 0]);
     makeBox([0.15, 0.055, 0.46], [0, -0.085, -0.45], this.blueMaterial);
-
     makeBox([0.055, 0.14, 0.65], [-0.17, 0.015, -0.18], this.blueMaterial, [0, 0, -0.05]);
     makeBox([0.055, 0.14, 0.65], [0.17, 0.015, -0.18], this.blueMaterial, [0, 0, 0.05]);
     makeBox([0.045, 0.09, 0.42], [-0.145, -0.035, -0.66], this.whiteMaterial, [0, 0, -0.08]);
@@ -164,13 +112,7 @@ export class WarpRifle {
     this.group.add(core);
 
     [-0.48, -0.26, -0.04, 0.18].forEach((z, index) => {
-      const material = new THREE.MeshStandardMaterial({
-        color: 0x31566d,
-        emissive: 0x22dfff,
-        emissiveIntensity: 0.32,
-        metalness: 0.25,
-        roughness: 0.12
-      });
+      const material = new THREE.MeshStandardMaterial({ color: 0x31566d, emissive: 0x22dfff, emissiveIntensity: 0.32, metalness: 0.25, roughness: 0.12 });
       this.cellMaterials.push(material);
       const cell = makeBox([0.105, 0.025, 0.13], [0, 0.158, z], material);
       cell.rotation.x = index % 2 === 0 ? 0.025 : -0.025;
