@@ -44,6 +44,7 @@ import { installMapEditorNaming } from "./editor/MapEditorNamingRuntime";
 import { PUZZLE_GRAMMAR_V1 } from "./world/puzzleGrammar";
 import { CAMPAIGN_MAPS } from "./world/campaign";
 import { CHALLENGE_ENTRIES, TIME_TRIAL_ENTRIES } from "./world/modeSuites";
+import { REVERSAL_LABYRINTH_ROOMS } from "./world/reversalLabyrinth";
 import { registerCampaign02 } from "./world/registerCampaign02";
 import { registerCampaign03 } from "./world/registerCampaign03";
 import { registerCampaign04 } from "./world/registerCampaign04";
@@ -61,7 +62,7 @@ const rendererAdapter = createThreeStarterAdapter(canvas);
 const app = await createGameApp({
   gameId: "traversal-fps",
   gameName: "Traversal FPS",
-  version: "0.13.0-alpha-content-complete",
+  version: "0.14.0-alpha-reversal",
   renderer: rendererAdapter,
   root: uiRoot,
   assemblies: [
@@ -108,6 +109,12 @@ const traversalModes = [
     description: "24 chambers across precision, logic, flow and synthesis.",
     leaderboardKey: "score",
     rules: { grading: true, exactKills: true, shotAllowance: 1, airGraceScale: 0.8 }
+  },
+  {
+    id: "reversal",
+    label: "THE REVERSE // Labyrinth",
+    description: "Postgame. Cross to the hidden side of the Construct and find the way back.",
+    rules: { grading: false, scoreFocus: false, airGraceScale: 0.78 }
   }
 ] as const;
 
@@ -149,6 +156,11 @@ const progression = new TraversalProgression(app.storage);
 await progression.load();
 const contentRuntime = installContentRuntime(app.shell);
 
+const reversalUnlocked = () => {
+  const snapshot = progression.snapshot();
+  return snapshot.campaign.completed || snapshot.completedMaps.includes("map-32");
+};
+
 app.ui.register([
   {
     id: "achievements",
@@ -167,6 +179,21 @@ const refreshAchievements = () => {
 };
 progression.onUnlock(() => refreshAchievements());
 
+const refreshModeSelect = () => {
+  const postgameOpen = reversalUnlocked();
+  app.ui.updateScreen("mode-select", {
+    title: postgameOpen ? "Select Mode // Construct Reversed" : "Select Mode",
+    choices: traversalModes.map((mode) => ({
+      id: mode.id,
+      label: mode.label,
+      description: mode.id === "reversal" && !postgameOpen
+        ? "LOCKED // Clear Sector 32 to expose the hidden side of the Construct."
+        : mode.description,
+      disabled: mode.id === "reversal" && !postgameOpen
+    }))
+  });
+};
+
 app.ui.updateScreen("main-menu", {
   choices: [
     { id: "play", label: "Play" },
@@ -176,14 +203,7 @@ app.ui.updateScreen("main-menu", {
   ]
 });
 
-app.ui.updateScreen("mode-select", {
-  title: "Select Mode",
-  choices: traversalModes.map((mode) => ({
-    id: mode.id,
-    label: mode.label,
-    description: mode.description
-  }))
-});
+refreshModeSelect();
 
 app.ui.updateScreen("difficulty-select", {
   title: "Difficulty",
@@ -231,7 +251,7 @@ app.ui.updateScreen("credits", {
     { id: "credit-tech", label: "Technology // Three.js + SLU Web Game Shell", disabled: true },
     { id: "credit-type", label: "Typography // Rajdhani + Sora", disabled: true },
     { id: "credit-tools", label: "Development Assistance // OpenAI + Anthropic", disabled: true },
-    { id: "credit-build", label: "Build // v0.13 Alpha Content Complete", description: "32 Campaign sectors // 24 Challenges // 16 Time Trials", disabled: true }
+    { id: "credit-build", label: "Build // v0.14 Alpha Reversal", description: "32 Campaign sectors // 8 Reversal chambers // 24 Challenges // 16 Time Trials", disabled: true }
   ]
 });
 
@@ -252,6 +272,10 @@ app.flow.onActivate = (screenId: string, choiceId: string) => {
     refreshAchievements();
     app.ui.show("achievements");
     return;
+  }
+
+  if (screenId === "main-menu" && choiceId === "play") {
+    refreshModeSelect();
   }
 
   if (screenId === "mode-select") {
@@ -285,6 +309,18 @@ app.flow.onActivate = (screenId: string, choiceId: string) => {
           ...sectorChoices(choiceId)
         ]
       });
+    } else if (choiceId === "reversal") {
+      contentRuntime.setModeSuite("reversal");
+      app.ui.updateScreen("stage-select", {
+        title: "THE REVERSE",
+        choices: [
+          {
+            id: "suite-reversal",
+            label: "Enter the Labyrinth // 01–08",
+            description: "Eight authored postgame chambers. No new verbs. No tutorialization. Find the way back."
+          }
+        ]
+      });
     } else {
       app.ui.updateScreen("stage-select", {
         title: "Campaign",
@@ -298,6 +334,7 @@ app.flow.onActivate = (screenId: string, choiceId: string) => {
     if (choiceId === "training-grammar") contentRuntime.setTrainingPath("grammar");
     if (choiceId === "suite-time-trial") contentRuntime.setModeSuite("time-trial");
     if (choiceId === "suite-challenge") contentRuntime.setModeSuite("challenge");
+    if (choiceId === "suite-reversal") contentRuntime.setModeSuite("reversal");
     if (choiceId.startsWith("map-")) contentRuntime.setSelectedMap(choiceId);
   }
 
@@ -343,7 +380,7 @@ game.start();
 console.info("Traversal FPS ready", {
   shellVersion: "1.0.2+settings+mode-replace",
   shellCommit: "d45d5b89b56eb65cf10cc25ef3a89595d63f6b3f",
-  gameVersion: "0.13.0-alpha-content-complete",
+  gameVersion: "0.14.0-alpha-reversal",
   renderTarget: "Vector Surface",
   typography: "Rajdhani / Sora",
   starfield: "shader-twinkle",
@@ -353,7 +390,7 @@ console.info("Traversal FPS ready", {
   controls: "semantic bindings // persistent overrides // Settings > Controls",
   scope: "R3 / Q / touch toggle // precision look // 36-48 degree FOV",
   campaignScoring: "no live score // sphere progress + completion stats",
-  campaignFlow: "new-continue before difficulty // implemented sectors chain // build boundary does not fake campaign completion",
+  campaignFlow: "new-continue before difficulty // implemented sectors chain // Sector 32 unlocks THE REVERSE",
   landingAssist: "warp arrival cushion + ground-below placement cue + audited campaign sphere vectors",
   exitGate: "dormant until required spheres resolved",
   rewind: "Campaign/Training only // last movement only // firing cancels",
@@ -364,7 +401,7 @@ console.info("Traversal FPS ready", {
   autoStepMeters: 0.38,
   puzzleGrammar: PUZZLE_GRAMMAR_V1.map((entry) => entry.id),
   trainingRooms: 12,
-  modeSuites: { timeTrials: TIME_TRIAL_ENTRIES.length, challenges: CHALLENGE_ENTRIES.length },
+  modeSuites: { timeTrials: TIME_TRIAL_ENTRIES.length, challenges: CHALLENGE_ENTRIES.length, reversal: REVERSAL_LABYRINTH_ROOMS.length },
   onboarding: "action-gated controls // keyboard + controller + touch",
   campaignMaps: CAMPAIGN_MAPS.map((map) => ({
     id: map.id,
@@ -375,6 +412,7 @@ console.info("Traversal FPS ready", {
   achievements: ACHIEVEMENTS.length,
   hazards: ["lethal-field", "sweep", "sightline-gate", "aperture-wall"],
   spatialActors: "sphere movement // cube state // diamond motion // prism energy // gravity ring progression",
+  postgame: "THE REVERSE // 8-chamber authored labyrinth // unlocked by Sector 32 clear",
   editor: "development-only // F2 // backquote; public menu entry deferred",
   mobileControls: true,
   vrStatus: "future-compatible target; not current production scope",
