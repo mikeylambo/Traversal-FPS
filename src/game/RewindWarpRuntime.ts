@@ -20,6 +20,7 @@ type WarpAccess = {
 
 type RuntimeState = {
   modeId: string;
+  difficultyId: string;
   shots: number;
   camera: THREE.PerspectiveCamera;
   warp: WarpAccess;
@@ -32,6 +33,9 @@ type RuntimeState = {
  * One-step movement undo for Campaign/Training. It reverses only the last Warp:
  * sphere kills, shots, and consumed vectors remain committed. Firing after commit
  * invalidates Rewind, preventing shoot-and-retreat scouting loops.
+ *
+ * Difficulty contract: Rewind is part of informational/recovery forgiveness and
+ * is therefore available on Assist/Standard only. Hard/Expert solve without undo.
  */
 export function installRewindWarpRuntime(game: object): void {
   const state = game as unknown as RuntimeState;
@@ -54,7 +58,7 @@ export function installRewindWarpRuntime(game: object): void {
   state.warp.commit = (position: THREE.Vector3) => {
     const origin = position.clone();
     const committed = originalCommit(position);
-    if (committed && eligibleMode(state.modeId)) {
+    if (committed && eligible(state)) {
       rewindOrigin = origin;
       pendingArrival = true;
       available = false;
@@ -89,9 +93,11 @@ export function installRewindWarpRuntime(game: object): void {
   state.update = (dt: number) => {
     originalUpdate(dt);
 
+    if (!eligible(state) && (available || pendingArrival || rewinding)) clear();
+
     if (pendingArrival && !state.warp.isTransiting()) {
       pendingArrival = false;
-      available = Boolean(rewindOrigin) && eligibleMode(state.modeId);
+      available = Boolean(rewindOrigin) && eligible(state);
     }
 
     const padPressed = rewindPadPressed();
@@ -126,8 +132,10 @@ export function installRewindWarpRuntime(game: object): void {
   };
 }
 
-function eligibleMode(modeId: string): boolean {
-  return modeId === "standard" || modeId === "training";
+function eligible(state: RuntimeState): boolean {
+  const modeEligible = state.modeId === "standard" || state.modeId === "training";
+  const difficultyEligible = state.difficultyId === "assist" || state.difficultyId === "standard";
+  return modeEligible && difficultyEligible;
 }
 
 function rewindPadPressed(): boolean {

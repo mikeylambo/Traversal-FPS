@@ -1,9 +1,12 @@
 import * as THREE from "three";
 import { ROOMS, type PlatformSpec } from "../world/stages";
+import { installDifficultyInformationRuntime } from "./DifficultyInformationRuntime";
 
 type RuntimeState = {
   scene: THREE.Scene;
+  camera: THREE.PerspectiveCamera;
   roomIndex: number;
+  difficultyId: string;
   warp: {
     hasAnchor(): boolean;
     // Runtime-accessed private method on WarpSystem. Kept here rather than
@@ -22,11 +25,18 @@ type GroundSupport = {
 const EYE_HEIGHT = 1.7;
 const EDGE_INSET = 0.18;
 const VERTICAL_CUSHION = 0.72;
+const HARD_CUE_RANGE = 18;
+const EXPERT_CONTACT_RANGE = 6.5;
 
 /**
  * Positive-only landing information: when the selected vector coordinate has a
  * real walkable surface underneath it, draw a thin drop line and ground ring.
  * Absence of the cue does not forbid the warp; airborne routes remain possible.
+ *
+ * Difficulty scales prediction rather than basic spatial truth:
+ * - Assist/Standard: full current cue.
+ * - Hard: cue only at near/mid range.
+ * - Expert: close contact ring only; no predictive drop line.
  */
 export function installLandingReadabilityRuntime(game: object): void {
   const state = game as unknown as RuntimeState;
@@ -62,6 +72,11 @@ export function installLandingReadabilityRuntime(game: object): void {
     originalUpdate(dt);
     syncLandingCue(state, line, groundRing);
   };
+
+  // Installed here because Landing Readability is already the presentation seam
+  // immediately after GameplayClarity. This keeps the redesign isolated from the
+  // shell's difficulty data contract while the new tiers are being playtested.
+  installDifficultyInformationRuntime(game);
 }
 
 function syncLandingCue(
@@ -80,27 +95,45 @@ function syncLandingCue(
   const selected = state.warp.selectedPoint();
   const room = ROOMS[state.roomIndex];
   const support = room ? findGroundSupport(selected, room.platforms) : null;
-  const supported = Boolean(support);
-  document.body.classList.toggle("landing-supported", supported);
+  const tier = normalizeDifficulty(state.difficultyId);
+  const distance = state.camera.position.distanceTo(selected);
+  const inRange = tier === "hard"
+    ? distance <= HARD_CUE_RANGE
+    : tier === "expert"
+      ? distance <= EXPERT_CONTACT_RANGE
+      : true;
+  const cueVisible = Boolean(support) && inRange;
+  document.body.classList.toggle("landing-supported", cueVisible);
 
-  if (!support) {
+  if (!support || !inRange) {
     line.visible = false;
     groundRing.visible = false;
     return;
   }
 
-  line.geometry.dispose();
-  line.geometry = new THREE.BufferGeometry().setFromPoints([
-    selected,
-    new THREE.Vector3(selected.x, support.surfaceY + 0.035, selected.z)
-  ]);
-  line.visible = true;
+  if (tier !== "expert") {
+    line.geometry.dispose();
+    line.geometry = new THREE.BufferGeometry().setFromPoints([
+      selected,
+      new THREE.Vector3(selected.x, support.surfaceY + 0.035, selected.z)
+    ]);
+    line.visible = true;
+  } else {
+    // Expert still gets a close-range contact truth to compensate for first-person
+    // depth/proprioception limits, but no long-range prediction line.
+    line.visible = false;
+  }
 
   groundRing.position.set(selected.x, support.surfaceY + 0.045, selected.z);
   groundRing.visible = true;
 
   const stateLabel = document.getElementById("stop-short-state");
-  if (stateLabel) stateLabel.textContent = "GROUND";
+  if (stateLabel && tier !== "hard" && tier !== "expert") stateLabel.textContent = "GROUND";
+}
+
+function normalizeDifficulty(value: string): "assist" | "standard" | "hard" | "expert" {
+  if (value === "assist" || value === "hard" || value === "expert") return value;
+  return "standard";
 }
 
 function findGroundSupport(selected: THREE.Vector3, platforms: readonly PlatformSpec[]): GroundSupport | null {
