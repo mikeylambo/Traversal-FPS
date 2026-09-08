@@ -1,0 +1,161 @@
+/* Landscape mobile menu compaction + PWA interaction hardening.
+ * Scoped to coarse pointers only so desktop/controller presentation is untouched.
+ */
+@media (pointer: coarse) and (orientation: landscape) {
+  #ui .slu-screen {
+    padding:
+      max(6px, env(safe-area-inset-top))
+      max(10px, env(safe-area-inset-right))
+      max(6px, env(safe-area-inset-bottom))
+      max(10px, env(safe-area-inset-left)) !important;
+    place-items: center !important;
+    overscroll-behavior: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  #ui .slu-panel {
+    width: min(100%, 1180px) !important;
+    max-height: calc(100dvh - max(12px, env(safe-area-inset-top)) - max(12px, env(safe-area-inset-bottom))) !important;
+    padding: 14px 28px 16px !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+
+  #ui .slu-panel::before {
+    min-height: 26px !important;
+    height: 26px !important;
+    margin-bottom: 8px !important;
+    padding: 0 0 5px 38px !important;
+    background-size: 29px 25px !important;
+  }
+
+  #ui .slu-panel::after {
+    display: none !important;
+  }
+
+  #ui .slu-header h1 {
+    margin: 0 0 3px !important;
+    font-size: clamp(24px, 4.4vw, 42px) !important;
+    line-height: .96 !important;
+    letter-spacing: .08em !important;
+  }
+
+  #ui .slu-header p {
+    margin: 0 0 9px !important;
+    font-size: clamp(10px, 1.7vw, 13px) !important;
+    line-height: 1.15 !important;
+  }
+
+  #ui .slu-choices {
+    gap: 3px !important;
+  }
+
+  #ui .slu-choice,
+  #ui .slu-back {
+    min-height: 0 !important;
+    padding: 7px 12px !important;
+    border-radius: 0 !important;
+    touch-action: manipulation;
+  }
+
+  #ui .slu-choice:hover,
+  #ui .slu-choice[data-focused="true"],
+  #ui .slu-choice:focus-visible {
+    transform: translateX(2px) !important;
+  }
+
+  #ui .slu-choice-label {
+    font-size: clamp(13px, 2vw, 17px) !important;
+    line-height: 1.02 !important;
+  }
+
+  #ui .slu-choice-desc {
+    margin-top: 2px !important;
+    font-size: clamp(9px, 1.35vw, 11px) !important;
+    line-height: 1.05 !important;
+  }
+
+  #ui .slu-back {
+    margin-top: 7px !important;
+    width: auto !important;
+    font-size: 11px !important;
+  }
+
+  /* Main menu should fit completely on iPhone landscape without scrolling. */
+  #ui .slu-screen[data-screen-id="main-menu"] .slu-panel,
+  #ui .slu-screen[data-screen-id="settings"] .slu-panel,
+  #ui .slu-screen[data-screen-id="credits"] .slu-panel,
+  #ui .slu-screen[data-screen-id="difficulty-select"] .slu-panel,
+  #ui .slu-screen[data-screen-id="pause"] .slu-panel,
+  #ui .slu-screen[data-screen-id="results"] .slu-panel {
+    overflow-y: hidden !important;
+  }
+
+  #ui .slu-screen[data-screen-id="main-menu"] .slu-header h1 {
+    font-size: clamp(28px, 5.2vw, 48px) !important;
+  }
+
+  /* Long selection screens may still need internal scroll, but chrome stays fixed
+     and compact rather than forcing the whole document to move. */
+  #ui .slu-screen[data-screen-id="mode-select"] .slu-panel,
+  #ui .slu-screen[data-screen-id="stage-select"] .slu-panel,
+  #ui .slu-screen[data-screen-id="achievements"] .slu-panel {
+    overflow-y: auto !important;
+  }
+
+  #ui .slu-screen input,
+  #ui .slu-screen select,
+  #ui .slu-screen textarea {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+}
+
+@media (pointer: coarse) and (orientation: landscape) and (max-height: 430px) {
+  #ui .slu-panel {
+    padding: 9px 20px 10px !important;
+  }
+
+  #ui .slu-panel::before {
+    min-height: 20px !important;
+    height: 20px !important;
+    margin-bottom: 5px !important;
+    padding-left: 31px !important;
+    background-size: 23px 20px !important;
+  }
+
+  #ui .slu-header h1 {
+    font-size: clamp(21px, 4vw, 34px) !important;
+  }
+
+  #ui .slu-header p {
+    margin-bottom: 6px !important;
+    font-size: 9px !important;
+  }
+
+  #ui .slu-choices {
+    gap: 2px !important;
+  }
+
+  #ui .slu-choice,
+  #ui .slu-back {
+    padding: 5px 10px !important;
+  }
+
+  #ui .slu-choice-label {
+    font-size: 13px !important;
+  }
+
+  #ui .slu-choice-desc {
+    font-size: 8.5px !important;
+  }
+
+  #ui .slu-back {
+    margin-top: 5px !important;
+  }
+}
