@@ -1,0 +1,85 @@
+{
+  "ok": true,
+  "verdict": "pass",
+  "confidence": 0.86,
+  "estimatedFidelity": 0.86,
+  "targetThreshold": 0.7,
+  "materialId": "dark-detail",
+  "sourceImage": "./docs/art/platform-system/material-crops/dark-detail.png",
+  "outDir": "./public/textures/platform",
+  "palette": [
+    "#0E1316",
+    "#07090B",
+    "#D5DAE0",
+    "#28363F",
+    "#5892AA"
+  ],
+  "maps": {
+    "albedo": {
+      "path": "./public/textures/platform/dark-detail_albedo.png",
+      "url": "/textures/platform/dark-detail_albedo.png",
+      "channel": "albedo",
+      "source": "reference-pixel-extraction"
+    },
+    "roughness": {
+      "path": "./public/textures/platform/dark-detail_roughness.png",
+      "url": "/textures/platform/dark-detail_roughness.png",
+      "channel": "roughness",
+      "source": "reference-pixel-extraction"
+    },
+    "height": {
+      "path": "./public/textures/platform/dark-detail_height.png",
+      "url": "/textures/platform/dark-detail_height.png",
+      "channel": "height",
+      "source": "reference-pixel-extraction"
+    },
+    "normal": {
+      "path": "./public/textures/platform/dark-detail_normal.png",
+      "url": "/textures/platform/dark-detail_normal.png",
+      "channel": "normal",
+      "source": "reference-pixel-extraction"
+    },
+    "ao": {
+      "path": "./public/textures/platform/dark-detail_ao.png",
+      "url": "/textures/platform/dark-detail_ao.png",
+      "channel": "ao",
+      "source": "reference-pixel-extraction"
+    }
+  },
+  "diagnostics": {
+    "sourceWidth": 165,
+    "sourceHeight": 74,
+    "mapSize": 1024,
+    "cropBBoxPixels": {
+      "x": 0,
+      "y": 0,
+      "width": 165,
+      "height": 74
+    },
+    "mask": {
+      "backgroundColor": "#0F1315",
+      "backgroundNoise": 99.358,
+      "transparentPixelFraction": 0.0,
+      "foregroundCoverage": 0.4712
+    },
+    "mapStats": {
+      "valueRange": 0.8745,
+      "heightP90Gradient": 0.01541,
+      "roughnessBase": 0.682,
+      "roughnessVariation": 0.05,
+      "normalStrength": 0.174,
+      "blurRadius": 21
+    },
+    "palette": [
+      "#0E1316",
+      "#07090B",
+      "#D5DAE0",
+      "#28363F",
+      "#5892AA"
+    ]
+  },
+  "warnings": [
+    "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+  ],
+  "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+}

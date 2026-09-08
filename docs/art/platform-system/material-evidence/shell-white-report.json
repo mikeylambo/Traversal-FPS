@@ -1,0 +1,87 @@
+{
+  "ok": true,
+  "verdict": "pass",
+  "confidence": 0.829,
+  "estimatedFidelity": 0.829,
+  "targetThreshold": 0.7,
+  "materialId": "shell-white",
+  "sourceImage": "./docs/art/platform-system/material-crops/shell-white.png",
+  "outDir": "./public/textures/platform",
+  "palette": [
+    "#DDDCE3",
+    "#1C2227",
+    "#D4D3DA",
+    "#EEEEF2",
+    "#A19FA5"
+  ],
+  "maps": {
+    "albedo": {
+      "path": "./public/textures/platform/shell-white_albedo.png",
+      "url": "/textures/platform/shell-white_albedo.png",
+      "channel": "albedo",
+      "source": "reference-pixel-extraction"
+    },
+    "roughness": {
+      "path": "./public/textures/platform/shell-white_roughness.png",
+      "url": "/textures/platform/shell-white_roughness.png",
+      "channel": "roughness",
+      "source": "reference-pixel-extraction"
+    },
+    "height": {
+      "path": "./public/textures/platform/shell-white_height.png",
+      "url": "/textures/platform/shell-white_height.png",
+      "channel": "height",
+      "source": "reference-pixel-extraction"
+    },
+    "normal": {
+      "path": "./public/textures/platform/shell-white_normal.png",
+      "url": "/textures/platform/shell-white_normal.png",
+      "channel": "normal",
+      "source": "reference-pixel-extraction"
+    },
+    "ao": {
+      "path": "./public/textures/platform/shell-white_ao.png",
+      "url": "/textures/platform/shell-white_ao.png",
+      "channel": "ao",
+      "source": "reference-pixel-extraction"
+    }
+  },
+  "diagnostics": {
+    "sourceWidth": 300,
+    "sourceHeight": 88,
+    "mapSize": 1024,
+    "cropBBoxPixels": {
+      "x": 0,
+      "y": 0,
+      "width": 300,
+      "height": 88
+    },
+    "mask": {
+      "backgroundColor": "#161B1F",
+      "backgroundNoise": 24.249,
+      "transparentPixelFraction": 0.0,
+      "foregroundCoverage": 0.9955
+    },
+    "mapStats": {
+      "valueRange": 0.8383,
+      "heightP90Gradient": 0.02517,
+      "roughnessBase": 0.686,
+      "roughnessVariation": 0.05,
+      "normalStrength": 0.186,
+      "blurRadius": 21
+    },
+    "palette": [
+      "#DDDCE3",
+      "#1C2227",
+      "#D4D3DA",
+      "#EEEEF2",
+      "#A19FA5"
+    ]
+  },
+  "warnings": [
+    "image is not clearly isolated from background; using most pixels as material evidence",
+    "object/background separation is weak",
+    "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+  ],
+  "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+}

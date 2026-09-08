@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 112" role="img" aria-labelledby="title">
+  <title id="title">Traversal triangular mark</title>
+  <path d="M64 8 118 102H10L64 8Z" fill="none" stroke="#edf2f4" stroke-width="10" stroke-linejoin="round"/>
+  <path d="M64 43 84 78H44L64 43Z" fill="#edf2f4"/>
+</svg>

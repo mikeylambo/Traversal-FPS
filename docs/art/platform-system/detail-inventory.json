@@ -1,0 +1,142 @@
+{
+  "sourceImage": "docs/art/platform-system/platform-reference-isolated.png",
+  "zonesDir": "docs/art/platform-system/detail-inventory",
+  "detailInventory": {
+    "scanMethod": "grid-3x3",
+    "targetMinDetails": 10,
+    "details": [
+      {
+        "id": "deck-perimeter-chamfer",
+        "kind": "bevel",
+        "description": "Continuous shallow chamfer catches a narrow highlight around the off-white upper shell.",
+        "region": {"x": 0.16, "y": 0.29, "width": 0.70, "height": 0.32, "units": "normalized"},
+        "scale": "0.035 world-unit bevel radius",
+        "affects": "upper shell silhouette and grazing highlight",
+        "mapsTo": {"type": "component.localFeatures", "ref": "deck-shell/perimeter-chamfer"},
+        "evidenceRef": "docs/art/platform-system/detail-inventory/zone-r1c1.png",
+        "confidence": 0.96
+      },
+      {
+        "id": "top-panel-cross",
+        "kind": "seam",
+        "description": "Two perpendicular panel seams divide the top deck into four large plates.",
+        "region": {"x": 0.28, "y": 0.30, "width": 0.50, "height": 0.28, "units": "normalized"},
+        "scale": "0.012 world-unit dark recessed seam",
+        "affects": "top deck panel construction",
+        "mapsTo": {"type": "component.localFeatures", "ref": "deck-shell/top-panel-seams"},
+        "evidenceRef": "docs/art/platform-system/detail-inventory/zone-r1c1.png",
+        "confidence": 0.90
+      },
+      {
+        "id": "corner-cap-array",
+        "kind": "contour",
+        "description": "Four graphite corner cap assemblies interrupt the white perimeter and continue down the fascia.",
+        "region": {"x": 0.14, "y": 0.43, "width": 0.73, "height": 0.35, "units": "normalized"},
+        "scale": "four modules, each about 0.10 deck width",
+        "affects": "corner silhouette and white-to-graphite material break",
+        "mapsTo": {"type": "component.localFeatures", "ref": "corner-caps/cap-array"},
+        "evidenceRef": "docs/art/platform-system/detail-inventory/zone-r1c0.png",
+        "confidence": 0.93
+      },
+      {
+        "id": "front-cyan-rail",
+        "kind": "emissive",
+        "description": "A long cyan strip is recessed into the front-right fascia behind a dark aperture.",
+        "region": {"x": 0.70, "y": 0.52, "width": 0.14, "height": 0.07, "units": "normalized"},
+        "scale": "0.24 deck width by 0.025 deck height",
+        "affects": "emissive fascia material and bloom",
+        "mapsTo": {"type": "material.localOverrides", "ref": "emitter-cyan/front-rail"},
+        "evidenceRef": "docs/art/platform-system/detail-inventory/zone-r1c2.png",
+        "confidence": 0.98
+      },
+      {
+        "id": "side-cyan-rail",
+        "kind": "emissive",
+        "description": "Short cyan strips repeat on the lateral fascia and at the near corner.",
+        "region": {"x": 0.17, "y": 0.55, "width": 0.25, "height": 0.10, "units": "normalized"},
+        "scale": "three short modules at 0.08–0.13 deck width",
+        "affects": "emissive fascia material and repeated light rhythm",
+        "mapsTo": {"type": "material.localOverrides", "ref": "emitter-cyan/side-rails"},
+        "evidenceRef": "docs/art/platform-system/detail-inventory/zone-r1c0.png",
+        "confidence": 0.94
+      },
+      {
+        "id": "corner-cyan-nodes",
+        "kind": "emissive",
+        "description": "Small cyan nodes sit inside dark corner recesses below the white shell.",
+        "region": {"x": 0.14, "y": 0.52, "width": 0.74, "height": 0.15, "units": "normalized"},
+        "scale": "four nodes at 0.018 deck width",
+        "affects": "corner cap local emission",
+        "mapsTo": {"type": "component.localFeatures", "ref": "corner-caps/cyan-nodes"},
+        "evidenceRef": "docs/art/platform-system/detail-inventory/zone-r1c2.png",
+        "confidence": 0.88
+      },
+      {
+        "id": "fastener-rows",
+        "kind": "fastener",
+        "description": "Small dark countersunk fasteners repeat along the shell perimeter and fascia panels.",
+        "region": {"x": 0.17, "y": 0.38, "width": 0.69, "height": 0.28, "units": "normalized"},
+        "scale": "approximately 18 visible heads at 0.008 deck width",
+        "affects": "shell and fascia microstructure",
+        "mapsTo": {"type": "component.localFeatures", "ref": "fasteners/perimeter-array"},
+        "evidenceRef": "docs/art/platform-system/detail-inventory/zone-r1c1.png",
+        "confidence": 0.84
+      },
+      {
+        "id": "logo-decal",
+        "kind": "decal",
+        "description": "A small black triangular Traversal mark is centered on the front white fascia.",
+        "region": {"x": 0.54, "y": 0.51, "width": 0.035, "height": 0.075, "units": "normalized"},
+        "scale": "0.045 deck width",
+        "affects": "front fascia identity",
+        "mapsTo": {"type": "material.localOverrides", "ref": "shell-white/traversal-mark"},
+        "evidenceRef": "docs/art/platform-system/detail-inventory/zone-r1c1.png",
+        "confidence": 0.99
+      },
+      {
+        "id": "underside-cassette",
+        "kind": "contour",
+        "description": "A central graphite cassette projects below the chassis with a rectangular recess and layered frame.",
+        "region": {"x": 0.38, "y": 0.62, "width": 0.28, "height": 0.20, "units": "normalized"},
+        "scale": "0.31 deck width by 0.22 deck depth",
+        "affects": "underside silhouette and support connection",
+        "mapsTo": {"type": "component.localFeatures", "ref": "undercarriage/central-cassette"},
+        "evidenceRef": "docs/art/platform-system/detail-inventory/zone-r2c1.png",
+        "confidence": 0.91
+      },
+      {
+        "id": "underside-support-fins",
+        "kind": "ridge",
+        "description": "Angled graphite support fins descend from both sides of the undercarriage toward the center cassette.",
+        "region": {"x": 0.22, "y": 0.60, "width": 0.54, "height": 0.23, "units": "normalized"},
+        "scale": "four paired supports at about 0.16 deck width",
+        "affects": "underside mechanical structure",
+        "mapsTo": {"type": "component.localFeatures", "ref": "undercarriage/support-fins"},
+        "evidenceRef": "docs/art/platform-system/detail-inventory/zone-r2c0.png",
+        "confidence": 0.86
+      },
+      {
+        "id": "shell-edge-wear",
+        "kind": "scratch",
+        "description": "Sparse cool-gray hairline scuffs and slightly darkened chips break the otherwise clean white coating near exposed edges.",
+        "region": {"x": 0.18, "y": 0.29, "width": 0.67, "height": 0.33, "units": "normalized"},
+        "scale": "sub-centimeter marks grouped near corners and seams",
+        "affects": "white shell albedo and roughness variation",
+        "mapsTo": {"type": "material.localOverrides", "ref": "shell-white/sparse-edge-wear"},
+        "evidenceRef": "docs/art/platform-system/detail-inventory/zone-r1c1.png",
+        "confidence": 0.78
+      },
+      {
+        "id": "fascia-panel-grooves",
+        "kind": "groove",
+        "description": "Narrow dark vertical breaks segment the white fascia into replaceable plates around the cyan apertures.",
+        "region": {"x": 0.18, "y": 0.48, "width": 0.68, "height": 0.18, "units": "normalized"},
+        "scale": "0.008 deck width seams with shallow depth",
+        "affects": "front and lateral fascia segmentation",
+        "mapsTo": {"type": "component.localFeatures", "ref": "fascia/panel-grooves"},
+        "evidenceRef": "docs/art/platform-system/detail-inventory/zone-r1c2.png",
+        "confidence": 0.89
+      }
+    ]
+  }
+}

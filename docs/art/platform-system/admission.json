@@ -1,0 +1,14 @@
+{
+  "admitted": true,
+  "reasons": [],
+  "provenance": {
+    "viewpoint": "reference",
+    "sourcePath": "./docs/art/platform-system/platform-reference-isolated.png",
+    "width": 720,
+    "height": 385,
+    "foregroundCoverage": 0.9677,
+    "largestComponentFraction": 1.0,
+    "pHash": 17352618887647131892,
+    "duplicateOfHash": null
+  }
+}

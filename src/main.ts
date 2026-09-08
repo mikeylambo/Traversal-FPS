@@ -85,6 +85,12 @@ const app = await createGameApp({
   }
 });
 
+app.ui.updateScreen("title", {
+  title: "TRAVERSAL",
+  subtitle: "PLATFORM SYSTEM // BUILD A BRIGHTER PATH",
+  choices: [{ id: "start", label: "Initialize" }]
+});
+
 const traversalModes = [
   {
     id: "training",
@@ -218,6 +224,8 @@ const refreshModeSelect = () => {
 };
 
 app.ui.updateScreen("main-menu", {
+  title: "TRAVERSAL",
+  subtitle: "SIMPLE ELEMENTS. COMPLEX POSSIBILITIES.",
   choices: [
     { id: "play", label: "Play" },
     { id: "achievements", label: "Achievements", description: `${progression.snapshot().achievements.length} / ${ACHIEVEMENTS.length}` },

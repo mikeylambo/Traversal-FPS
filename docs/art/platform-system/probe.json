@@ -1,0 +1,13 @@
+{
+  "path": "./docs/art/platform-system/platform-reference-isolated.png",
+  "type": "png",
+  "bytes": 156991,
+  "width": 720,
+  "height": 385,
+  "aspectRatio": 1.87012987012987,
+  "technicalSuitability": "conditional",
+  "warnings": [
+    "low resolution; small geometry/material details may be unreliable"
+  ],
+  "note": "This is only technical image probing. Semantic object suitability still requires visual inspection."
+}

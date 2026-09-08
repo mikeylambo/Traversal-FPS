@@ -339,3 +339,323 @@ body.playing #hud { opacity: 1; }
   #tutorial-card { top: 21%; padding-right: 18px; }
   .tutorial-skip { position: static; display: block; margin-top: 7px; }
 }
+
+/* ------------------------- TRAVERSAL PLATFORM SYSTEM MENUS ------------------------- */
+#ui {
+  --menu-cyan: #52dcff;
+  --menu-white: #edf2f4;
+  --menu-muted: #8b969d;
+  --menu-line: rgba(195, 216, 224, .24);
+  --menu-black: #070c0f;
+}
+
+#ui .slu-screen {
+  place-items: stretch !important;
+  padding: clamp(28px, 4vw, 64px) !important;
+  overflow: hidden;
+  isolation: isolate;
+  color: var(--menu-white);
+  background:
+    linear-gradient(90deg, rgba(7, 12, 15, .98) 0 36%, rgba(7, 12, 15, .82) 58%, rgba(7, 12, 15, .96) 100%),
+    radial-gradient(circle at 68% 48%, rgba(82, 220, 255, .12), transparent 27%),
+    linear-gradient(rgba(155, 181, 190, .055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(155, 181, 190, .055) 1px, transparent 1px),
+    #070c0f !important;
+  background-size: auto, auto, 56px 56px, 56px 56px, auto !important;
+}
+
+#ui .slu-screen::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, transparent 0 7%, rgba(82, 220, 255, .8) 7% calc(7% + 76px), transparent calc(7% + 76px)) top 25px left / 100% 1px no-repeat,
+    linear-gradient(90deg, transparent, rgba(237, 242, 244, .22) 20%, transparent 62%) bottom 28px left / 100% 1px no-repeat,
+    linear-gradient(180deg, rgba(255, 255, 255, .035), transparent 21%, transparent 78%, rgba(82, 220, 255, .03));
+}
+
+#ui .slu-screen::after {
+  content: "";
+  position: absolute;
+  z-index: -2;
+  inset: clamp(90px, 11vh, 140px) clamp(34px, 4vw, 72px) clamp(84px, 9vh, 112px) 35%;
+  opacity: .86;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, var(--menu-black) 0, transparent 16% 82%, var(--menu-black) 100%),
+    linear-gradient(0deg, var(--menu-black) 0, transparent 18% 82%, var(--menu-black) 100%),
+    url("/ui/traversal-platform-hero.png") center / contain no-repeat;
+  filter: saturate(.78) contrast(1.08);
+}
+
+#ui .slu-panel {
+  position: relative;
+  align-self: center;
+  z-index: 1;
+  width: min(520px, 42vw) !important;
+  max-height: calc(100vh - clamp(56px, 8vw, 128px)) !important;
+  margin: 0 !important;
+  padding: clamp(24px, 3vw, 48px) clamp(24px, 3.4vw, 56px) !important;
+  overflow: auto;
+  border: 1px solid var(--menu-line) !important;
+  border-radius: 0 !important;
+  clip-path: none !important;
+  background: rgba(7, 12, 15, .76) !important;
+  box-shadow: 20px 0 80px rgba(0, 0, 0, .24), inset 0 0 42px rgba(82, 220, 255, .025) !important;
+  backdrop-filter: blur(18px) saturate(.8) !important;
+}
+
+#ui .slu-panel::before {
+  content: "PLATFORM SYSTEM  /  OS-01";
+  display: block;
+  margin-bottom: clamp(26px, 4vh, 52px);
+  padding: 12px 0 10px 78px;
+  min-height: 62px;
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: .24em;
+  color: var(--menu-muted);
+  background: url("/ui/traversal-mark.svg") left center / 56px 49px no-repeat;
+  border-bottom: 1px solid var(--menu-line);
+}
+
+#ui .slu-panel::after {
+  content: "MODULAR   /   ADAPTIVE   /   PRECISE   /   ENDLESS";
+  display: block;
+  margin-top: 24px;
+  padding-top: 12px;
+  border-top: 1px solid var(--menu-line);
+  font-family: var(--font-body);
+  font-size: 8px;
+  line-height: 1.6;
+  letter-spacing: .2em;
+  color: var(--menu-muted);
+}
+
+#ui .slu-header {
+  position: relative;
+  padding-bottom: clamp(18px, 3vh, 30px);
+}
+
+#ui .slu-header::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 82px;
+  height: 2px;
+  background: var(--menu-cyan);
+  box-shadow: 0 0 16px rgba(82, 220, 255, .7);
+}
+
+#ui .slu-header h1 {
+  margin: 0 !important;
+  color: var(--menu-white);
+  font-size: clamp(38px, 5.5vw, 76px) !important;
+  font-weight: 500 !important;
+  line-height: .88;
+  letter-spacing: .22em !important;
+  text-indent: .22em;
+  text-transform: uppercase;
+  text-shadow: 0 0 24px rgba(237, 242, 244, .09);
+}
+
+#ui .slu-header p {
+  margin: 15px 0 0 !important;
+  color: var(--menu-muted) !important;
+  font-family: var(--font-body);
+  font-size: 9px !important;
+  line-height: 1.5;
+  letter-spacing: .25em;
+  text-transform: uppercase;
+  opacity: 1 !important;
+}
+
+#ui .slu-choices {
+  counter-reset: menu-choice;
+  display: grid;
+  gap: 0 !important;
+  margin-top: clamp(23px, 3.6vh, 42px);
+  border-top: 1px solid var(--menu-line);
+}
+
+#ui .slu-choice {
+  counter-increment: menu-choice;
+  position: relative;
+  min-height: 58px;
+  padding: 13px 18px 13px 52px !important;
+  border: 0 !important;
+  border-bottom: 1px solid var(--menu-line) !important;
+  border-radius: 0 !important;
+  color: var(--menu-white) !important;
+  background: transparent !important;
+  clip-path: none;
+  transition: color .14s ease, background .14s ease, padding .14s ease !important;
+}
+
+#ui .slu-choice::before {
+  content: "0" counter(menu-choice);
+  position: absolute;
+  left: 2px;
+  top: 17px;
+  color: #66737a;
+  font-family: var(--font-body);
+  font-size: 8px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: .12em;
+}
+
+#ui .slu-choice::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: -1px;
+  bottom: -1px;
+  width: 2px;
+  background: var(--menu-cyan);
+  box-shadow: 0 0 14px rgba(82, 220, 255, .8);
+  opacity: 0;
+  transform: scaleY(.3);
+  transition: opacity .14s ease, transform .14s ease;
+}
+
+#ui .slu-choice:hover,
+#ui .slu-choice[data-focused="true"],
+#ui .slu-choice:focus-visible {
+  outline: none !important;
+  padding-left: 58px !important;
+  color: #fff !important;
+  background: linear-gradient(90deg, rgba(82, 220, 255, .13), rgba(82, 220, 255, .025) 62%, transparent) !important;
+  transform: none !important;
+}
+
+#ui .slu-choice:hover::before,
+#ui .slu-choice[data-focused="true"]::before,
+#ui .slu-choice:focus-visible::before {
+  color: var(--menu-cyan);
+}
+
+#ui .slu-choice:hover::after,
+#ui .slu-choice[data-focused="true"]::after,
+#ui .slu-choice:focus-visible::after {
+  opacity: 1;
+  transform: scaleY(1);
+}
+
+#ui .slu-choice:disabled {
+  opacity: .35 !important;
+  cursor: not-allowed;
+}
+
+#ui .slu-choice-label {
+  display: block;
+  font-size: 17px !important;
+  font-weight: 600 !important;
+  line-height: 1.05;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+}
+
+#ui .slu-choice-desc {
+  display: block;
+  margin-top: 6px !important;
+  color: #9ba9af !important;
+  font-size: 9px;
+  line-height: 1.45 !important;
+  letter-spacing: .075em;
+  opacity: 1 !important;
+}
+
+#ui .slu-back {
+  width: auto !important;
+  margin-top: 22px !important;
+  padding: 10px 14px !important;
+  border: 1px solid var(--menu-line) !important;
+  border-radius: 0 !important;
+  color: var(--menu-muted) !important;
+  background: transparent !important;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+}
+
+#ui .slu-back::before { content: "←  "; color: var(--menu-cyan); }
+#ui .slu-back:hover,
+#ui .slu-back:focus-visible {
+  outline: none;
+  border-color: rgba(82, 220, 255, .6) !important;
+  color: var(--menu-white) !important;
+}
+
+#ui .slu-screen[data-screen-id="title"] .slu-panel,
+#ui .slu-screen[data-screen-id="main-menu"] .slu-panel {
+  border-left-color: rgba(82, 220, 255, .6) !important;
+}
+
+#ui .slu-screen[data-screen-id="title"] .slu-choices {
+  width: min(300px, 100%);
+}
+
+#ui .slu-screen[data-screen-id="title"] .slu-choice-label {
+  color: var(--menu-cyan);
+}
+
+#ui:has(.slu-screen[data-screen-id="gameplay-placeholder"]) .slu-screen::before,
+#ui:has(.slu-screen[data-screen-id="gameplay-placeholder"]) .slu-screen::after {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  #ui .slu-screen {
+    padding: 22px !important;
+    background:
+      linear-gradient(90deg, rgba(7, 12, 15, .96), rgba(7, 12, 15, .78)),
+      linear-gradient(rgba(155, 181, 190, .05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(155, 181, 190, .05) 1px, transparent 1px),
+      #070c0f !important;
+    background-size: auto, 42px 42px, 42px 42px, auto !important;
+  }
+
+  #ui .slu-screen::after {
+    inset: 8% -10% 38% 17%;
+    opacity: .25;
+  }
+
+  #ui .slu-panel {
+    align-self: end;
+    width: min(100%, 620px) !important;
+    max-height: 92vh !important;
+    padding: 22px !important;
+    background: rgba(7, 12, 15, .88) !important;
+  }
+
+  #ui .slu-panel::before {
+    margin-bottom: 22px;
+    padding-left: 60px;
+    min-height: 46px;
+    background-size: 44px 39px;
+  }
+
+  #ui .slu-header h1 { font-size: clamp(34px, 10vw, 60px) !important; }
+  #ui .slu-choices { margin-top: 22px; }
+}
+
+@media (max-height: 720px) and (min-width: 700px) {
+  #ui .slu-panel { padding-top: 22px !important; padding-bottom: 22px !important; }
+  #ui .slu-panel::before { margin-bottom: 18px; min-height: 42px; background-size: 38px 34px; }
+  #ui .slu-header { padding-bottom: 16px; }
+  #ui .slu-header h1 { font-size: 40px !important; }
+  #ui .slu-choices { margin-top: 18px; }
+  #ui .slu-choice { min-height: 48px; padding-top: 10px !important; padding-bottom: 10px !important; }
+  #ui .slu-panel::after { margin-top: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #ui .slu-choice,
+  #ui .slu-choice::after { transition: none !important; }
+}
