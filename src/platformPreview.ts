@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { SVGRenderer } from "three/examples/jsm/renderers/SVGRenderer.js";
 import {
   configureTraversalMovingPlatformRenderer,
   createTraversalMovingPlatformEnvironment,
@@ -7,17 +8,31 @@ import {
   frameTraversalMovingPlatformCamera
 } from "./art/procedural/models/createTraversalPlatformModel";
 
-const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+let renderer: THREE.WebGLRenderer | SVGRenderer;
+let webglRenderer: THREE.WebGLRenderer | null = null;
+
+try {
+  webglRenderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+  webglRenderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  webglRenderer.shadowMap.enabled = true;
+  webglRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  configureTraversalMovingPlatformRenderer(webglRenderer);
+  renderer = webglRenderer;
+  document.body.dataset.renderer = "webgl";
+} catch (error) {
+  console.warn("Platform look-dev is using the silhouette-safe SVG fallback", error);
+  renderer = new SVGRenderer();
+  renderer.setQuality("high");
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  document.body.dataset.renderer = "svg";
+}
+
 renderer.setSize(innerWidth, innerHeight);
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-configureTraversalMovingPlatformRenderer(renderer);
 document.body.append(renderer.domElement);
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x071016);
-scene.environment = createTraversalMovingPlatformEnvironment(renderer);
+if (webglRenderer) scene.environment = createTraversalMovingPlatformEnvironment(webglRenderer);
 scene.add(createTraversalMovingPlatformLookDevLights("reference"));
 
 const model = createTraversalMovingPlatformModel();
