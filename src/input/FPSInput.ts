@@ -281,12 +281,23 @@ export class FPSInput {
     stick.addEventListener("pointerup", releaseStick);
     stick.addEventListener("pointercancel", releaseStick);
 
+    const applyTouchLook = (dx: number, dy: number) => {
+      this.lookX += dx * 1.35;
+      this.lookY += dy * 1.35;
+    };
+
     let lookPointer: number | null = null;
     let lastLookX = 0;
     let lastLookY = 0;
     look.addEventListener("pointerdown", (event) => {
       if (!this.enabled) return;
       event.preventDefault();
+      if (lookPointer !== null && event.pointerId !== lookPointer) {
+        // A second right-thumb/finger tap while aiming is a shot. This keeps the
+        // primary look pointer alive, so mobile can aim and fire simultaneously.
+        this.fireQueued = true;
+        return;
+      }
       lookPointer = event.pointerId;
       lastLookX = event.clientX;
       lastLookY = event.clientY;
@@ -299,8 +310,7 @@ export class FPSInput {
       const dy = event.clientY - lastLookY;
       lastLookX = event.clientX;
       lastLookY = event.clientY;
-      this.lookX += dx * 1.35;
-      this.lookY += dy * 1.35;
+      applyTouchLook(dx, dy);
     });
     const releaseLook = (event: PointerEvent) => {
       if (event.pointerId === lookPointer) lookPointer = null;
@@ -308,11 +318,35 @@ export class FPSInput {
     look.addEventListener("pointerup", releaseLook);
     look.addEventListener("pointercancel", releaseLook);
 
+    // The FIRE control is also a mini look surface. Pressing fires immediately;
+    // keeping the thumb down and dragging continues to steer the camera. This
+    // avoids the common mobile-FPS "stop aiming to press fire" problem.
+    let firePointer: number | null = null;
+    let lastFireX = 0;
+    let lastFireY = 0;
     fire.addEventListener("pointerdown", (event) => {
       if (!this.enabled) return;
       event.preventDefault();
       this.fireQueued = true;
+      firePointer = event.pointerId;
+      lastFireX = event.clientX;
+      lastFireY = event.clientY;
+      fire.setPointerCapture(event.pointerId);
     });
+    fire.addEventListener("pointermove", (event) => {
+      if (event.pointerId !== firePointer) return;
+      event.preventDefault();
+      const dx = event.clientX - lastFireX;
+      const dy = event.clientY - lastFireY;
+      lastFireX = event.clientX;
+      lastFireY = event.clientY;
+      applyTouchLook(dx, dy);
+    });
+    const releaseFire = (event: PointerEvent) => {
+      if (event.pointerId === firePointer) firePointer = null;
+    };
+    fire.addEventListener("pointerup", releaseFire);
+    fire.addEventListener("pointercancel", releaseFire);
 
     crouch.addEventListener("pointerdown", (event) => {
       if (!this.enabled) return;
