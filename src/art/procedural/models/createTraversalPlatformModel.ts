@@ -567,7 +567,7 @@ function makeAttachmentEndpoint(attachment: unknown): AttachmentEndpoint | null 
 }
 
 // Generated from ObjectSculptSpec target: Traversal Moving Platform
-// Sculpt build pass: form-refinement
+// Sculpt build pass: material-pass
 // This factory is intentionally pass-gated. Finish browser screenshot review before unlocking deeper passes.
 export function createTraversalMovingPlatformModel(options: ProceduralModelOptions = {}): THREE.Group {
   const root = new THREE.Group();

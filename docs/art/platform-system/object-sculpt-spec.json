@@ -772,22 +772,35 @@
       "interaction-pass",
       "optimization-pass"
     ],
-    "currentPass": "form-refinement",
+    "currentPass": "material-pass",
     "completedPasses": [
       "blockout",
-      "structural-pass"
+      "structural-pass",
+      "form-refinement"
     ],
-    "lastCompletedPass": "structural-pass",
+    "lastCompletedPass": "form-refinement",
     "blockedReason": "",
     "nextRequiredEvidence": [
-      "Important visible forms are represented in component geometryDescriptor, deformations, localFeatures, or repetitionSystems.",
-      "Endpoint-based child parts are rooted at their attachment sockets and do not visibly float away from parents.",
+      "Reference-derived albedo palette records dominant, secondary, and accent colors per visible material.",
+      "Each important material defines roughness variation and at least one normal/bump/displacement response.",
+      "Local material overrides, dirt/wear/stains/moss/chips/scratches or equivalent masks are tied to evidenceRefs.",
+      "Thin, transparent, reflective, wet, or fibrous materials document alpha/transmission/clearcoat/metalness/fiber response when relevant.",
+      "Generated preview uses procedural albedo/roughness/bump texture or vertex color variation instead of one flat color.",
+      "Generated preview uses independent PBR maps at 1024px or higher for the quality-first tier.",
+      "If source pixels are available, referencePbr extraction passed at confidence >= 0.7 or the pass is stopped/requesting better references.",
+      "Macro, meso, and micro surface frequency bands are visible at the intended review distance without obvious tiling.",
       "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold.",
-      "attachment contracts for child appendages/connectors",
-      "no floating child roots/joints in the browser screenshot",
+      "reference-derived albedo palette with dominant, secondary, and accent colors",
+      "independent albedo, roughness, height/normal, and AO maps",
+      "macro, meso, and micro surface-frequency response at 1024px or higher",
+      "local material masks: AO, dirt, wear, stains, moss, chips, scratches, wetness, or equivalent",
+      "neutral, grazing-light close-up, and reference-matched browser screenshots",
+      "AI vision comparison sheet score meeting the visual acceptance threshold",
       "browser render screenshot from your agent's browser/screenshot tool",
-      "single side-by-side full reference/render comparison sheet",
-      "all critical semantic feature scores at or above their thresholds",
+      "side-by-side reference/render comparison sheet for AI vision review",
+      "banded interior difference vs the reference baseline (forge/stage4_review/interior_difference.py --from/--to per region)",
+      "AI vision score at or above the visual acceptance threshold",
+      "all critical semantic feature scores from the shared image pair at or above their thresholds",
       "self-correction review appended with action=continue before the next pass"
     ]
   },
@@ -5669,6 +5682,43 @@
       "cameraView": "three-quarter",
       "notes": "One deployed three-quarter view is sufficient to identify the missing repeated rail system.",
       "aiVisionNotes": "The core structure is now readable, but the cyan light language is an identity-defining system and is visibly underrepresented. The next spec revision should mirror the front rail and add lateral rails at the same fascia height."
+    },
+    {
+      "timestamp": "2026-09-08T12:40:29.507506+00:00",
+      "passId": "form-refinement",
+      "estimatedFidelity": 0.76,
+      "aiVisionScore": 0.76,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.79,
+        "componentStructure": 0.84,
+        "formDetail": 0.72,
+        "materialSurface": 0.48,
+        "lightingCamera": 0.62
+      },
+      "featureReviews": [
+        {
+          "id": "layered-platform-structure",
+          "score": 0.84,
+          "notes": "The light shell, inset dark chassis, corner hardware, and stepped underside read as one assembled platform across four azimuths."
+        },
+        {
+          "id": "cyan-rail-rhythm",
+          "score": 0.86,
+          "notes": "Two front/rear bars, lateral bars, and corner cyan nodes now create the reference-defining perimeter light rhythm."
+        },
+        {
+          "id": "top-panel-language",
+          "score": 0.73,
+          "notes": "The central seam cross is clear, while shallow perimeter relief remains approximate in SVG."
+        }
+      ],
+      "referenceScreenshot": "public/ui/traversal-platform-hero.png",
+      "renderScreenshot": "docs/art/platform-system/review/form-refinement/render-three-quarter.jpg",
+      "comparisonImage": "docs/art/platform-system/review/form-refinement/comparison.png",
+      "cameraView": "three-quarter",
+      "notes": "Primary three-quarter comparison plus front right rear and left turntable captures. SVG fallback is accepted only for form because cloud Chrome exposes no WebGL.",
+      "aiVisionNotes": "The corrected form reads immediately as the approved Traversal standard deck rather than a generic slab. The white shell over a graphite mechanical underside, repeated cyan fascia bars, dark corner interruptions, and top-panel cross all survive axial and three-quarter views. The main remaining gap is surface fidelity: the SVG renderer flattens bevels, occlusion, emissive bloom, and reference-derived PBR maps, so this review accepts form only and does not make a material claim."
     }
   ],
   "reviewHistory": [
@@ -5941,6 +5991,79 @@
         "cameraView": "three-quarter",
         "notes": "One deployed three-quarter view is sufficient to identify the missing repeated rail system.",
         "aiVisionNotes": "The core structure is now readable, but the cyan light language is an identity-defining system and is visibly underrepresented. The next spec revision should mirror the front rail and add lateral rails at the same fascia height."
+      }
+    },
+    {
+      "timestamp": "2026-09-08T12:40:29.507506+00:00",
+      "passId": "form-refinement",
+      "estimatedFidelity": 0.76,
+      "aiVisionScore": 0.76,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.79,
+        "componentStructure": 0.84,
+        "formDetail": 0.72,
+        "materialSurface": 0.48,
+        "lightingCamera": 0.62
+      },
+      "featureReviews": [
+        {
+          "id": "layered-platform-structure",
+          "score": 0.84,
+          "notes": "The light shell, inset dark chassis, corner hardware, and stepped underside read as one assembled platform across four azimuths."
+        },
+        {
+          "id": "cyan-rail-rhythm",
+          "score": 0.86,
+          "notes": "Two front/rear bars, lateral bars, and corner cyan nodes now create the reference-defining perimeter light rhythm."
+        },
+        {
+          "id": "top-panel-language",
+          "score": 0.73,
+          "notes": "The central seam cross is clear, while shallow perimeter relief remains approximate in SVG."
+        }
+      ],
+      "action": "continue",
+      "summary": "Form pass accepted: the standard-deck silhouette now carries the white-over-graphite stack, four-sided cyan rail rhythm, corner modules, and panel seam language across the full turntable.",
+      "matched": [
+        "four fascia emitters repeat consistently across front rear and lateral views",
+        "white shell remains visibly separated from the inset graphite chassis",
+        "top panel seam cross and perimeter corner systems survive orbit review",
+        "turntable coverage is complete with reliable segmentation and no degenerate views or silhouette holes"
+      ],
+      "mismatches": [
+        "corner caps and seam relief remain visually coarse in the SVG fallback",
+        "exact bevel response and material realism cannot be judged without WebGL",
+        "interior-difference values are contaminated by the required review-background correction and are not used as acceptance authority"
+      ],
+      "specFixes": [],
+      "codeFixes": [
+        "Advance to material pass only after a WebGL-capable render is available",
+        "keep SVG fallback limited to silhouette and form evidence"
+      ],
+      "evidence": [
+        "docs/art/platform-system/review/form-refinement/render-three-quarter.jpg",
+        "docs/art/platform-system/review/form-refinement/render-front.jpg",
+        "docs/art/platform-system/review/form-refinement/render-side.jpg",
+        "docs/art/platform-system/review/form-refinement/render-rear.jpg",
+        "docs/art/platform-system/review/form-refinement/render-left.jpg",
+        "turntable segmented=true covered=true degenerate=false holed=false",
+        "interiorDifference lower=0.76327 middle=0.29583 upper=0.11177 background-change-contaminated"
+      ],
+      "mapStrippedRender": "docs/art/platform-system/review/form-refinement/render-three-quarter.jpg",
+      "reviewViewpoints": [
+        "three-quarter",
+        "long-axis",
+        "thickness-axis",
+        "rear"
+      ],
+      "visualEvidence": {
+        "referenceScreenshot": "public/ui/traversal-platform-hero.png",
+        "renderScreenshot": "docs/art/platform-system/review/form-refinement/render-three-quarter.jpg",
+        "comparisonImage": "docs/art/platform-system/review/form-refinement/comparison.png",
+        "cameraView": "three-quarter",
+        "notes": "Primary three-quarter comparison plus front right rear and left turntable captures. SVG fallback is accepted only for form because cloud Chrome exposes no WebGL.",
+        "aiVisionNotes": "The corrected form reads immediately as the approved Traversal standard deck rather than a generic slab. The white shell over a graphite mechanical underside, repeated cyan fascia bars, dark corner interruptions, and top-panel cross all survive axial and three-quarter views. The main remaining gap is surface fidelity: the SVG renderer flattens bevels, occlusion, emissive bloom, and reference-derived PBR maps, so this review accepts form only and does not make a material claim."
       }
     }
   ],
@@ -6764,6 +6887,188 @@
         "render: image is not clearly isolated from background; using most pixels as material evidence"
       ],
       "renderHash": "0212fc14760f26e5",
+      "passId": "form-refinement"
+    },
+    {
+      "passed": true,
+      "checks": {
+        "silhouetteIoU": 0.8902,
+        "aspectRatioDelta": 0.0,
+        "scaleDelta": 0.0,
+        "bilateralSymmetryError": 0.0001,
+        "colorDelta": {
+          "checked": 17,
+          "maxDeltaE": 36.5,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 1.93
+            },
+            {
+              "componentId": null,
+              "deltaE": 2.68
+            },
+            {
+              "componentId": null,
+              "deltaE": 1.93
+            },
+            {
+              "componentId": null,
+              "deltaE": 18.26
+            },
+            {
+              "componentId": null,
+              "deltaE": 18.26
+            },
+            {
+              "componentId": null,
+              "deltaE": 2.68
+            },
+            {
+              "componentId": null,
+              "deltaE": 2.68
+            },
+            {
+              "componentId": null,
+              "deltaE": 2.68
+            },
+            {
+              "componentId": null,
+              "deltaE": 2.68
+            },
+            {
+              "componentId": null,
+              "deltaE": 1.93
+            },
+            {
+              "componentId": null,
+              "deltaE": 18.26
+            },
+            {
+              "componentId": null,
+              "deltaE": 18.26
+            },
+            {
+              "componentId": null,
+              "deltaE": 36.5
+            },
+            {
+              "componentId": null,
+              "deltaE": 18.26
+            },
+            {
+              "componentId": null,
+              "deltaE": 36.5
+            },
+            {
+              "componentId": null,
+              "deltaE": 36.5
+            },
+            {
+              "componentId": null,
+              "deltaE": 36.5
+            }
+          ],
+          "gated": false
+        }
+      },
+      "failures": [],
+      "maskWarnings": [
+        "reference: image is not clearly isolated from background; using most pixels as material evidence",
+        "render: image is not clearly isolated from background; using most pixels as material evidence"
+      ],
+      "renderHash": "61e6198e33f42d0a",
+      "passId": "form-refinement"
+    },
+    {
+      "passed": true,
+      "checks": {
+        "silhouetteIoU": 0.8902,
+        "aspectRatioDelta": 0.0,
+        "scaleDelta": 0.0,
+        "bilateralSymmetryError": 0.0001,
+        "colorDelta": {
+          "checked": 17,
+          "maxDeltaE": 36.5,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 1.93
+            },
+            {
+              "componentId": null,
+              "deltaE": 2.68
+            },
+            {
+              "componentId": null,
+              "deltaE": 1.93
+            },
+            {
+              "componentId": null,
+              "deltaE": 18.26
+            },
+            {
+              "componentId": null,
+              "deltaE": 18.26
+            },
+            {
+              "componentId": null,
+              "deltaE": 2.68
+            },
+            {
+              "componentId": null,
+              "deltaE": 2.68
+            },
+            {
+              "componentId": null,
+              "deltaE": 2.68
+            },
+            {
+              "componentId": null,
+              "deltaE": 2.68
+            },
+            {
+              "componentId": null,
+              "deltaE": 1.93
+            },
+            {
+              "componentId": null,
+              "deltaE": 18.26
+            },
+            {
+              "componentId": null,
+              "deltaE": 18.26
+            },
+            {
+              "componentId": null,
+              "deltaE": 36.5
+            },
+            {
+              "componentId": null,
+              "deltaE": 18.26
+            },
+            {
+              "componentId": null,
+              "deltaE": 36.5
+            },
+            {
+              "componentId": null,
+              "deltaE": 36.5
+            },
+            {
+              "componentId": null,
+              "deltaE": 36.5
+            }
+          ],
+          "gated": false
+        }
+      },
+      "failures": [],
+      "maskWarnings": [
+        "reference: image is not clearly isolated from background; using most pixels as material evidence",
+        "render: image is not clearly isolated from background; using most pixels as material evidence"
+      ],
+      "renderHash": "61e6198e33f42d0a",
       "passId": "form-refinement"
     }
   ]
