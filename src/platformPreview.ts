@@ -60,7 +60,7 @@ if (!webglRenderer) {
     group.position.copy(instanced.position);
     group.quaternion.copy(instanced.quaternion);
     group.scale.copy(instanced.scale);
-    const repetitionMaterial = instanced.userData.repetitionSystem?.material as string | undefined;
+    const repetitionMaterial = instanced.name.includes("cyan") ? "emitter-cyan" : "dark-detail";
     const material = fallbackMaterial(repetitionMaterial);
     const matrix = new THREE.Matrix4();
     for (let index = 0; index < instanced.count; index += 1) {
