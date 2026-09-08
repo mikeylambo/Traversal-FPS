@@ -30,12 +30,12 @@ type RuntimeState = {
 };
 
 /**
- * One-step movement undo for Campaign/Training. It reverses only the last Warp:
- * sphere kills, shots, and consumed vectors remain committed. Firing after commit
- * invalidates Rewind, preventing shoot-and-retreat scouting loops.
+ * One-step movement undo. It reverses only the last Warp: sphere kills, shots,
+ * and consumed vectors remain committed. Firing after commit invalidates Rewind,
+ * preventing shoot-and-retreat scouting loops.
  *
- * Difficulty contract: Rewind is part of informational/recovery forgiveness and
- * is therefore available on Assist/Standard only. Hard/Expert solve without undo.
+ * Difficulty contract: Rewind is a tier lever, not a mode-rule lever. Assist and
+ * Standard provide it in every mode; Hard and Expert solve without undo.
  */
 export function installRewindWarpRuntime(game: object): void {
   const state = game as unknown as RuntimeState;
@@ -133,9 +133,7 @@ export function installRewindWarpRuntime(game: object): void {
 }
 
 function eligible(state: RuntimeState): boolean {
-  const modeEligible = state.modeId === "standard" || state.modeId === "training";
-  const difficultyEligible = state.difficultyId === "assist" || state.difficultyId === "standard";
-  return modeEligible && difficultyEligible;
+  return state.difficultyId === "assist" || state.difficultyId === "standard";
 }
 
 function rewindPadPressed(): boolean {
