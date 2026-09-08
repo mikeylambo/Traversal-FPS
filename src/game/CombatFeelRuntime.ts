@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { emitTraversalAudio } from "../audio/TraversalAudio";
+import { activeTraversalSettingsStore } from "./TraversalSettings";
 
 type WeaponState = {
   group: THREE.Group;
@@ -95,6 +96,8 @@ export function installCombatFeel(game: object): void {
 }
 
 function rumble(duration: number, strongMagnitude: number, weakMagnitude: number): void {
+  if (activeTraversalSettingsStore()?.value.accessibility.haptics === false) return;
+
   try {
     const pads = navigator.getGamepads?.() ?? [];
     const pad = Array.from(pads).find((candidate) => candidate?.connected) as (Gamepad & {

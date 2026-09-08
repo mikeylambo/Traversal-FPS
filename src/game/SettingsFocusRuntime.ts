@@ -1,4 +1,5 @@
 import { installSettingsAdjustmentRuntime } from "./SettingsAdjustmentRuntime";
+import { installSettingsTabsRuntime } from "./SettingsTabsRuntime";
 import { activeTraversalSettingsStore } from "./TraversalSettings";
 
 type FlowLike = {
@@ -11,63 +12,17 @@ type UILike = {
 };
 
 /**
- * The pinned Shell rebuilds Settings after every change and resets its internal
- * focus index to zero. Keep the player's selected row stable, then layer the
- * Traversal-specific select + left/right adjustment model on top.
+ * Compatibility seam retained under the original installer name. Traversal now
+ * owns a real tabbed Settings presentation, while the pinned Shell remains the
+ * source of screen flow and basic UI navigation.
  */
 export function installSettingsFocusRetention(
   flow: FlowLike,
   ui: UILike,
   root: HTMLElement
 ): void {
-  const originalActivate = flow.onActivate.bind(flow);
-
-  flow.onActivate = (screenId: string, choiceId: string) => {
-    originalActivate(screenId, choiceId);
-    if (screenId !== "settings") return;
-    preserveChoice(choiceId, ui, root);
-  };
-
   const settings = activeTraversalSettingsStore();
-  if (settings) installSettingsAdjustmentRuntime(flow, root, settings);
-}
-
-function preserveChoice(choiceId: string, ui: UILike, root: HTMLElement): void {
-  let disposed = false;
-  let scheduled = false;
-
-  const restore = () => {
-    scheduled = false;
-    if (disposed) return;
-    const screen = root.querySelector<HTMLElement>('[data-screen-id="settings"]');
-    if (!screen) return;
-
-    const buttons = Array.from(
-      screen.querySelectorAll<HTMLButtonElement>('[data-choice-id]:not(:disabled)')
-    );
-    const targetIndex = buttons.findIndex((button) => button.dataset.choiceId === choiceId);
-    if (targetIndex < 0) return;
-
-    let currentIndex = buttons.findIndex((button) => button.dataset.focused === "true");
-    if (currentIndex < 0) currentIndex = 0;
-    if (currentIndex !== targetIndex) ui.move(targetIndex - currentIndex);
-  };
-
-  const queueRestore = () => {
-    if (scheduled || disposed) return;
-    scheduled = true;
-    requestAnimationFrame(restore);
-  };
-
-  const observer = new MutationObserver(queueRestore);
-  observer.observe(root, { childList: true, subtree: true });
-
-  for (const delay of [0, 24, 70, 150, 320, 640]) {
-    window.setTimeout(restore, delay);
-  }
-
-  window.setTimeout(() => {
-    disposed = true;
-    observer.disconnect();
-  }, 900);
+  if (!settings) return;
+  installSettingsTabsRuntime(flow, ui, root, settings);
+  installSettingsAdjustmentRuntime(flow, root, settings);
 }

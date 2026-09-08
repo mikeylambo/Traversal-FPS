@@ -68,6 +68,19 @@ export function configureTraversalAudio(volumes: () => TraversalVolumeSnapshot):
   traversalAudioEngine.configure(volumes);
 }
 
+/** Fold the final master mix so both output channels carry the same information. */
+export function setTraversalAudioMono(enabled: boolean): void {
+  traversalAudioEngine.setMono(enabled);
+}
+
+/**
+ * Suspend or resume playback for one lifecycle reason. Reasons stack, so returning
+ * to the game cannot resume audio while the document is still hidden or unfocused.
+ */
+export function setTraversalAudioSuspended(reason: string, suspended: boolean): void {
+  traversalAudioEngine.setSuspended(reason, suspended);
+}
+
 /** High-frequency, always-needed cues. Small enough to sit in the boot bundle. */
 export function preloadCoreTraversalAudio(): Promise<void> {
   ensureTraversalAudioRuntime();

@@ -16,17 +16,24 @@ export interface TraversalVisualSettings {
  * it did not give equal access to. That has always governed spatial fairness —
  * ground cues, exit gates, landing rings. These extend the same rule to players
  * whose access is limited by photosensitivity, motion sensitivity, colour vision
- * deficiency, or text legibility, and they live on the same Settings screen as
- * every other option rather than in a separate accessibility menu.
+ * deficiency, hearing, or text legibility, and they live on the same Settings
+ * screen as every other option rather than in a separate accessibility menu.
  */
 export type ColorProfile = "standard" | "deuteranopia" | "protanopia" | "tritanopia";
 export type CvdPreview = "off" | "deuteranopia" | "protanopia" | "tritanopia";
+export type AimAssistStrength = "off" | "low" | "standard" | "strong";
 
 export interface TraversalAccessibilitySettings {
   /** Caps flash intensity and disables the transit saturation/brightness pulse. */
   reduceFlash: boolean;
   /** Dampens screen shake and the warp FOV punch without touching render quality. */
   reduceMotion: boolean;
+  /** Folds the final stereo master to identical left/right information. */
+  monoAudio: boolean;
+  /** Enables controller vibration where the browser/gamepad supports it. */
+  haptics: boolean;
+  /** Multiplier for tutorial cards and transient gameplay confirmation text. */
+  timedTextScale: number;
   /** Re-hues colour-coded systems for a specific CVD. Shape cues are always on. */
   colorProfile: ColorProfile;
   hudContrast: "standard" | "high";
@@ -38,9 +45,12 @@ export interface TraversalAccessibilitySettings {
 
 export interface TraversalSettingsValue {
   mouseSensitivity: number;
+  invertX: boolean;
   invertY: boolean;
+  crouchToggle: boolean;
   fov: number;
   aimSmoothing: number;
+  aimAssist: AimAssistStrength;
   reticleScale: number;
   controllerSensitivityX: number;
   controllerSensitivityY: number;
@@ -86,6 +96,9 @@ function prefersReducedMotion(): boolean {
 export const DEFAULT_ACCESSIBILITY_SETTINGS: TraversalAccessibilitySettings = {
   reduceFlash: false,
   reduceMotion: false,
+  monoAudio: false,
+  haptics: true,
+  timedTextScale: 1,
   colorProfile: "standard",
   hudContrast: "standard",
   uiScale: 1,
@@ -94,9 +107,12 @@ export const DEFAULT_ACCESSIBILITY_SETTINGS: TraversalAccessibilitySettings = {
 
 export const DEFAULT_TRAVERSAL_SETTINGS: TraversalSettingsValue = {
   mouseSensitivity: 1,
+  invertX: false,
   invertY: false,
+  crouchToggle: false,
   fov: 92,
   aimSmoothing: 0,
+  aimAssist: "standard",
   reticleScale: 1,
   controllerSensitivityX: 6,
   controllerSensitivityY: 5,
@@ -125,6 +141,8 @@ const FOVS = [75, 82, 88, 92, 96, 100, 105, 110];
 const SMOOTHING = [0, 0.12, 0.25];
 const RETICLE_SCALES = [0.8, 1, 1.2, 1.4];
 const UI_SCALES = [0.9, 1, 1.1, 1.25, 1.4, 1.6];
+const TEXT_TIMING_SCALES = [1, 2, 5, 10];
+const AIM_ASSIST_STRENGTHS: AimAssistStrength[] = ["off", "low", "standard", "strong"];
 const COLOR_PROFILES: ColorProfile[] = ["standard", "deuteranopia", "protanopia", "tritanopia"];
 const CVD_PREVIEWS: CvdPreview[] = ["off", "deuteranopia", "protanopia", "tritanopia"];
 const ACCESSIBILITY_EVENT = "traversal:accessibility-changed";
@@ -134,6 +152,13 @@ const PROFILE_LABELS: Record<ColorProfile, string> = {
   deuteranopia: "Deuteranopia",
   protanopia: "Protanopia",
   tritanopia: "Tritanopia"
+};
+
+const AIM_ASSIST_LABELS: Record<AimAssistStrength, string> = {
+  off: "Off",
+  low: "Low",
+  standard: "Standard",
+  strong: "Strong"
 };
 
 export class TraversalSettingsStore {
@@ -192,8 +217,20 @@ export class TraversalSettingsStore {
         description: "Raise if camera drifts"
       },
       {
+        id: "traversal-invert-x",
+        label: `Invert X: ${this.value.invertX ? "On" : "Off"}`
+      },
+      {
         id: "traversal-invert-y",
         label: `Invert Y: ${this.value.invertY ? "On" : "Off"}`
+      },
+      {
+        id: "traversal-crouch-mode",
+        label: `Crouch: ${this.value.crouchToggle ? "Toggle" : "Hold"}`
+      },
+      {
+        id: "traversal-controller-vibration",
+        label: `Controller Vibration: ${access.haptics ? "On" : "Off"}`
       },
       {
         id: "traversal-fov",
@@ -205,8 +242,18 @@ export class TraversalSettingsStore {
         description: "Raw input is default"
       },
       {
+        id: "traversal-aim-assist",
+        label: `Aim Assist: ${AIM_ASSIST_LABELS[this.value.aimAssist]}`,
+        description: "Controller and touch camera assistance. Shots stay exact"
+      },
+      {
         id: "traversal-reticle-scale",
         label: `Reticle Size: ${Math.round(this.value.reticleScale * 100)}%`
+      },
+      {
+        id: "traversal-mono-audio",
+        label: `Mono Audio: ${access.monoAudio ? "On" : "Off"}`,
+        description: "Same spatial information in both channels"
       },
       {
         id: "traversal-reduce-flash",
@@ -231,6 +278,11 @@ export class TraversalSettingsStore {
       {
         id: "traversal-ui-scale",
         label: `UI Text Scale: ${Math.round(access.uiScale * 100)}%`
+      },
+      {
+        id: "traversal-text-timing",
+        label: `Timed Text: ${access.timedTextScale}x`,
+        description: "Extends tutorial and gameplay confirmation text"
       },
       {
         id: "traversal-cvd-preview",
@@ -275,14 +327,26 @@ export class TraversalSettingsStore {
       this.value.controllerMoveDeadzone = this.next(MOVE_DEADZONES, this.value.controllerMoveDeadzone, direction);
     } else if (choiceId === "traversal-controller-deadzone") {
       this.value.controllerRightDeadzone = this.next(RIGHT_DEADZONES, this.value.controllerRightDeadzone, direction);
+    } else if (choiceId === "traversal-invert-x") {
+      this.value.invertX = !this.value.invertX;
     } else if (choiceId === "traversal-invert-y") {
       this.value.invertY = !this.value.invertY;
+    } else if (choiceId === "traversal-crouch-mode") {
+      this.value.crouchToggle = !this.value.crouchToggle;
+    } else if (choiceId === "traversal-controller-vibration") {
+      this.setAccessibility("haptics", !this.value.accessibility.haptics);
+      return true;
     } else if (choiceId === "traversal-fov") {
       this.value.fov = this.next(FOVS, this.value.fov, direction);
     } else if (choiceId === "traversal-aim-smoothing") {
       this.value.aimSmoothing = this.next(SMOOTHING, this.value.aimSmoothing, direction);
+    } else if (choiceId === "traversal-aim-assist") {
+      this.value.aimAssist = cycle(AIM_ASSIST_STRENGTHS, this.value.aimAssist, direction);
     } else if (choiceId === "traversal-reticle-scale") {
       this.value.reticleScale = this.next(RETICLE_SCALES, this.value.reticleScale, direction);
+    } else if (choiceId === "traversal-mono-audio") {
+      this.setAccessibility("monoAudio", !this.value.accessibility.monoAudio);
+      return true;
     } else if (choiceId === "traversal-reduce-flash") {
       this.setAccessibility("reduceFlash", !this.value.accessibility.reduceFlash);
       return true;
@@ -297,6 +361,9 @@ export class TraversalSettingsStore {
       return true;
     } else if (choiceId === "traversal-ui-scale") {
       this.setAccessibility("uiScale", this.next(UI_SCALES, this.value.accessibility.uiScale, direction));
+      return true;
+    } else if (choiceId === "traversal-text-timing") {
+      this.setAccessibility("timedTextScale", this.next(TEXT_TIMING_SCALES, this.value.accessibility.timedTextScale, direction));
       return true;
     } else if (choiceId === "traversal-cvd-preview") {
       this.setAccessibility("cvdPreview", cycle(CVD_PREVIEWS, this.value.accessibility.cvdPreview, direction));
