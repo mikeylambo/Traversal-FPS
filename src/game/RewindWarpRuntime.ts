@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { emitTraversalAudio, preloadTraversalAudioEvents } from "../audio/TraversalAudio";
 import { resolveTraversalAction } from "../input/TraversalBindings";
 
 type Transit = {
@@ -27,6 +28,7 @@ type RuntimeState = {
   update(dt: number): void;
   shoot(): void;
   loadRoom(index: number): void;
+  playWarpArrival(): void;
 };
 
 /**
@@ -78,6 +80,18 @@ export function installRewindWarpRuntime(game: object): void {
   state.loadRoom = (index: number) => {
     clear();
     originalLoadRoom(index);
+    // Rewind audio is only reachable on Assist/Standard, so it is fetched when a
+    // room first makes it possible rather than sitting in the boot bundle.
+    if (eligible(state)) void preloadTraversalAudioEvents(["rewind.begin", "rewind.arrive"]);
+  };
+
+  // The reverse transit reuses WarpSystem's certified arrival path, so the arrival
+  // cue arrives through the normal warp hook. Retimbre it rather than adding a
+  // second arrival sound on top of the first.
+  const originalWarpArrival = state.playWarpArrival.bind(game);
+  state.playWarpArrival = () => {
+    if (rewinding) emitTraversalAudio("rewind.arrive");
+    else originalWarpArrival();
   };
 
   const onKeyDown = (event: KeyboardEvent) => {
@@ -118,6 +132,7 @@ export function installRewindWarpRuntime(game: object): void {
       available = false;
       pendingArrival = false;
       rewinding = true;
+      emitTraversalAudio("rewind.begin");
       document.body.classList.add("rewinding");
     }
     keyboardQueued = false;

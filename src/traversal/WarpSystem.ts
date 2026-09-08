@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { flashScale } from "../game/TraversalAccessibility";
 
 type EndpointFx = {
   root: THREE.Group;
@@ -7,6 +8,8 @@ type EndpointFx = {
   age: number;
   duration: number;
   arrival: boolean;
+  /** Reduce Flash cap, sampled when the burst is spawned. */
+  flash: number;
 };
 
 export class WarpSystem {
@@ -226,13 +229,17 @@ export class WarpSystem {
     root.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), forward);
     this.scene.add(root);
 
-    const light = new THREE.PointLight(0x73efff, 2.4, 5, 2);
+    const light = new THREE.PointLight(0x73efff, 2.4 * flashScale(), 5, 2);
     light.position.copy(position);
     this.scene.add(light);
-    this.endpointFx.push({ root, materials, light, age: 0, duration: 0.24, arrival: false });
+    this.endpointFx.push({ root, materials, light, age: 0, duration: 0.24, arrival: false, flash: flashScale() });
   }
 
   private addEndpointBurst(position: THREE.Vector3, arrival: boolean, direction: THREE.Vector3): void {
+    // The strengthened arrival flash is the loudest thing in the game to look at.
+    // Reduce Flash caps its peak; it never removes the burst, because the burst is
+    // how you read where you landed.
+    const flash = flashScale();
     const root = new THREE.Group();
     root.position.copy(position);
     const materials: Array<THREE.MeshBasicMaterial | THREE.LineBasicMaterial> = [];
@@ -285,7 +292,7 @@ export class WarpSystem {
     root.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), forward);
     this.scene.add(root);
 
-    const light = new THREE.PointLight(color, arrival ? 8 : 5, arrival ? 10 : 7, 2);
+    const light = new THREE.PointLight(color, (arrival ? 8 : 5) * flash, arrival ? 10 : 7, 2);
     light.position.copy(position);
     this.scene.add(light);
     this.endpointFx.push({
@@ -294,7 +301,8 @@ export class WarpSystem {
       light,
       age: 0,
       duration: arrival ? 0.42 : 0.28,
-      arrival
+      arrival,
+      flash
     });
   }
 
@@ -307,7 +315,9 @@ export class WarpSystem {
       const scale = effect.arrival ? 0.75 + t * 1.9 : 0.8 + t * 1.35;
       effect.root.scale.setScalar(scale);
       effect.root.rotation.z += dt * (effect.arrival ? 5.5 : -4.2);
-      for (const material of effect.materials) material.opacity = Math.max(0, fade * fade);
+      // The cap is applied on the live fade curve, not just the spawn value, so
+      // Reduce Flash actually holds for the whole burst.
+      for (const material of effect.materials) material.opacity = Math.max(0, fade * fade) * effect.flash;
       effect.light.intensity *= Math.pow(0.025, dt / Math.max(0.01, effect.duration));
       if (t < 1) continue;
       this.disposeEndpointFx(effect);

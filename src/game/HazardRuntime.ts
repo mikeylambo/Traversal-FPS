@@ -1,6 +1,12 @@
 import * as THREE from "three";
-import { emitTraversalAudio } from "../audio/TraversalAudio";
-import { ROOMS, type HazardSpec, type PuzzleEffect } from "../world/stages";
+import {
+  emitTraversalAudio,
+  emitTraversalAudioAt,
+  preloadTraversalAudioEvents,
+  type TraversalAudioEvent
+} from "../audio/TraversalAudio";
+import { flashScale, hazardCue, onAccessibilityChange } from "./TraversalAccessibility";
+import { ROOMS, type HazardKind, type HazardSpec, type PuzzleEffect } from "../world/stages";
 import { installMovingPlatformRuntime } from "./MovingPlatformRuntime";
 
 type ActiveHazard = {
@@ -8,10 +14,25 @@ type ActiveHazard = {
   mesh: THREE.Mesh<THREE.BoxGeometry, THREE.MeshBasicMaterial>;
   base: THREE.Vector3;
   edges: THREE.LineSegments;
+  /** Non-colour identity: chevrons on a sweep, hatching on a lethal field. */
+  shapeCue?: THREE.LineSegments;
   disabled: boolean;
   apertureOffset: number;
   apertureFrame?: THREE.Object3D;
   active: boolean;
+  /** Previous frame's state, so cycle edges can be sounded exactly once. */
+  wasActive: boolean;
+  /** Sign of the drift velocity, so a sweep sounds at each end of its travel. */
+  driftSign: number;
+  soundedAt: number;
+};
+
+/** Deferred cues a room only needs if it actually contains the hazard. */
+const HAZARD_CUES: Record<HazardKind, TraversalAudioEvent[]> = {
+  "sweep": ["hazard.sweep"],
+  "lethal-field": ["hazard.field-on", "hazard.field-off"],
+  "sightline-gate": ["hazard.gate-open", "hazard.gate-close"],
+  "aperture-wall": ["hazard.aperture-shift"]
 };
 
 type RuntimeState = {
@@ -58,6 +79,7 @@ export function installHazardRuntime(game: object): void {
         if (!effect.targetIds.includes(hazard.spec.id)) continue;
         hazard.apertureOffset = effect.offset;
         syncApertureFrame(hazard);
+        emitTraversalAudioAt("hazard.aperture-shift", hazard.mesh.position);
       }
     }
   }) as EventListener);
@@ -72,7 +94,17 @@ export function installHazardRuntime(game: object): void {
       hazards.push(hazard);
       if (spec.kind === "sightline-gate") state.platformMeshes.push(hazard.mesh);
     }
+
+    // Hazard audio is fetched with the room that needs it, not at boot.
+    const cues = [...new Set((room?.hazards ?? []).flatMap((spec) => HAZARD_CUES[spec.kind]))];
+    if (cues.length > 0) void preloadTraversalAudioEvents(cues);
   };
+
+  // A live Settings change has to reach hazards already in the room; they are the
+  // objects the colour profile and flash cap exist for.
+  onAccessibilityChange(() => {
+    for (const hazard of hazards) applyHazardPalette(hazard);
+  });
 
   const originalUpdate = state.update.bind(game);
   state.update = (dt: number) => {
@@ -111,9 +143,9 @@ function createHazard(root: THREE.Group, spec: HazardSpec): ActiveHazard {
   const sweep = spec.kind === "sweep";
   const gate = spec.kind === "sightline-gate";
   const aperture = spec.kind === "aperture-wall";
-  const color = gate ? 0x73e7ff : aperture ? 0xff7895 : sweep ? 0xff5f7a : 0xff9a5d;
+  const cue = hazardCue(spec.kind);
   const material = new THREE.MeshBasicMaterial({
-    color,
+    color: cue.fill,
     transparent: true,
     opacity: aperture ? 0.13 : gate ? 0.5 : sweep ? 0.32 : 0.14,
     blending: THREE.AdditiveBlending,
@@ -127,7 +159,7 @@ function createHazard(root: THREE.Group, spec: HazardSpec): ActiveHazard {
   const edges = new THREE.LineSegments(
     new THREE.EdgesGeometry(mesh.geometry),
     new THREE.LineBasicMaterial({
-      color: gate ? 0xd7fbff : aperture ? 0xffd7df : sweep ? 0xffd0d8 : 0xffb476,
+      color: cue.edge,
       transparent: true,
       opacity: gate ? 0.9 : sweep ? 0.92 : aperture ? 0.82 : 0.62,
       blending: THREE.AdditiveBlending
@@ -178,17 +210,109 @@ function createHazard(root: THREE.Group, spec: HazardSpec): ActiveHazard {
     mesh.add(apertureFrame);
   }
 
+  // Priority 3: every hazard carries a non-colour signature as well as a hue, the
+  // same way utility actors already carry a ring geometry as well as a colour.
+  const shapeCue = createShapeCue(spec);
+  if (shapeCue) mesh.add(shapeCue);
+
   root.add(mesh);
   return {
     spec,
     mesh,
     base: mesh.position.clone(),
     edges,
+    shapeCue: shapeCue ?? undefined,
     disabled: false,
     apertureOffset: 0,
     apertureFrame,
-    active: true
+    active: true,
+    wasActive: true,
+    driftSign: 0,
+    soundedAt: 0
   };
+}
+
+function applyHazardPalette(hazard: ActiveHazard): void {
+  const cue = hazardCue(hazard.spec.kind);
+  hazard.mesh.material.color.setHex(cue.fill);
+  (hazard.edges.material as THREE.LineBasicMaterial).color.setHex(cue.edge);
+}
+
+/**
+ * The two axes a flat hazard reads across, largest first. Hazards are box slabs, so
+ * the smallest extent is the face normal and the other two carry any pattern.
+ */
+function majorAxes(size: readonly [number, number, number]): ["x" | "y" | "z", "x" | "y" | "z", "x" | "y" | "z"] {
+  const order = (["x", "y", "z"] as const)
+    .map((axis, index) => ({ axis, extent: size[index]! }))
+    .sort((a, b) => b.extent - a.extent);
+  return [order[0]!.axis, order[1]!.axis, order[2]!.axis];
+}
+
+function axisIndex(axis: "x" | "y" | "z"): 0 | 1 | 2 {
+  return axis === "x" ? 0 : axis === "y" ? 1 : 2;
+}
+
+/**
+ * Sweeps get chevrons pointing along their travel; lethal fields get diagonal
+ * hatching. Both are high-luminance and hue-independent, so the two hazards stay
+ * tellable apart in greyscale, in any colour profile, and at any flash cap.
+ */
+function createShapeCue(spec: HazardSpec): THREE.LineSegments | null {
+  if (spec.kind !== "sweep" && spec.kind !== "lethal-field") return null;
+
+  const [majorAxis, minorAxis, normalAxis] = majorAxes(spec.size);
+  const major = spec.size[axisIndex(majorAxis)]!;
+  const minor = spec.size[axisIndex(minorAxis)]!;
+  const normalOffset = spec.size[axisIndex(normalAxis)]! * 0.52;
+  const vertices: number[] = [];
+
+  const push = (aStart: number, bStart: number, aEnd: number, bEnd: number, side: number) => {
+    for (const point of [[aStart, bStart], [aEnd, bEnd]]) {
+      const vertex: [number, number, number] = [0, 0, 0];
+      vertex[axisIndex(majorAxis)] = point[0]!;
+      vertex[axisIndex(minorAxis)] = point[1]!;
+      vertex[axisIndex(normalAxis)] = side * normalOffset;
+      vertices.push(...vertex);
+    }
+  };
+
+  if (spec.kind === "sweep") {
+    // Chevrons: ">>>" repeated along the blade, pointing the way it travels.
+    const count = Math.max(2, Math.min(7, Math.round(major / 1.6)));
+    const step = major / (count + 1);
+    const wing = Math.min(step * 0.42, minor * 0.3);
+    for (let i = 1; i <= count; i += 1) {
+      const centre = -major * 0.5 + step * i;
+      for (const side of [-1, 1]) {
+        push(centre - wing, -wing, centre, 0, side);
+        push(centre, 0, centre - wing, wing, side);
+      }
+    }
+  } else {
+    // Hatching: slow diagonal bars, visually the opposite of a chevron.
+    const count = Math.max(3, Math.min(10, Math.round(major / 1.3)));
+    const step = major / count;
+    for (let i = 0; i <= count; i += 1) {
+      const start = -major * 0.5 + step * i;
+      for (const side of [-1, 1]) {
+        push(start, -minor * 0.42, start + minor * 0.84, minor * 0.42, side);
+      }
+    }
+  }
+
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute("position", new THREE.Float32BufferAttribute(vertices, 3));
+  return new THREE.LineSegments(
+    geometry,
+    new THREE.LineBasicMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0.62,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    })
+  );
 }
 
 function createApertureFrame(spec: HazardSpec): THREE.Object3D {
@@ -267,9 +391,14 @@ function cycleIsOpen(cycle: NonNullable<HazardSpec["cycle"]>, time: number): boo
 }
 
 function updateHazards(hazards: ActiveHazard[], time: number): void {
+  // Reduce Flash caps how far a warning pulse may swing. The pulse stays — it is
+  // the rate, not the depth, that identifies the hazard — it just stops strobing.
+  const flash = flashScale();
+
   for (const hazard of hazards) {
     if (hazard.disabled) {
       hazard.active = false;
+      hazard.wasActive = false;
       hazard.mesh.visible = false;
       hazard.mesh.layers.set(1);
       continue;
@@ -278,9 +407,12 @@ function updateHazards(hazards: ActiveHazard[], time: number): void {
     hazard.mesh.position.copy(hazard.base);
     const drift = hazard.spec.drift;
     if (drift) {
-      const offset = Math.sin(time * drift.speed * Math.PI * 2 + (drift.phase ?? 0)) * drift.amplitude;
-      hazard.mesh.position[drift.axis] += offset;
+      const phase = time * drift.speed * Math.PI * 2 + (drift.phase ?? 0);
+      hazard.mesh.position[drift.axis] += Math.sin(phase) * drift.amplitude;
+      soundSweepTravel(hazard, Math.cos(phase), time);
     }
+
+    const cue = hazardCue(hazard.spec.kind);
 
     if (hazard.spec.kind === "sightline-gate") {
       const cycle = hazard.spec.cycle ?? { period: 2.4, openFor: 0.85, phase: 0 };
@@ -288,7 +420,8 @@ function updateHazards(hazards: ActiveHazard[], time: number): void {
       hazard.active = !open;
       hazard.mesh.visible = !open;
       hazard.mesh.layers.set(open ? 1 : 0);
-      hazard.mesh.material.opacity = 0.42 + Math.sin(time * 8) * 0.06;
+      hazard.mesh.material.opacity = 0.42 + Math.sin(time * cue.pulseRate) * 0.06 * flash;
+      soundCycleEdge(hazard, "hazard.gate-close", "hazard.gate-open");
       continue;
     }
 
@@ -297,14 +430,17 @@ function updateHazards(hazards: ActiveHazard[], time: number): void {
       hazard.active = !safeWindow;
       hazard.mesh.visible = !safeWindow;
       hazard.mesh.layers.set(safeWindow ? 1 : 0);
+      soundCycleEdge(hazard, "hazard.field-on", "hazard.field-off");
       if (safeWindow) continue;
     } else {
       hazard.active = true;
+      hazard.wasActive = true;
       hazard.mesh.visible = true;
       hazard.mesh.layers.set(0);
     }
 
-    const pulse = 0.78 + Math.sin(time * 7.5 + hazard.base.z * 0.13) * 0.22;
+    const depth = 0.22 * flash;
+    const pulse = (1 - depth) + Math.sin(time * cue.pulseRate + hazard.base.z * 0.13) * depth;
     hazard.mesh.material.opacity = hazard.spec.kind === "aperture-wall"
       ? 0.1 + pulse * 0.045
       : (hazard.spec.kind === "sweep" ? 0.28 : 0.12) * pulse;
@@ -312,7 +448,37 @@ function updateHazards(hazards: ActiveHazard[], time: number): void {
     lineMaterial.opacity = hazard.spec.kind === "aperture-wall"
       ? 0.72 + pulse * 0.18
       : (hazard.spec.kind === "sweep" ? 0.78 : 0.48) + pulse * 0.16;
+    if (hazard.shapeCue) {
+      (hazard.shapeCue.material as THREE.LineBasicMaterial).opacity = 0.46 + pulse * 0.22;
+    }
   }
+}
+
+/**
+ * Sounds a hazard the moment its cycle flips, panned to the hazard itself. This is
+ * the second information channel the timing puzzles are built around: the rhythm
+ * and rough bearing of a cycle should be readable without looking at it.
+ */
+function soundCycleEdge(
+  hazard: ActiveHazard,
+  onActive: TraversalAudioEvent,
+  onClear: TraversalAudioEvent
+): void {
+  if (hazard.active === hazard.wasActive) return;
+  hazard.wasActive = hazard.active;
+  emitTraversalAudioAt(hazard.active ? onActive : onClear, hazard.mesh.position);
+}
+
+/** A sweep sounds at each end of its travel, which is where its rhythm is legible. */
+function soundSweepTravel(hazard: ActiveHazard, velocity: number, time: number): void {
+  if (hazard.spec.kind !== "sweep") return;
+  const sign = velocity >= 0 ? 1 : -1;
+  const previous = hazard.driftSign;
+  hazard.driftSign = sign;
+  if (previous === 0 || previous === sign) return;
+  if (time - hazard.soundedAt < 0.25) return;
+  hazard.soundedAt = time;
+  emitTraversalAudioAt("hazard.sweep", hazard.mesh.position);
 }
 
 function intersectsPlayerPath(from: THREE.Vector3, to: THREE.Vector3, hazard: ActiveHazard): boolean {

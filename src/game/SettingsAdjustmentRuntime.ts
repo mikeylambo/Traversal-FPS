@@ -15,7 +15,12 @@ const ADJUSTABLE = new Set([
   "traversal-controller-deadzone",
   "traversal-fov",
   "traversal-aim-smoothing",
-  "traversal-reticle-scale"
+  "traversal-reticle-scale",
+  // Accessibility rows with more than two states adjust the same way; the plain
+  // on/off toggles activate directly, like Invert Y.
+  "traversal-color-profile",
+  "traversal-ui-scale",
+  "traversal-cvd-preview"
 ]);
 
 /**

@@ -9,6 +9,33 @@ export interface TraversalVisualSettings {
   starTwinkle: number;
 }
 
+/**
+ * Perceptual access settings.
+ *
+ * The fairness constitution says the game should never punish missing information
+ * it did not give equal access to. That has always governed spatial fairness —
+ * ground cues, exit gates, landing rings. These extend the same rule to players
+ * whose access is limited by photosensitivity, motion sensitivity, colour vision
+ * deficiency, or text legibility, and they live on the same Settings screen as
+ * every other option rather than in a separate accessibility menu.
+ */
+export type ColorProfile = "standard" | "deuteranopia" | "protanopia" | "tritanopia";
+export type CvdPreview = "off" | "deuteranopia" | "protanopia" | "tritanopia";
+
+export interface TraversalAccessibilitySettings {
+  /** Caps flash intensity and disables the transit saturation/brightness pulse. */
+  reduceFlash: boolean;
+  /** Dampens screen shake and the warp FOV punch without touching render quality. */
+  reduceMotion: boolean;
+  /** Re-hues colour-coded systems for a specific CVD. Shape cues are always on. */
+  colorProfile: ColorProfile;
+  hudContrast: "standard" | "high";
+  /** Multiplier on HUD/tutorial text size. */
+  uiScale: number;
+  /** Authoring aid: simulates a CVD over the whole frame so palettes can self-check. */
+  cvdPreview: CvdPreview;
+}
+
 export interface TraversalSettingsValue {
   mouseSensitivity: number;
   invertY: boolean;
@@ -22,6 +49,7 @@ export interface TraversalSettingsValue {
   controllerMoveDeadzone: number;
   controllerRightDeadzone: number;
   visual: TraversalVisualSettings;
+  accessibility: TraversalAccessibilitySettings;
 }
 
 let activeStore: TraversalSettingsStore | null = null;
@@ -42,6 +70,28 @@ export const DEFAULT_VISUAL_SETTINGS: TraversalVisualSettings = {
   starTwinkle: 0.82
 };
 
+/**
+ * Reduce Flash and Reduce Motion default to the operating system preference on a
+ * first run. A player who has already told their OS they need this should not have
+ * to find a menu before the game is safe to look at.
+ */
+function prefersReducedMotion(): boolean {
+  try {
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  } catch {
+    return false;
+  }
+}
+
+export const DEFAULT_ACCESSIBILITY_SETTINGS: TraversalAccessibilitySettings = {
+  reduceFlash: false,
+  reduceMotion: false,
+  colorProfile: "standard",
+  hudContrast: "standard",
+  uiScale: 1,
+  cvdPreview: "off"
+};
+
 export const DEFAULT_TRAVERSAL_SETTINGS: TraversalSettingsValue = {
   mouseSensitivity: 1,
   invertY: false,
@@ -54,7 +104,8 @@ export const DEFAULT_TRAVERSAL_SETTINGS: TraversalSettingsValue = {
   controllerScopeSensitivity: 0.6,
   controllerMoveDeadzone: 0.18,
   controllerRightDeadzone: 0.10,
-  visual: { ...DEFAULT_VISUAL_SETTINGS }
+  visual: { ...DEFAULT_VISUAL_SETTINGS },
+  accessibility: { ...DEFAULT_ACCESSIBILITY_SETTINGS }
 };
 
 type SettingChoice = {
@@ -73,6 +124,17 @@ const RIGHT_DEADZONES = [0.05, 0.08, 0.10, 0.12, 0.14, 0.16, 0.18, 0.20];
 const FOVS = [75, 82, 88, 92, 96, 100, 105, 110];
 const SMOOTHING = [0, 0.12, 0.25];
 const RETICLE_SCALES = [0.8, 1, 1.2, 1.4];
+const UI_SCALES = [0.9, 1, 1.1, 1.25, 1.4, 1.6];
+const COLOR_PROFILES: ColorProfile[] = ["standard", "deuteranopia", "protanopia", "tritanopia"];
+const CVD_PREVIEWS: CvdPreview[] = ["off", "deuteranopia", "protanopia", "tritanopia"];
+const ACCESSIBILITY_EVENT = "traversal:accessibility-changed";
+
+const PROFILE_LABELS: Record<ColorProfile, string> = {
+  standard: "Standard",
+  deuteranopia: "Deuteranopia",
+  protanopia: "Protanopia",
+  tritanopia: "Tritanopia"
+};
 
 export class TraversalSettingsStore {
   readonly value: TraversalSettingsValue;
@@ -84,6 +146,7 @@ export class TraversalSettingsStore {
   }
 
   choices(): SettingChoice[] {
+    const access = this.value.accessibility;
     const smoothingLabel = this.value.aimSmoothing === 0
       ? "Off"
       : this.value.aimSmoothing <= 0.12 ? "Low" : "Medium";
@@ -146,6 +209,35 @@ export class TraversalSettingsStore {
         label: `Reticle Size: ${Math.round(this.value.reticleScale * 100)}%`
       },
       {
+        id: "traversal-reduce-flash",
+        label: `Reduce Flash: ${access.reduceFlash ? "On" : "Off"}`,
+        description: "Caps warp, hazard and impact flashes for photosensitivity"
+      },
+      {
+        id: "traversal-reduce-motion",
+        label: `Reduce Motion: ${access.reduceMotion ? "On" : "Off"}`,
+        description: "Dampens screen shake and the warp FOV punch. Visual quality is unchanged"
+      },
+      {
+        id: "traversal-color-profile",
+        label: `Colour Profile: ${PROFILE_LABELS[access.colorProfile]}`,
+        description: "Re-hues hazards and actors. Shape and pulse cues stay on in every profile"
+      },
+      {
+        id: "traversal-hud-contrast",
+        label: `HUD Contrast: ${access.hudContrast === "high" ? "High" : "Standard"}`,
+        description: "Solid panels behind HUD and tutorial text"
+      },
+      {
+        id: "traversal-ui-scale",
+        label: `UI Text Scale: ${Math.round(access.uiScale * 100)}%`
+      },
+      {
+        id: "traversal-cvd-preview",
+        label: `Colour Vision Preview: ${access.cvdPreview === "off" ? "Off" : PROFILE_LABELS[access.cvdPreview]}`,
+        description: "Simulates a colour vision deficiency over the whole frame while you play"
+      },
+      {
         id: "traversal-visual-lab",
         label: "Rendering Lab",
         description: "Open in-game look controls"
@@ -191,6 +283,24 @@ export class TraversalSettingsStore {
       this.value.aimSmoothing = this.next(SMOOTHING, this.value.aimSmoothing, direction);
     } else if (choiceId === "traversal-reticle-scale") {
       this.value.reticleScale = this.next(RETICLE_SCALES, this.value.reticleScale, direction);
+    } else if (choiceId === "traversal-reduce-flash") {
+      this.setAccessibility("reduceFlash", !this.value.accessibility.reduceFlash);
+      return true;
+    } else if (choiceId === "traversal-reduce-motion") {
+      this.setAccessibility("reduceMotion", !this.value.accessibility.reduceMotion);
+      return true;
+    } else if (choiceId === "traversal-color-profile") {
+      this.setAccessibility("colorProfile", cycle(COLOR_PROFILES, this.value.accessibility.colorProfile, direction));
+      return true;
+    } else if (choiceId === "traversal-hud-contrast") {
+      this.setAccessibility("hudContrast", this.value.accessibility.hudContrast === "high" ? "standard" : "high");
+      return true;
+    } else if (choiceId === "traversal-ui-scale") {
+      this.setAccessibility("uiScale", this.next(UI_SCALES, this.value.accessibility.uiScale, direction));
+      return true;
+    } else if (choiceId === "traversal-cvd-preview") {
+      this.setAccessibility("cvdPreview", cycle(CVD_PREVIEWS, this.value.accessibility.cvdPreview, direction));
+      return true;
     } else if (choiceId === "traversal-visual-lab") {
       window.dispatchEvent(new CustomEvent("traversal:toggle-visual-lab"));
       return true;
@@ -200,6 +310,17 @@ export class TraversalSettingsStore {
 
     this.save();
     return true;
+  }
+
+  setAccessibility<K extends keyof TraversalAccessibilitySettings>(
+    key: K,
+    value: TraversalAccessibilitySettings[K]
+  ): void {
+    this.value.accessibility[key] = value;
+    this.save();
+    // Presentation runtimes re-read the snapshot rather than being handed one, so
+    // a single notification keeps DOM classes, CSS vars and world colours in step.
+    window.dispatchEvent(new CustomEvent(ACCESSIBILITY_EVENT));
   }
 
   setVisual<K extends keyof TraversalVisualSettings>(key: K, value: TraversalVisualSettings[K]): void {
@@ -221,12 +342,20 @@ export class TraversalSettingsStore {
   private load(): TraversalSettingsValue {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return { ...DEFAULT_TRAVERSAL_SETTINGS, visual: { ...DEFAULT_VISUAL_SETTINGS } };
+      if (!raw) return this.freshDefaults();
       const parsed = JSON.parse(raw) as Partial<TraversalSettingsValue>;
       const merged: TraversalSettingsValue = {
         ...DEFAULT_TRAVERSAL_SETTINGS,
         ...parsed,
-        visual: { ...DEFAULT_VISUAL_SETTINGS, ...(parsed.visual ?? {}) }
+        visual: { ...DEFAULT_VISUAL_SETTINGS, ...(parsed.visual ?? {}) },
+        accessibility: {
+          ...DEFAULT_ACCESSIBILITY_SETTINGS,
+          // A profile saved before accessibility existed still inherits the OS
+          // preference rather than silently opting the player back into flashes.
+          reduceFlash: prefersReducedMotion(),
+          reduceMotion: prefersReducedMotion(),
+          ...(parsed.accessibility ?? {})
+        }
       };
 
       // v0.10.1 shipped 5/5/2/12% as the untouched controller defaults. If the
@@ -254,8 +383,17 @@ export class TraversalSettingsStore {
 
       return merged;
     } catch {
-      return { ...DEFAULT_TRAVERSAL_SETTINGS, visual: { ...DEFAULT_VISUAL_SETTINGS } };
+      return this.freshDefaults();
     }
+  }
+
+  private freshDefaults(): TraversalSettingsValue {
+    const reduced = prefersReducedMotion();
+    return {
+      ...DEFAULT_TRAVERSAL_SETTINGS,
+      visual: { ...DEFAULT_VISUAL_SETTINGS },
+      accessibility: { ...DEFAULT_ACCESSIBILITY_SETTINGS, reduceFlash: reduced, reduceMotion: reduced }
+    };
   }
 
   private save(): void {
@@ -265,4 +403,9 @@ export class TraversalSettingsStore {
       // Settings are quality-of-life only; gameplay remains usable if storage is blocked.
     }
   }
+}
+
+function cycle<T>(values: readonly T[], current: T, direction: -1 | 1): T {
+  const index = Math.max(0, values.indexOf(current));
+  return values[(index + direction + values.length) % values.length]!;
 }

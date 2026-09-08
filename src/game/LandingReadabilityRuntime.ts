@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { emitTraversalAudio } from "../audio/TraversalAudio";
 import { ROOMS, type PlatformSpec } from "../world/stages";
 import { installDifficultyInformationRuntime } from "./DifficultyInformationRuntime";
 
@@ -9,6 +10,7 @@ type RuntimeState = {
   difficultyId: string;
   warp: {
     hasAnchor(): boolean;
+    selectionPercent(): number;
     // Runtime-accessed private method on WarpSystem. Kept here rather than
     // changing WarpSystem's movement contract for a presentation-only feature.
     selectedPoint(): THREE.Vector3;
@@ -67,10 +69,18 @@ export function installLandingReadabilityRuntime(game: object): void {
   groundRing.visible = false;
   state.scene.add(line, groundRing);
 
+  // Placing a landing is a continuous, silent adjustment on the gauge. A short tick
+  // per step gives the same information without asking the player to watch a number.
+  let lastPercent = -1;
   const originalUpdate = state.update.bind(game);
   state.update = (dt: number) => {
     originalUpdate(dt);
     syncLandingCue(state, line, groundRing);
+
+    const placing = state.warp.hasAnchor() && state.input.isWarpHeld();
+    const percent = placing ? state.warp.selectionPercent() : -1;
+    if (placing && lastPercent >= 0 && percent !== lastPercent) emitTraversalAudio("landing.adjust");
+    lastPercent = percent;
   };
 
   // Installed here because Landing Readability is already the presentation seam

@@ -1,3 +1,4 @@
+import { emitTraversalAudio } from "../audio/TraversalAudio";
 import type { ContentRuntime } from "./ContentRuntime";
 import { ACHIEVEMENTS, type AchievementDefinition, type TraversalProgression } from "./Progression";
 
@@ -24,7 +25,10 @@ export function installAchievementRuntime(
 ): void {
   const state = game as unknown as RuntimeState;
 
-  progression.onUnlock(showAchievementToast);
+  progression.onUnlock((achievement) => {
+    showAchievementToast(achievement);
+    emitTraversalAudio("achievement.unlock");
+  });
 
   const originalShoot = state.shoot.bind(game);
   state.shoot = () => {
