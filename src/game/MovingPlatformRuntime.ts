@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { emitTraversalAudioAt } from "../audio/TraversalAudio";
 import { mountRegisteredVisual, type ProceduralVisualKey } from "../art/procedural/ProceduralVisualRegistry";
 import { ROOMS, type PlatformSpec, type PuzzleEffect } from "../world/stages";
 
@@ -37,6 +38,9 @@ export function installMovingPlatformRuntime(game: object): void {
       platform.active = true;
       platform.startedAt = performance.now() * 0.001;
       platform.mesh.userData.motionActive = true;
+      // Panned to the platform, not the player: a platform that starts moving
+      // behind you is information you are entitled to without turning around.
+      emitTraversalAudioAt("platform.activate", platform.mesh.position);
     }
   }) as EventListener);
 

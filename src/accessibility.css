@@ -1,0 +1,210 @@
+/* Perceptual access ------------------------------------------------------------
+ *
+ * Same principle as the rest of the fairness work: never punish missing
+ * information the game did not give equal access to. These rules cap intensity;
+ * they never delete a cue, because a capped cue still tells you what happened.
+ */
+
+:root {
+  --ui-scale: 1;
+  --flash-scale: 1;
+  --motion-scale: 1;
+}
+
+/* --- Priority 5: text scale + contrast --------------------------------------- */
+
+/*
+ * Scaling the panels rather than restating every font size keeps the authored
+ * typography ramp intact: the clamp()-based sizes, the letter-spacing and the
+ * panel chrome all grow together. `zoom` is ignored by engines that lack it,
+ * which degrades to the shipped size rather than to a broken layout.
+ */
+#mission-panel,
+#metric-panel,
+#tutorial-card,
+#vector-console,
+#stop-short-readout,
+#shot-budget-readout,
+#capture-hint {
+  zoom: var(--ui-scale);
+}
+
+/*
+ * The HUD sits over a bloom-heavy starfield, so the transient text — the room
+ * timer and the utility-actor resolve messages — is the real contrast risk.
+ * Standard mode lifts those to WCAG AA on the darkest backdrop; High Contrast
+ * puts an opaque plate behind them so they clear AA over the brightest one too.
+ */
+#room-objective,
+#run-stats {
+  opacity: 1 !important;
+  color: #dcf4ff;
+  text-shadow: 0 1px 3px rgba(0, 8, 16, .95), 0 0 14px rgba(0, 10, 20, .8);
+}
+
+#warp-hint {
+  opacity: .95 !important;
+  color: #d6f2ff;
+  text-shadow: 0 1px 3px rgba(0, 8, 16, .95);
+}
+
+body.hud-contrast-high #mission-panel,
+body.hud-contrast-high #metric-panel,
+body.hud-contrast-high #tutorial-card,
+body.hud-contrast-high #vector-console,
+body.hud-contrast-high #stop-short-readout,
+body.hud-contrast-high #shot-budget-readout {
+  background: rgba(2, 8, 15, .96) !important;
+  backdrop-filter: none !important;
+  border-color: rgba(190, 240, 255, .55) !important;
+}
+
+body.hud-contrast-high #room-objective,
+body.hud-contrast-high #run-stats,
+body.hud-contrast-high #tutorial-text,
+body.hud-contrast-high #warp-hint,
+body.hud-contrast-high #anchor-status {
+  color: #f2fbff !important;
+  opacity: 1 !important;
+  text-shadow: none !important;
+}
+
+body.hud-contrast-high .traversal-flash,
+body.hud-contrast-high #flash-message {
+  background: rgba(2, 8, 15, .96) !important;
+  padding: 6px 14px;
+  border: 1px solid rgba(190, 240, 255, .5);
+  text-shadow: none !important;
+}
+
+/* --- Priority 1: reduce flash ------------------------------------------------ */
+
+/*
+ * The warp FX pass was deliberately strengthened — brighter radial flash,
+ * saturation/brightness kick during transit, stronger arrival flash. Every one of
+ * those is capped here, and the full-frame colour pump is removed outright.
+ *
+ * Each rule is scoped to the state class that raises the flash in the first place:
+ * `#warp-fx` and its layers rest at opacity 0, so an unscoped cap would pin the
+ * vignette on permanently instead of taming it.
+ */
+body.reduce-flash.warp-preview #warp-fx { opacity: calc(.34 * var(--flash-scale)) !important; }
+body.reduce-flash.warping #warp-fx { opacity: calc(1 * var(--flash-scale)) !important; }
+body.reduce-flash.warp-arrival #warp-fx { opacity: calc(.62 * var(--flash-scale)) !important; }
+
+body.reduce-flash.warping #warp-fx::before {
+  opacity: calc(.82 * var(--flash-scale)) !important;
+  /* The 120ms strobe is the specific photosensitivity risk in the transit FX. The
+     axis line stays visible; it just stops oscillating. */
+  animation: none !important;
+  transform: scaleX(.45) !important;
+}
+
+body.reduce-flash.warping #warp-fx::after {
+  opacity: calc(.78 * var(--flash-scale)) !important;
+  transform: scale(1.1) !important;
+}
+
+body.reduce-flash.warp-arrival #warp-fx::after {
+  opacity: calc(.94 * var(--flash-scale)) !important;
+  transform: scale(1.28) !important;
+}
+
+body.reduce-flash.warping #game-canvas,
+body.reduce-flash.hazard-hit #game-canvas {
+  filter: none !important;
+}
+
+/*
+ * The rifle impulse keeps its shape and timing — it is the weapon's weight — but
+ * peaks at a third of the excursion instead of near-white.
+ */
+body.reduce-flash.rifle-fired #game::after {
+  animation-name: rifle-impulse-reduced !important;
+}
+
+@keyframes rifle-impulse-reduced {
+  0% { opacity: .3; }
+  100% { opacity: 0; }
+}
+
+body.reduce-flash.hazard-hit #hud::after {
+  box-shadow: inset 0 0 90px 18px rgba(255, 67, 91, .18) !important;
+}
+
+body.reduce-flash .sector-transition-line { box-shadow: none !important; }
+
+/*
+ * The shot-budget warning keeps pulsing — losing it would cost a Challenge player
+ * real information — at a fraction of the glow and half the rate.
+ */
+body.reduce-flash #shot-budget-readout.danger {
+  animation-name: shot-budget-danger-reduced !important;
+  animation-duration: 1.4s !important;
+}
+
+@keyframes shot-budget-danger-reduced {
+  to { box-shadow: 0 0 12px rgba(255, 83, 105, .1); }
+}
+
+/* --- Priority 2: reduce motion ----------------------------------------------- */
+
+/*
+ * Independent of the Low/Medium/High graphics preset, which only touches
+ * bloom/AO/TAA. Screen shake and the warp FOV punch are motion triggers with no
+ * render cost, so they get their own control and fidelity is untouched.
+ */
+/*
+ * `warp-committed`, `warp-landed`, `hazard-hit` and `exit-activated` are the impulse
+ * hooks the feel pass attaches screen movement to. Neutralising them here means a
+ * future impulse cannot ship past this toggle by accident.
+ */
+body.reduce-motion.rifle-fired #game,
+body.reduce-motion.warp-committed #game,
+body.reduce-motion.warp-landed #game,
+body.reduce-motion.hazard-hit #game,
+body.reduce-motion.exit-activated #game {
+  animation: none !important;
+  transform: none !important;
+}
+
+/* The reticle's recoil settle is small, but it is movement under a fixed gaze. */
+body.reduce-motion.rifle-recovering:not(.warp-preview) #reticle {
+  transform: translate(-50%, -50%) scale(var(--reticle-scale)) !important;
+}
+
+body.reduce-motion .warp-streaks {
+  transform: scale(.62) !important;
+  transition: opacity .06s ease !important;
+}
+
+body.reduce-motion.warping .warp-streaks {
+  transform: scale(.8) !important;
+}
+
+body.reduce-motion #sector-transition::before,
+body.reduce-motion #sector-transition::after {
+  transition: none !important;
+}
+
+body.reduce-motion #sector-transition.show .sector-transition-copy,
+body.reduce-motion #sector-transition.show .sector-transition-line {
+  animation-duration: .01s !important;
+  animation-delay: 0s !important;
+  animation-fill-mode: forwards !important;
+}
+
+body.reduce-motion .goal-pulse,
+body.reduce-motion #reticle {
+  transition: none !important;
+}
+
+/* --- Colour-vision authoring preview ----------------------------------------- */
+
+#traversal-cvd-filters {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+}

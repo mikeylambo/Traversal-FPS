@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { actorColor, onAccessibilityChange } from "../game/TraversalAccessibility";
 import type { TraversalSettingsStore } from "../game/TraversalSettings";
 import { ROOMS, type EnemySpec, type PlatformSpec } from "../world/stages";
 import { VectorRendering } from "./VectorRendering";
@@ -98,11 +99,9 @@ export function enhanceTraversalPresentation(game: object, settings: TraversalSe
   };
 
   state.addEnemy = (spec: EnemySpec) => {
-    const color = spec.kind === "shield"
-      ? 0xffad66
-      : spec.kind === "drifter"
-        ? 0xff78c8
-        : 0x7cefff;
+    // Colour comes from the active colour profile; identity is still carried by
+    // geometry (icosahedron body, shield plate, drifter axis, utility ring) first.
+    const color = actorColor(spec.kind);
     const radius = spec.radius ?? 0.72;
     const material = rendering.createNodeMaterial(color);
     const mesh = new THREE.Mesh(new THREE.IcosahedronGeometry(radius, 3), material);
@@ -145,9 +144,17 @@ export function enhanceTraversalPresentation(game: object, settings: TraversalSe
     const light = new THREE.PointLight(color, state.roomIndex === 0 ? 3.4 : 2.5, 7, 2);
 
     mesh.add(shell, ringA, ringB, core, light);
+    // Tagged so a colour-profile change reaches actors already in the room. The
+    // white core is deliberately left untagged: it stays neutral in every profile.
+    mesh.userData.traversalActorKind = spec.kind;
+    for (const child of [shell, ringA, ringB, light]) child.userData.traversalAccent = true;
     state.roomRoot.add(mesh);
     state.enemies.push({ spec, mesh, base: mesh.position.clone(), alive: true });
   };
+
+  onAccessibilityChange(() => {
+    for (const enemy of state.enemies) retintActor(enemy.mesh, actorColor(enemy.spec.kind));
+  });
 
   state.addKillFx = (position: THREE.Vector3, kind: EnemySpec["kind"]) => {
     targetResolve.resolve(position, kind);
@@ -296,5 +303,27 @@ function addRoomEnvironment(state: RuntimeState, rendering: VectorRendering, ind
     ring.position.set(room.goal[0], room.goal[1], room.goal[2] - 0.45 - i * 0.18);
     ring.rotation.z = i * 0.24;
     state.roomRoot.add(ring);
+  }
+}
+
+/**
+ * Re-colours an actor in place, so a colour-profile change is immediate rather than
+ * waiting for the next room. The body is a shader material with a `uColor` uniform;
+ * the shell, rings and light are ordinary accent materials tagged at creation.
+ */
+function retintActor(root: THREE.Mesh, color: number): void {
+  const bodyMaterial = root.material as THREE.ShaderMaterial | undefined;
+  const uniformColor = bodyMaterial?.uniforms?.uColor?.value;
+  if (uniformColor instanceof THREE.Color) uniformColor.setHex(color);
+
+  for (const child of root.children) {
+    if (!child.userData.traversalAccent) continue;
+    const light = child as THREE.PointLight;
+    if (light.isPointLight) {
+      light.color.setHex(color);
+      continue;
+    }
+    const material = (child as THREE.Mesh).material as THREE.MeshBasicMaterial | undefined;
+    material?.color?.setHex(color);
   }
 }

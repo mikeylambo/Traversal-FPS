@@ -30,6 +30,28 @@ npm run dev
 
 `@slu/web-shell` is pinned to the exact 1.0.2 certification commit. Because the Shell repository is private, installs require GitHub access to that repository until the package has a publish/distribution path.
 
+## Audio
+
+Authored SFX live in `public/audio/`, mapped to semantic triggers by
+`src/audio/TraversalAudioManifest.ts`. Gameplay code emits meaning
+(`emitTraversalAudio("sphere.resolve")`), never a filename.
+
+```bash
+npm run audio:build -- "<path containing the 'Traversal FPS SFX' drop>"
+npm run audio:doctor            # runs in `npm run build`
+npm run audio:doctor -- --emit-map   # regenerates docs/AUDIO_MAPPING.md
+```
+
+The authored WAV drop is not in the repository; only the encoded output is. See
+[docs/AUDIO_MAPPING.md](docs/AUDIO_MAPPING.md).
+
+## Accessibility
+
+Reduce Flash, Reduce Motion, colour profiles with non-colour hazard cues, HUD
+contrast, UI text scale and a colour-vision preview all live on the existing
+Settings screen. See [docs/ACCESSIBILITY.md](docs/ACCESSIBILITY.md) for the
+contrast and colour audits.
+
 ## Core rule
 
 One kill creates one active anchor. Any committed warp consumes it completely, including a stop-short warp. A newer kill replaces the previous unused anchor.

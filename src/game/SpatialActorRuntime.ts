@@ -1,4 +1,6 @@
 import * as THREE from "three";
+import { emitTraversalAudio } from "../audio/TraversalAudio";
+import { actorColor, utilityRingColor } from "./TraversalAccessibility";
 import { evaluateActorOrigin, resolveOriginConstraint } from "../world/spatialActors";
 import { ROOMS, type EnemySpec } from "../world/stages";
 import { installActorGeometryRuntime } from "./ActorGeometryRuntime";
@@ -43,6 +45,12 @@ type RuntimeState = {
 };
 
 const UTILITY_KINDS = new Set<EnemySpec["kind"]>(["cube", "diamond", "prism"]);
+
+function utilityCue(kind: EnemySpec["kind"]): "actor.cube" | "actor.diamond" | "actor.prism" {
+  if (kind === "diamond") return "actor.diamond";
+  if (kind === "prism") return "actor.prism";
+  return "actor.cube";
+}
 
 /**
  * Sphere-family actors are movement currency. Cubes, Diamonds, and Prisms are
@@ -111,7 +119,10 @@ export function installSpatialActorRuntime(game: object): void {
     if (UTILITY_KINDS.has(enemy.spec.kind)) {
       state.roomShots = Math.max(0, state.roomShots - 1);
       state.addImpactFx(hitPosition, utilityImpactColor(enemy.spec.kind));
-      state.playKill();
+      // Utility resolves get their own timbre rather than the sphere confirm: the
+      // flash message and this sound are the only two signals that the kill changed
+      // world state, so they must not sound like an ordinary sphere.
+      emitTraversalAudio(utilityCue(enemy.spec.kind));
       state.flashMessage(utilityMessage(enemy.spec.kind), 1500);
       window.dispatchEvent(new CustomEvent("traversal:puzzle-actor", {
         detail: {
@@ -197,7 +208,7 @@ function decorateUtility(enemy: ActiveEnemy, kind: "cube" | "diamond" | "prism")
   const ring = new THREE.Mesh(
     new THREE.TorusGeometry(radius * 1.42, radius * 0.045, 8, kind === "prism" ? 3 : 36),
     new THREE.MeshBasicMaterial({
-      color: 0xf2fbff,
+      color: utilityRingColor(),
       transparent: true,
       opacity: 0.78,
       blending: THREE.AdditiveBlending,
@@ -235,7 +246,7 @@ function decorateShield(enemy: ActiveEnemy): void {
   const blockedSign = constraint?.min !== undefined ? -1 : 1;
 
   const material = new THREE.MeshBasicMaterial({
-    color: 0xffc48a,
+    color: actorColor("shield"),
     transparent: true,
     opacity: 0.34,
     side: THREE.DoubleSide,
@@ -275,7 +286,7 @@ function decorateDrifter(enemy: ActiveEnemy): void {
   const line = new THREE.Line(
     geometry,
     new THREE.LineBasicMaterial({
-      color: 0xffb4e5,
+      color: actorColor("drifter"),
       transparent: true,
       opacity: 0.82,
       blending: THREE.AdditiveBlending,

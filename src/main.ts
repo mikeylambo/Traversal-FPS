@@ -8,12 +8,18 @@ import "./transition-minimal.css";
 import "./onboarding.css";
 import "./scope.css";
 import "./editor/editor.css";
+// Last, so its caps and contrast fixes win over the styles they moderate.
+import "./accessibility.css";
 import {
   createArcadeAssembly,
   createFPSAssembly,
   createGameApp,
   createThreeStarterAdapter
 } from "@slu/web-shell";
+import {
+  configureTraversalAudio,
+  preloadCoreTraversalAudio
+} from "./audio/TraversalAudio";
 import { TraversalGame } from "./game/TraversalGame";
 import { TraversalSettingsStore } from "./game/TraversalSettings";
 import { enhanceTraversalMovement } from "./game/MovementPatch";
@@ -32,6 +38,8 @@ import { installCampaignFlow } from "./game/CampaignFlowRuntime";
 import { installOnboardingRuntime } from "./game/OnboardingRuntime";
 import { installSettingsFocusRetention } from "./game/SettingsFocusRuntime";
 import { installControlsRuntime } from "./game/ControlsRuntime";
+import { installUISounds } from "./game/UISoundRuntime";
+import { installAccessibilityRuntime } from "./game/AccessibilityRuntime";
 import { installSpatialActorRuntime } from "./game/SpatialActorRuntime";
 import { TraversalProgression, ACHIEVEMENTS } from "./game/Progression";
 import { achievementChoices, installAchievementRuntime } from "./game/AchievementRuntime";
@@ -151,6 +159,21 @@ const traversalDifficulties = [
 
 app.shell.modes.replace(traversalModes);
 app.shell.difficulty.register(traversalDifficulties);
+
+// Every sound in the game — authored, procedural, positional — runs through the
+// bus graph these three sliders drive, so the Settings screen stays accurate.
+configureTraversalAudio(() => {
+  const shellSettings = app.shell.settings.snapshot();
+  return {
+    master: Number(shellSettings.masterVolume ?? 1),
+    music: Number(shellSettings.musicVolume ?? 1),
+    sfx: Number(shellSettings.sfxVolume ?? 1)
+  };
+});
+// Deliberately not awaited: the core SFX set warms in the background while the
+// player is still in the menus, so first Campaign entry never waits on audio.
+void preloadCoreTraversalAudio();
+installAccessibilityRuntime();
 
 const progression = new TraversalProgression(app.storage);
 await progression.load();
@@ -350,6 +373,7 @@ app.flow.onBack = (screenId: string) => {
   originalBack(screenId);
 };
 
+installUISounds(app.flow, uiRoot);
 installSettingsFocusRetention(app.flow, app.ui, uiRoot);
 installControlsRuntime(app.flow, app.ui as any);
 
@@ -411,6 +435,8 @@ console.info("Traversal FPS ready", {
   })),
   achievements: ACHIEVEMENTS.length,
   hazards: ["lethal-field", "sweep", "sightline-gate", "aperture-wall"],
+  audio: "authored SFX through shared master/music/sfx buses // positional hazard + exit cues // procedural fallback retained",
+  accessibility: "reduce flash // reduce motion // colour profile + shape/rate cues // HUD contrast // UI text scale // CVD preview",
   spatialActors: "sphere movement // cube state // diamond motion // prism energy // gravity ring progression",
   postgame: "THE REVERSE // 8-chamber authored labyrinth // unlocked by Sector 32 clear",
   editor: "development-only // F2 // backquote; public menu entry deferred",

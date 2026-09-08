@@ -1,4 +1,10 @@
 import * as THREE from "three";
+import {
+  emitTraversalAudio,
+  emitTraversalAudioAt,
+  updateTraversalAudioListener
+} from "../audio/TraversalAudio";
+import { traversalAccessibility } from "./TraversalAccessibility";
 import { FPSInput } from "../input/FPSInput";
 import { WarpSystem } from "../traversal/WarpSystem";
 import { ROOMS, type EnemySpec, type PlatformSpec } from "../world/stages";
@@ -76,7 +82,6 @@ export class TraversalGame {
   private airGraceUntil = 0;
   private fireReadyAt = 0;
   private runComplete = false;
-  private audioContext: AudioContext | null = null;
 
   private modeId = "standard";
   private modeLabel = "Standard Run";
@@ -291,6 +296,7 @@ export class TraversalGame {
     document.body.classList.toggle("warp-arrival", now < this.warpArrivalUntil);
 
     this.updateCameraPresentation();
+    this.syncAudioListener();
     this.weapon.update(dt, {
       anchorReady: this.warp.hasAnchor(),
       warpHeld: this.input.isWarpHeld(),
@@ -440,6 +446,7 @@ export class TraversalGame {
 
   private failChallenge(message: string, now: number): void {
     this.warp.reset();
+    emitTraversalAudio("route.fail");
     this.flashMessage(message, 1500);
     this.pendingRoomResetAt = now + 1150;
   }
@@ -496,7 +503,10 @@ export class TraversalGame {
 
   private updateCameraPresentation(): void {
     const baseFov = this.gameSettings.value.fov;
-    const reducedMotion = Boolean(this.shell.settings.snapshot().reducedMotion);
+    // Two independent sources: the Shell's own reduced-motion preference and the
+    // game's Reduce Motion accessibility toggle. Either one dampens the warp punch.
+    const reducedMotion = Boolean(this.shell.settings.snapshot().reducedMotion) ||
+      traversalAccessibility().reduceMotion;
     let targetFov = baseFov;
 
     if (this.warp.isTransiting()) {
@@ -528,6 +538,8 @@ export class TraversalGame {
       ? this.roomKills !== room.requiredKills
       : this.roomKills < room.requiredKills) return;
     if (this.camera.position.distanceTo(this.goal.position) > this.goalRadius) return;
+
+    emitTraversalAudioAt("exit.enter", this.goal.position);
 
     if (this.roomIndex >= ROOMS.length - 1) {
       this.finishRun();
@@ -1082,114 +1094,41 @@ export class TraversalGame {
     this.effects.length = 0;
   }
 
+  // Audio is emitted as meaning, never as oscillator instructions. Sample choice,
+  // layering, mixing, and the procedural fallback all live behind the seam in
+  // `src/audio/TraversalAudio.ts`.
   private playShot(): void {
-    this.toneSweep(720, 210, 0.078, "sawtooth", 0.052);
-    this.toneSweep(1640, 760, 0.038, "triangle", 0.028, 0.003);
-    this.toneSweep(96, 58, 0.065, "sine", 0.07);
-    this.noiseBurst(0.045, 0.04, 2100, "highpass");
+    emitTraversalAudio("rifle.fire");
   }
 
   private playKill(): void {
-    this.toneSweep(430, 820, 0.09, "sine", 0.05);
-    this.toneSweep(690, 1120, 0.075, "triangle", 0.032, 0.018);
+    emitTraversalAudio("sphere.resolve");
   }
 
   private playVectorWritten(): void {
-    this.toneSweep(520, 960, 0.11, "sine", 0.032, 0.025);
-    this.toneSweep(820, 1460, 0.08, "triangle", 0.02, 0.045);
+    emitTraversalAudio("vector.write");
   }
 
   private playShieldReject(): void {
-    this.toneSweep(360, 120, 0.11, "square", 0.045);
-    this.noiseBurst(0.04, 0.028, 1500, "bandpass");
+    emitTraversalAudio("shield.reject");
   }
 
   private playWarpStart(): void {
-    this.toneSweep(126, 38, 0.2, "sawtooth", 0.085);
-    this.toneSweep(900, 190, 0.16, "triangle", 0.045);
-    this.noiseBurst(0.18, 0.055, 720, "bandpass");
+    emitTraversalAudio("warp.commit");
   }
 
   private playWarpArrival(): void {
-    this.toneSweep(150, 64, 0.13, "sine", 0.09);
-    this.toneSweep(1320, 430, 0.085, "triangle", 0.045);
-    this.noiseBurst(0.065, 0.07, 2400, "highpass");
+    emitTraversalAudio("warp.arrive");
   }
 
-  private toneSweep(
-    startFrequency: number,
-    endFrequency: number,
-    duration: number,
-    type: OscillatorType,
-    volume: number,
-    delay = 0
-  ): void {
-    try {
-      this.audioContext ??= new AudioContext();
-      const context = this.audioContext;
-      if (context.state === "suspended") void context.resume();
-
-      const start = context.currentTime + delay;
-      const osc = context.createOscillator();
-      const gain = context.createGain();
-      const shellSettings = this.shell.settings.snapshot();
-      const master = shellSettings.masterVolume ?? 1;
-      const sfx = shellSettings.sfxVolume ?? 1;
-
-      osc.type = type;
-      osc.frequency.setValueAtTime(startFrequency, start);
-      osc.frequency.exponentialRampToValueAtTime(
-        Math.max(20, endFrequency),
-        start + duration
-      );
-      gain.gain.setValueAtTime(Math.max(0.0001, volume * master * sfx), start);
-      gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
-      osc.connect(gain);
-      gain.connect(context.destination);
-      osc.start(start);
-      osc.stop(start + duration + 0.01);
-    } catch {
-      // Audio is non-critical for boot.
-    }
-  }
-
-  private noiseBurst(
-    duration: number,
-    volume: number,
-    frequency: number,
-    type: BiquadFilterType
-  ): void {
-    try {
-      this.audioContext ??= new AudioContext();
-      const context = this.audioContext;
-      if (context.state === "suspended") void context.resume();
-      const length = Math.max(64, Math.floor(context.sampleRate * duration));
-      const buffer = context.createBuffer(1, length, context.sampleRate);
-      const data = buffer.getChannelData(0);
-      for (let i = 0; i < length; i += 1) {
-        const envelope = 1 - i / length;
-        data[i] = (Math.random() * 2 - 1) * envelope;
-      }
-
-      const source = context.createBufferSource();
-      const filter = context.createBiquadFilter();
-      const gain = context.createGain();
-      const shellSettings = this.shell.settings.snapshot();
-      const master = shellSettings.masterVolume ?? 1;
-      const sfx = shellSettings.sfxVolume ?? 1;
-
-      filter.type = type;
-      filter.frequency.value = frequency;
-      filter.Q.value = type === "bandpass" ? 1.1 : 0.4;
-      gain.gain.value = volume * master * sfx;
-      source.buffer = buffer;
-      source.connect(filter);
-      filter.connect(gain);
-      gain.connect(context.destination);
-      source.start();
-    } catch {
-      // Audio is non-critical for gameplay.
-    }
+  /**
+   * Keeps the WebAudio listener on the camera so positional hazard cues carry a
+   * usable bearing. Cheap enough to run every frame; the engine smooths it.
+   */
+  private syncAudioListener(): void {
+    const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(this.camera.quaternion);
+    const up = new THREE.Vector3(0, 1, 0).applyQuaternion(this.camera.quaternion);
+    updateTraversalAudioListener(this.camera.position, forward, up);
   }
 
   private formatTime(seconds: number): string {

@@ -1,4 +1,9 @@
 import * as THREE from "three";
+import {
+  emitTraversalAudioAt,
+  startTraversalAudioLoop,
+  type TraversalAudioLoopHandle
+} from "../audio/TraversalAudio";
 import { mountRegisteredVisual } from "../art/procedural/ProceduralVisualRegistry";
 import { ROOMS } from "../world/stages";
 
@@ -24,6 +29,9 @@ const LOCKED_COLOR = 0x263b46;
 export function installExitGateRuntime(game: object): void {
   const state = game as unknown as RuntimeState;
   let wasReady = false;
+  // A positional bed on the open exit. Same job the landing ground cue does for a
+  // warp: it tells you where the way out is without requiring you to be looking at it.
+  let ringLoop: TraversalAudioLoopHandle | null = null;
   decorateGravityRing(state.goal);
   mountRegisteredVisual(state.goal, "exit.gravity-ring.default");
 
@@ -55,8 +63,14 @@ export function installExitGateRuntime(game: object): void {
       void document.body.offsetWidth;
       document.body.classList.add("exit-activated");
       state.flashMessage("GRAVITY RING ONLINE // ENTER TO ADVANCE", 1800);
+      emitTraversalAudioAt("exit.online", state.goal.position);
       window.setTimeout(() => document.body.classList.remove("exit-activated"), 520);
     }
+
+    if (ready && !ringLoop) ringLoop = startTraversalAudioLoop("exit.loop", state.goal.position);
+    ringLoop?.setPosition(state.goal.position.x, state.goal.position.y, state.goal.position.z);
+    ringLoop?.setIntensity(ready ? 1 : 0);
+
     wasReady = ready;
   };
 
