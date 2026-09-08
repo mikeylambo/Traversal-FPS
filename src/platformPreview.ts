@@ -31,7 +31,10 @@ renderer.setSize(innerWidth, innerHeight);
 document.body.append(renderer.domElement);
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x071016);
+// Keep review captures chromatically neutral so the img2threejs foreground
+// segmenter measures the platform instead of treating a saturated backdrop as
+// part of the silhouette. The in-game environment remains unchanged.
+scene.background = new THREE.Color(0x0a0a0a);
 if (webglRenderer) scene.environment = createTraversalMovingPlatformEnvironment(webglRenderer);
 scene.add(createTraversalMovingPlatformLookDevLights("reference"));
 
