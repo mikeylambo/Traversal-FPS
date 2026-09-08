@@ -772,16 +772,16 @@
       "interaction-pass",
       "optimization-pass"
     ],
-    "currentPass": "structural-pass",
+    "currentPass": "form-refinement",
     "completedPasses": [
-      "blockout"
+      "blockout",
+      "structural-pass"
     ],
-    "lastCompletedPass": "blockout",
+    "lastCompletedPass": "structural-pass",
     "blockedReason": "",
     "nextRequiredEvidence": [
-      "Macro, meso, and repeated structures meet qualityContract.minimumSpecDepth.",
-      "Parent-child relations, joints, seams, sockets, and contact points are explicit.",
-      "Every attached child appendage/connector has parentSocket, localStart/localEnd, contactType, embedDepth or overlap, and gapTolerance.",
+      "Important visible forms are represented in component geometryDescriptor, deformations, localFeatures, or repetitionSystems.",
+      "Endpoint-based child parts are rooted at their attachment sockets and do not visibly float away from parents.",
       "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold.",
       "attachment contracts for child appendages/connectors",
       "no floating child roots/joints in the browser screenshot",
@@ -5352,6 +5352,33 @@
       "cameraView": "three-quarter",
       "notes": "Primary comparison uses the reference-matched three-quarter; front and side orbit captures confirm the silhouette is stable. SVG is used only as map-stripped silhouette evidence because cloud WebGL is disabled.",
       "aiVisionNotes": "The corrected render now presents the same broad Standard Deck silhouette: a light square slab above a recessed dark mechanical mass. Fine chamfers, fascia rails, feet, seams, logo, and emissive rhythm remain intentionally absent at blockout and are assigned to later passes."
+    },
+    {
+      "timestamp": "2026-09-08T04:37:14.977307+00:00",
+      "passId": "structural-pass",
+      "estimatedFidelity": 0.75,
+      "aiVisionScore": 0.75,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.83,
+        "componentStructure": 0.84,
+        "formDetail": 0.58,
+        "materialSurface": 0.38,
+        "lightingCamera": 0.61
+      },
+      "featureReviews": [
+        {
+          "id": "layered-platform-structure",
+          "score": 0.83,
+          "notes": "The white shell, darker inset chassis, four fascia zones, and paired underside structures now form a coherent assembled platform."
+        }
+      ],
+      "referenceScreenshot": "public/ui/traversal-platform-hero.png",
+      "renderScreenshot": "docs/art/platform-system/review/structural-pass/render-three-quarter.jpg",
+      "comparisonImage": "docs/art/platform-system/review/structural-pass/comparison.png",
+      "cameraView": "three-quarter",
+      "notes": "Three deployed SVG views show the attachment hierarchy remains connected; no child component floats away from its parent.",
+      "aiVisionNotes": "Against the reference, the render now carries the essential white-shell-over-graphite-chassis construction and a separated underside rhythm. The reference is richer at the corners and fascia, but those named systems are intentionally scheduled for form refinement."
     }
   ],
   "reviewHistory": [
@@ -5460,6 +5487,62 @@
         "cameraView": "three-quarter",
         "notes": "Primary comparison uses the reference-matched three-quarter; front and side orbit captures confirm the silhouette is stable. SVG is used only as map-stripped silhouette evidence because cloud WebGL is disabled.",
         "aiVisionNotes": "The corrected render now presents the same broad Standard Deck silhouette: a light square slab above a recessed dark mechanical mass. Fine chamfers, fascia rails, feet, seams, logo, and emissive rhythm remain intentionally absent at blockout and are assigned to later passes."
+      }
+    },
+    {
+      "timestamp": "2026-09-08T04:37:14.977307+00:00",
+      "passId": "structural-pass",
+      "estimatedFidelity": 0.75,
+      "aiVisionScore": 0.75,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.83,
+        "componentStructure": 0.84,
+        "formDetail": 0.58,
+        "materialSurface": 0.38,
+        "lightingCamera": 0.61
+      },
+      "featureReviews": [
+        {
+          "id": "layered-platform-structure",
+          "score": 0.83,
+          "notes": "The white shell, darker inset chassis, four fascia zones, and paired underside structures now form a coherent assembled platform."
+        }
+      ],
+      "action": "continue",
+      "summary": "Structural pass accepted: perimeter fascia, inset chassis, central cassette, and paired support fins hold together without floating attachments.",
+      "matched": [
+        "Four fascia panels stay attached around the shell perimeter",
+        "graphite chassis remains inset beneath the white shell",
+        "paired fins and cassette create a repeated mechanical underside rhythm",
+        "automated structural render diagnostics pass"
+      ],
+      "mismatches": [
+        "Corner caps cyan rails fasteners and mark remain assigned to form refinement",
+        "surface response remains outside SVG review scope"
+      ],
+      "specFixes": [],
+      "codeFixes": [
+        "Advance to form refinement to add the identity-defining repeated systems"
+      ],
+      "evidence": [
+        "docs/art/platform-system/review/structural-pass/render-three-quarter.jpg",
+        "docs/art/platform-system/review/structural-pass/render-front.jpg",
+        "docs/art/platform-system/review/structural-pass/render-side.jpg",
+        "interiorDifference lower=0.01460 middle=0.02489 upper=0.00084"
+      ],
+      "reviewViewpoints": [
+        "three-quarter",
+        "long-axis",
+        "thickness-axis"
+      ],
+      "visualEvidence": {
+        "referenceScreenshot": "public/ui/traversal-platform-hero.png",
+        "renderScreenshot": "docs/art/platform-system/review/structural-pass/render-three-quarter.jpg",
+        "comparisonImage": "docs/art/platform-system/review/structural-pass/comparison.png",
+        "cameraView": "three-quarter",
+        "notes": "Three deployed SVG views show the attachment hierarchy remains connected; no child component floats away from its parent.",
+        "aiVisionNotes": "Against the reference, the render now carries the essential white-shell-over-graphite-chassis construction and a separated underside rhythm. The reference is richer at the corners and fascia, but those named systems are intentionally scheduled for form refinement."
       }
     }
   ],
@@ -6031,6 +6114,93 @@
       "renderHash": "8425134086c74315",
       "passId": "blockout",
       "mapStrippedRender": "docs/art/platform-system/review/blockout/render-three-quarter.jpg"
+    },
+    {
+      "passed": true,
+      "checks": {
+        "silhouetteIoU": 0.8903,
+        "aspectRatioDelta": 0.0,
+        "scaleDelta": 0.0,
+        "bilateralSymmetryError": 0.0001,
+        "colorDelta": {
+          "checked": 16,
+          "maxDeltaE": 37.72,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 1.89
+            },
+            {
+              "componentId": null,
+              "deltaE": 1.2
+            },
+            {
+              "componentId": null,
+              "deltaE": 1.89
+            },
+            {
+              "componentId": null,
+              "deltaE": 18.24
+            },
+            {
+              "componentId": null,
+              "deltaE": 18.24
+            },
+            {
+              "componentId": null,
+              "deltaE": 1.2
+            },
+            {
+              "componentId": null,
+              "deltaE": 1.2
+            },
+            {
+              "componentId": null,
+              "deltaE": 1.2
+            },
+            {
+              "componentId": null,
+              "deltaE": 1.2
+            },
+            {
+              "componentId": null,
+              "deltaE": 1.89
+            },
+            {
+              "componentId": null,
+              "deltaE": 18.24
+            },
+            {
+              "componentId": null,
+              "deltaE": 18.24
+            },
+            {
+              "componentId": null,
+              "deltaE": 18.24
+            },
+            {
+              "componentId": null,
+              "deltaE": 37.72
+            },
+            {
+              "componentId": null,
+              "deltaE": 18.24
+            },
+            {
+              "componentId": null,
+              "deltaE": 18.24
+            }
+          ],
+          "gated": false
+        }
+      },
+      "failures": [],
+      "maskWarnings": [
+        "reference: image is not clearly isolated from background; using most pixels as material evidence",
+        "render: image is not clearly isolated from background; using most pixels as material evidence"
+      ],
+      "renderHash": "238c746257577299",
+      "passId": "structural-pass"
     }
   ]
 }

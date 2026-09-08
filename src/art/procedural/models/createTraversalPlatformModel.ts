@@ -567,7 +567,7 @@ function makeAttachmentEndpoint(attachment: unknown): AttachmentEndpoint | null 
 }
 
 // Generated from ObjectSculptSpec target: Traversal Moving Platform
-// Sculpt build pass: structural-pass
+// Sculpt build pass: form-refinement
 // This factory is intentionally pass-gated. Finish browser screenshot review before unlocking deeper passes.
 export function createTraversalMovingPlatformModel(options: ProceduralModelOptions = {}): THREE.Group {
   const root = new THREE.Group();
@@ -1099,6 +1099,292 @@ export function createTraversalMovingPlatformModel(options: ProceduralModelOptio
   colliders["support-fin-right"] = {"type": "none", "offset": [0, 0, 0], "scale": [1, 1, 1], "isTrigger": true, "notes": "Presentation-only; authoritative collision remains on the parent gameplay mesh."};
   destructionGroups["support-fin-right"] ??= [];
   destructionGroups["support-fin-right"].push(node_support_fin_right_11);
+
+  const endpoint_corner_caps_12 = makeAttachmentEndpoint(null);
+  const node_corner_caps_12 = new THREE.Group();
+  node_corner_caps_12.name = "Graphite corner cap array__pivot";
+  node_corner_caps_12.scale.set(1, 1, 1);
+  if (endpoint_corner_caps_12) {
+    node_corner_caps_12.position.copy(endpoint_corner_caps_12.start);
+    node_corner_caps_12.rotation.set(0.0, 0.0, 0.0);
+  } else {
+    node_corner_caps_12.position.set(0.43, -0.055, 0.43);
+    node_corner_caps_12.rotation.set(0.0, 0.0, 0.0);
+  }
+  node_corner_caps_12.userData.sculptComponent = {"id": "corner-caps", "name": "Graphite corner cap array", "level": "micro", "role": "hardware", "importance": 0.9, "confidence": 0.94, "primitive": "box", "topologyClass": "assembled-solid", "topologyRationale": "The reference shows a discrete rigid hard-surface part with countable planar faces and manufactured seams.", "geometryDescriptor": {"topologyIntent": "beveled hard-surface game prop", "edgeTreatment": {"type": "chamfer", "bevelRadius": 0.018, "segments": 2}, "deformationStack": [], "uvStrategy": "generated procedural coordinates", "normalStrategy": "weighted vertex normals from generated geometry"}, "colorMaterialRecipe": {"dominantAlbedo": "rgba(65, 76, 85, 1)", "secondaryAlbedo": "rgba(12, 17, 22, 1)", "materialClass": "metal", "materialClassConfidence": 0.93, "colorGradient": {"type": "linear", "axis": [0, 1, 0], "stops": [{"position": 0, "color": "rgba(12, 17, 22, 1)"}, {"position": 1, "color": "rgba(65, 76, 85, 1)"}]}}, "parent": "deck-shell", "attachment": {"parentId": "deck-shell", "parentSocket": "deck-shell-surface", "contactType": "overlap", "localStart": [0.43, -0.055, 0.43], "localEnd": [0.43, -0.055, 0.43], "contactNormal": [0, 1, 0], "overlap": 0.025, "embedDepth": 0.025, "gapTolerance": 0.01, "evidenceRefs": ["front-fascia"]}, "dimensions": {"width": 0.13, "height": 0.2, "depth": 0.13, "units": "relative", "confidence": 0.94}, "transform": {"position": [0.43, -0.055, 0.43], "rotation": [0, 0, 0], "scale": [0.13, 0.2, 0.13]}, "actionProfile": {"animationRole": "static-presentation", "pivot": {"mode": "center", "localPosition": [0, 0, 0], "axis": [0, 1, 0], "confidence": 0.95}, "transformChannels": {"translate": true, "rotate": false, "scale": false, "bend": false, "twist": false, "detach": false, "visibility": true, "materialState": true}, "sockets": [], "collider": {"type": "none", "offset": [0, 0, 0], "scale": [1, 1, 1], "isTrigger": true, "notes": "Presentation-only; authoritative collision remains on the parent gameplay mesh."}, "constraints": [], "destruction": {"breakable": false, "fractureGroup": "corner-caps", "seamRefs": [], "detachableFragments": [], "breakImpulse": 0, "debrisMaterial": "graphite"}}, "material": "dark-detail", "materialLayers": ["dark-detail"], "deformations": [], "joints": [], "seams": [], "localFeatures": ["cap-array", "cyan-nodes"], "surfaceDetail": {"macroRoughness": 0.12, "microRoughness": 0.08, "bumpAmplitude": 0.008, "normalPattern": "fine machined-metal variation", "displacementPattern": "none; silhouette relief is geometry", "occlusionPattern": "darken sockets, seams, and chassis overlaps", "edgeWearPattern": "subtle polished bevel crests", "notes": "Keep microstructure below gameplay silhouette scale."}, "evidenceRefs": ["front-fascia"], "details": ["cap-array", "cyan-nodes"], "fidelityTier": "surface"};
+  node_corner_caps_12.userData.actionProfile = {"animationRole": "static-presentation", "pivot": {"mode": "center", "localPosition": [0, 0, 0], "axis": [0, 1, 0], "confidence": 0.95}, "transformChannels": {"translate": true, "rotate": false, "scale": false, "bend": false, "twist": false, "detach": false, "visibility": true, "materialState": true}, "sockets": [], "collider": {"type": "none", "offset": [0, 0, 0], "scale": [1, 1, 1], "isTrigger": true, "notes": "Presentation-only; authoritative collision remains on the parent gameplay mesh."}, "constraints": [], "destruction": {"breakable": false, "fractureGroup": "corner-caps", "seamRefs": [], "detachableFragments": [], "breakImpulse": 0, "debrisMaterial": "graphite"}};
+  (nodes["deck-shell"] ?? root).add(node_corner_caps_12);
+  nodes["corner-caps"] = node_corner_caps_12;
+  const mesh_corner_caps_12Geometry = endpoint_corner_caps_12
+    ? new THREE.CylinderGeometry(endpoint_corner_caps_12.endRadius, endpoint_corner_caps_12.baseRadius, endpoint_corner_caps_12.length, 16, 6)
+    : new THREE.BoxGeometry(1, 1, 1, 4, 4, 4);
+  if (!endpoint_corner_caps_12) {
+    mesh_corner_caps_12Geometry.scale(0.13, 0.2, 0.13);
+  }
+  const mesh_corner_caps_12 = new THREE.Mesh(
+    mesh_corner_caps_12Geometry,
+    materialMap["dark-detail"] ?? new THREE.MeshStandardMaterial({ color: 0x888888 })
+  );
+  mesh_corner_caps_12.name = "Graphite corner cap array";
+  if (endpoint_corner_caps_12) {
+    mesh_corner_caps_12.position.copy(endpoint_corner_caps_12.midpoint);
+    mesh_corner_caps_12.quaternion.copy(endpoint_corner_caps_12.quaternion);
+  }
+  mesh_corner_caps_12.castShadow = options.castShadow ?? true;
+  mesh_corner_caps_12.receiveShadow = options.receiveShadow ?? true;
+  mesh_corner_caps_12.userData.sculptComponent = {"id": "corner-caps", "name": "Graphite corner cap array", "level": "micro", "role": "hardware", "importance": 0.9, "confidence": 0.94, "primitive": "box", "topologyClass": "assembled-solid", "topologyRationale": "The reference shows a discrete rigid hard-surface part with countable planar faces and manufactured seams.", "geometryDescriptor": {"topologyIntent": "beveled hard-surface game prop", "edgeTreatment": {"type": "chamfer", "bevelRadius": 0.018, "segments": 2}, "deformationStack": [], "uvStrategy": "generated procedural coordinates", "normalStrategy": "weighted vertex normals from generated geometry"}, "colorMaterialRecipe": {"dominantAlbedo": "rgba(65, 76, 85, 1)", "secondaryAlbedo": "rgba(12, 17, 22, 1)", "materialClass": "metal", "materialClassConfidence": 0.93, "colorGradient": {"type": "linear", "axis": [0, 1, 0], "stops": [{"position": 0, "color": "rgba(12, 17, 22, 1)"}, {"position": 1, "color": "rgba(65, 76, 85, 1)"}]}}, "parent": "deck-shell", "attachment": {"parentId": "deck-shell", "parentSocket": "deck-shell-surface", "contactType": "overlap", "localStart": [0.43, -0.055, 0.43], "localEnd": [0.43, -0.055, 0.43], "contactNormal": [0, 1, 0], "overlap": 0.025, "embedDepth": 0.025, "gapTolerance": 0.01, "evidenceRefs": ["front-fascia"]}, "dimensions": {"width": 0.13, "height": 0.2, "depth": 0.13, "units": "relative", "confidence": 0.94}, "transform": {"position": [0.43, -0.055, 0.43], "rotation": [0, 0, 0], "scale": [0.13, 0.2, 0.13]}, "actionProfile": {"animationRole": "static-presentation", "pivot": {"mode": "center", "localPosition": [0, 0, 0], "axis": [0, 1, 0], "confidence": 0.95}, "transformChannels": {"translate": true, "rotate": false, "scale": false, "bend": false, "twist": false, "detach": false, "visibility": true, "materialState": true}, "sockets": [], "collider": {"type": "none", "offset": [0, 0, 0], "scale": [1, 1, 1], "isTrigger": true, "notes": "Presentation-only; authoritative collision remains on the parent gameplay mesh."}, "constraints": [], "destruction": {"breakable": false, "fractureGroup": "corner-caps", "seamRefs": [], "detachableFragments": [], "breakImpulse": 0, "debrisMaterial": "graphite"}}, "material": "dark-detail", "materialLayers": ["dark-detail"], "deformations": [], "joints": [], "seams": [], "localFeatures": ["cap-array", "cyan-nodes"], "surfaceDetail": {"macroRoughness": 0.12, "microRoughness": 0.08, "bumpAmplitude": 0.008, "normalPattern": "fine machined-metal variation", "displacementPattern": "none; silhouette relief is geometry", "occlusionPattern": "darken sockets, seams, and chassis overlaps", "edgeWearPattern": "subtle polished bevel crests", "notes": "Keep microstructure below gameplay silhouette scale."}, "evidenceRefs": ["front-fascia"], "details": ["cap-array", "cyan-nodes"], "fidelityTier": "surface"};
+  node_corner_caps_12.add(mesh_corner_caps_12);
+  meshes["corner-caps"] = mesh_corner_caps_12;
+  colliders["corner-caps"] = {"type": "none", "offset": [0, 0, 0], "scale": [1, 1, 1], "isTrigger": true, "notes": "Presentation-only; authoritative collision remains on the parent gameplay mesh."};
+  destructionGroups["corner-caps"] ??= [];
+  destructionGroups["corner-caps"].push(node_corner_caps_12);
+
+  const endpoint_emitter_cyan_13 = makeAttachmentEndpoint(null);
+  const node_emitter_cyan_13 = new THREE.Group();
+  node_emitter_cyan_13.name = "Cyan rail emitters__pivot";
+  node_emitter_cyan_13.scale.set(1, 1, 1);
+  if (endpoint_emitter_cyan_13) {
+    node_emitter_cyan_13.position.copy(endpoint_emitter_cyan_13.start);
+    node_emitter_cyan_13.rotation.set(0.0, 0.0, 0.0);
+  } else {
+    node_emitter_cyan_13.position.set(0.25, -0.04, 0.041);
+    node_emitter_cyan_13.rotation.set(0.0, 0.0, 0.0);
+  }
+  node_emitter_cyan_13.userData.sculptComponent = {"id": "emitter-cyan", "name": "Cyan rail emitters", "level": "micro", "role": "effect-emitter", "importance": 0.95, "confidence": 0.94, "primitive": "box", "topologyClass": "assembled-solid", "topologyRationale": "The reference shows a discrete rigid hard-surface part with countable planar faces and manufactured seams.", "geometryDescriptor": {"topologyIntent": "beveled hard-surface game prop", "edgeTreatment": {"type": "chamfer", "bevelRadius": 0.018, "segments": 2}, "deformationStack": [], "uvStrategy": "generated procedural coordinates", "normalStrategy": "weighted vertex normals from generated geometry"}, "colorMaterialRecipe": {"dominantAlbedo": "rgba(92, 239, 255, 1)", "secondaryAlbedo": "rgba(12, 97, 126, 1)", "materialClass": "plastic", "materialClassConfidence": 0.82, "colorGradient": {"type": "linear", "axis": [0, 1, 0], "stops": [{"position": 0, "color": "rgba(12, 97, 126, 1)"}, {"position": 1, "color": "rgba(92, 239, 255, 1)"}]}}, "parent": "fascia", "attachment": {"parentId": "fascia", "parentSocket": "fascia-surface", "contactType": "overlap", "localStart": [0.25, -0.04, 0.041], "localEnd": [0.25, -0.04, 0.041], "contactNormal": [0, 1, 0], "overlap": 0.025, "embedDepth": 0.025, "gapTolerance": 0.01, "evidenceRefs": ["front-fascia"]}, "dimensions": {"width": 0.26, "height": 0.032, "depth": 0.018, "units": "relative", "confidence": 0.94}, "transform": {"position": [0.25, -0.04, 0.041], "rotation": [0, 0, 0], "scale": [0.26, 0.032, 0.018]}, "actionProfile": {"animationRole": "static-presentation", "pivot": {"mode": "center", "localPosition": [0, 0, 0], "axis": [0, 1, 0], "confidence": 0.95}, "transformChannels": {"translate": true, "rotate": false, "scale": false, "bend": false, "twist": false, "detach": false, "visibility": true, "materialState": true}, "sockets": [{"id": "cyan-emission", "localPosition": [0, 0, 0.012], "localRotation": [0, 0, 0]}], "collider": {"type": "none", "offset": [0, 0, 0], "scale": [1, 1, 1], "isTrigger": true, "notes": "Presentation-only; authoritative collision remains on the parent gameplay mesh."}, "constraints": [], "destruction": {"breakable": false, "fractureGroup": "emitter-cyan", "seamRefs": [], "detachableFragments": [], "breakImpulse": 0, "debrisMaterial": "graphite"}}, "material": "emitter-cyan", "materialLayers": ["emitter-cyan"], "deformations": [], "joints": [], "seams": [], "localFeatures": ["front-rail", "side-rails"], "surfaceDetail": {"macroRoughness": 0.12, "microRoughness": 0.08, "bumpAmplitude": 0.008, "normalPattern": "fine machined-metal variation", "displacementPattern": "none; silhouette relief is geometry", "occlusionPattern": "darken sockets, seams, and chassis overlaps", "edgeWearPattern": "subtle polished bevel crests", "notes": "Keep microstructure below gameplay silhouette scale."}, "evidenceRefs": ["front-fascia"], "details": ["front-rail", "side-rails"], "fidelityTier": "surface"};
+  node_emitter_cyan_13.userData.actionProfile = {"animationRole": "static-presentation", "pivot": {"mode": "center", "localPosition": [0, 0, 0], "axis": [0, 1, 0], "confidence": 0.95}, "transformChannels": {"translate": true, "rotate": false, "scale": false, "bend": false, "twist": false, "detach": false, "visibility": true, "materialState": true}, "sockets": [{"id": "cyan-emission", "localPosition": [0, 0, 0.012], "localRotation": [0, 0, 0]}], "collider": {"type": "none", "offset": [0, 0, 0], "scale": [1, 1, 1], "isTrigger": true, "notes": "Presentation-only; authoritative collision remains on the parent gameplay mesh."}, "constraints": [], "destruction": {"breakable": false, "fractureGroup": "emitter-cyan", "seamRefs": [], "detachableFragments": [], "breakImpulse": 0, "debrisMaterial": "graphite"}};
+  (nodes["fascia"] ?? root).add(node_emitter_cyan_13);
+  nodes["emitter-cyan"] = node_emitter_cyan_13;
+  const mesh_emitter_cyan_13Geometry = endpoint_emitter_cyan_13
+    ? new THREE.CylinderGeometry(endpoint_emitter_cyan_13.endRadius, endpoint_emitter_cyan_13.baseRadius, endpoint_emitter_cyan_13.length, 16, 6)
+    : new THREE.BoxGeometry(1, 1, 1, 4, 4, 4);
+  if (!endpoint_emitter_cyan_13) {
+    mesh_emitter_cyan_13Geometry.scale(0.26, 0.032, 0.018);
+  }
+  const mesh_emitter_cyan_13 = new THREE.Mesh(
+    mesh_emitter_cyan_13Geometry,
+    materialMap["emitter-cyan"] ?? new THREE.MeshStandardMaterial({ color: 0x888888 })
+  );
+  mesh_emitter_cyan_13.name = "Cyan rail emitters";
+  if (endpoint_emitter_cyan_13) {
+    mesh_emitter_cyan_13.position.copy(endpoint_emitter_cyan_13.midpoint);
+    mesh_emitter_cyan_13.quaternion.copy(endpoint_emitter_cyan_13.quaternion);
+  }
+  mesh_emitter_cyan_13.castShadow = options.castShadow ?? true;
+  mesh_emitter_cyan_13.receiveShadow = options.receiveShadow ?? true;
+  mesh_emitter_cyan_13.userData.sculptComponent = {"id": "emitter-cyan", "name": "Cyan rail emitters", "level": "micro", "role": "effect-emitter", "importance": 0.95, "confidence": 0.94, "primitive": "box", "topologyClass": "assembled-solid", "topologyRationale": "The reference shows a discrete rigid hard-surface part with countable planar faces and manufactured seams.", "geometryDescriptor": {"topologyIntent": "beveled hard-surface game prop", "edgeTreatment": {"type": "chamfer", "bevelRadius": 0.018, "segments": 2}, "deformationStack": [], "uvStrategy": "generated procedural coordinates", "normalStrategy": "weighted vertex normals from generated geometry"}, "colorMaterialRecipe": {"dominantAlbedo": "rgba(92, 239, 255, 1)", "secondaryAlbedo": "rgba(12, 97, 126, 1)", "materialClass": "plastic", "materialClassConfidence": 0.82, "colorGradient": {"type": "linear", "axis": [0, 1, 0], "stops": [{"position": 0, "color": "rgba(12, 97, 126, 1)"}, {"position": 1, "color": "rgba(92, 239, 255, 1)"}]}}, "parent": "fascia", "attachment": {"parentId": "fascia", "parentSocket": "fascia-surface", "contactType": "overlap", "localStart": [0.25, -0.04, 0.041], "localEnd": [0.25, -0.04, 0.041], "contactNormal": [0, 1, 0], "overlap": 0.025, "embedDepth": 0.025, "gapTolerance": 0.01, "evidenceRefs": ["front-fascia"]}, "dimensions": {"width": 0.26, "height": 0.032, "depth": 0.018, "units": "relative", "confidence": 0.94}, "transform": {"position": [0.25, -0.04, 0.041], "rotation": [0, 0, 0], "scale": [0.26, 0.032, 0.018]}, "actionProfile": {"animationRole": "static-presentation", "pivot": {"mode": "center", "localPosition": [0, 0, 0], "axis": [0, 1, 0], "confidence": 0.95}, "transformChannels": {"translate": true, "rotate": false, "scale": false, "bend": false, "twist": false, "detach": false, "visibility": true, "materialState": true}, "sockets": [{"id": "cyan-emission", "localPosition": [0, 0, 0.012], "localRotation": [0, 0, 0]}], "collider": {"type": "none", "offset": [0, 0, 0], "scale": [1, 1, 1], "isTrigger": true, "notes": "Presentation-only; authoritative collision remains on the parent gameplay mesh."}, "constraints": [], "destruction": {"breakable": false, "fractureGroup": "emitter-cyan", "seamRefs": [], "detachableFragments": [], "breakImpulse": 0, "debrisMaterial": "graphite"}}, "material": "emitter-cyan", "materialLayers": ["emitter-cyan"], "deformations": [], "joints": [], "seams": [], "localFeatures": ["front-rail", "side-rails"], "surfaceDetail": {"macroRoughness": 0.12, "microRoughness": 0.08, "bumpAmplitude": 0.008, "normalPattern": "fine machined-metal variation", "displacementPattern": "none; silhouette relief is geometry", "occlusionPattern": "darken sockets, seams, and chassis overlaps", "edgeWearPattern": "subtle polished bevel crests", "notes": "Keep microstructure below gameplay silhouette scale."}, "evidenceRefs": ["front-fascia"], "details": ["front-rail", "side-rails"], "fidelityTier": "surface"};
+  node_emitter_cyan_13.add(mesh_emitter_cyan_13);
+  meshes["emitter-cyan"] = mesh_emitter_cyan_13;
+  colliders["emitter-cyan"] = {"type": "none", "offset": [0, 0, 0], "scale": [1, 1, 1], "isTrigger": true, "notes": "Presentation-only; authoritative collision remains on the parent gameplay mesh."};
+  destructionGroups["emitter-cyan"] ??= [];
+  destructionGroups["emitter-cyan"].push(node_emitter_cyan_13);
+  const socket_emitter_cyan_cyan_emission_0 = new THREE.Object3D();
+  socket_emitter_cyan_cyan_emission_0.name = "cyan-emission";
+  socket_emitter_cyan_cyan_emission_0.position.set(0.0, 0.0, 0.012);
+  socket_emitter_cyan_cyan_emission_0.rotation.set(0.0, 0.0, 0.0);
+  socket_emitter_cyan_cyan_emission_0.userData.socket = {"id": "cyan-emission", "localPosition": [0, 0, 0.012], "localRotation": [0, 0, 0]};
+  node_emitter_cyan_13.add(socket_emitter_cyan_cyan_emission_0);
+  sockets["emitter-cyan:cyan-emission"] = socket_emitter_cyan_cyan_emission_0;
+
+  const endpoint_fasteners_14 = makeAttachmentEndpoint(null);
+  const node_fasteners_14 = new THREE.Group();
+  node_fasteners_14.name = "Countersunk perimeter fasteners__pivot";
+  node_fasteners_14.scale.set(1, 1, 1);
+  if (endpoint_fasteners_14) {
+    node_fasteners_14.position.copy(endpoint_fasteners_14.start);
+    node_fasteners_14.rotation.set(0.0, 0.0, 0.0);
+  } else {
+    node_fasteners_14.position.set(0.0, 0.13, 0.0);
+    node_fasteners_14.rotation.set(0.0, 0.0, 0.0);
+  }
+  node_fasteners_14.userData.sculptComponent = {"id": "fasteners", "name": "Countersunk perimeter fasteners", "level": "micro", "role": "hardware", "importance": 0.62, "confidence": 0.94, "primitive": "instanced-cluster", "topologyClass": "surface-relief", "topologyRationale": "Repeated fastener heads add shallow local relief without defining the platform volume.", "geometryDescriptor": {"topologyIntent": "beveled hard-surface game prop", "edgeTreatment": {"type": "none", "bevelRadius": 0, "segments": 2}, "deformationStack": [], "uvStrategy": "generated procedural coordinates", "normalStrategy": "weighted vertex normals from generated geometry"}, "colorMaterialRecipe": {"dominantAlbedo": "rgba(65, 76, 85, 1)", "secondaryAlbedo": "rgba(12, 17, 22, 1)", "materialClass": "metal", "materialClassConfidence": 0.93, "colorGradient": {"type": "linear", "axis": [0, 1, 0], "stops": [{"position": 0, "color": "rgba(12, 17, 22, 1)"}, {"position": 1, "color": "rgba(65, 76, 85, 1)"}]}}, "parent": "deck-shell", "attachment": {"parentId": "deck-shell", "parentSocket": "deck-shell-surface", "contactType": "overlap", "localStart": [0, 0.13, 0], "localEnd": [0, 0.13, 0], "contactNormal": [0, 1, 0], "overlap": 0.025, "embedDepth": 0.025, "gapTolerance": 0.01, "evidenceRefs": ["top-deck"]}, "dimensions": {"width": 0.018, "height": 0.009, "depth": 0.018, "units": "relative", "confidence": 0.94}, "transform": {"position": [0, 0.13, 0], "rotation": [0, 0, 0], "scale": [0.018, 0.009, 0.018]}, "actionProfile": {"animationRole": "static-presentation", "pivot": {"mode": "center", "localPosition": [0, 0, 0], "axis": [0, 1, 0], "confidence": 0.95}, "transformChannels": {"translate": true, "rotate": false, "scale": false, "bend": false, "twist": false, "detach": false, "visibility": true, "materialState": true}, "sockets": [], "collider": {"type": "none", "offset": [0, 0, 0], "scale": [1, 1, 1], "isTrigger": true, "notes": "Presentation-only; authoritative collision remains on the parent gameplay mesh."}, "constraints": [], "destruction": {"breakable": false, "fractureGroup": "fasteners", "seamRefs": [], "detachableFragments": [], "breakImpulse": 0, "debrisMaterial": "graphite"}}, "material": "dark-detail", "materialLayers": ["dark-detail"], "deformations": [], "joints": [], "seams": [], "localFeatures": ["perimeter-array"], "surfaceDetail": {"macroRoughness": 0.12, "microRoughness": 0.08, "bumpAmplitude": 0.008, "normalPattern": "fine machined-metal variation", "displacementPattern": "none; silhouette relief is geometry", "occlusionPattern": "darken sockets, seams, and chassis overlaps", "edgeWearPattern": "subtle polished bevel crests", "notes": "Keep microstructure below gameplay silhouette scale."}, "evidenceRefs": ["top-deck", "front-fascia"], "details": ["perimeter-array"], "fidelityTier": "surface"};
+  node_fasteners_14.userData.actionProfile = {"animationRole": "static-presentation", "pivot": {"mode": "center", "localPosition": [0, 0, 0], "axis": [0, 1, 0], "confidence": 0.95}, "transformChannels": {"translate": true, "rotate": false, "scale": false, "bend": false, "twist": false, "detach": false, "visibility": true, "materialState": true}, "sockets": [], "collider": {"type": "none", "offset": [0, 0, 0], "scale": [1, 1, 1], "isTrigger": true, "notes": "Presentation-only; authoritative collision remains on the parent gameplay mesh."}, "constraints": [], "destruction": {"breakable": false, "fractureGroup": "fasteners", "seamRefs": [], "detachableFragments": [], "breakImpulse": 0, "debrisMaterial": "graphite"}};
+  (nodes["deck-shell"] ?? root).add(node_fasteners_14);
+  nodes["fasteners"] = node_fasteners_14;
+  const mesh_fasteners_14Geometry = endpoint_fasteners_14
+    ? new THREE.CylinderGeometry(endpoint_fasteners_14.endRadius, endpoint_fasteners_14.baseRadius, endpoint_fasteners_14.length, 16, 6)
+    : new THREE.BoxGeometry(1, 1, 1, 4, 4, 4);
+  if (!endpoint_fasteners_14) {
+    mesh_fasteners_14Geometry.scale(0.018, 0.009, 0.018);
+  }
+  const mesh_fasteners_14 = new THREE.Mesh(
+    mesh_fasteners_14Geometry,
+    materialMap["dark-detail"] ?? new THREE.MeshStandardMaterial({ color: 0x888888 })
+  );
+  mesh_fasteners_14.name = "Countersunk perimeter fasteners";
+  if (endpoint_fasteners_14) {
+    mesh_fasteners_14.position.copy(endpoint_fasteners_14.midpoint);
+    mesh_fasteners_14.quaternion.copy(endpoint_fasteners_14.quaternion);
+  }
+  mesh_fasteners_14.castShadow = options.castShadow ?? true;
+  mesh_fasteners_14.receiveShadow = options.receiveShadow ?? true;
+  mesh_fasteners_14.userData.sculptComponent = {"id": "fasteners", "name": "Countersunk perimeter fasteners", "level": "micro", "role": "hardware", "importance": 0.62, "confidence": 0.94, "primitive": "instanced-cluster", "topologyClass": "surface-relief", "topologyRationale": "Repeated fastener heads add shallow local relief without defining the platform volume.", "geometryDescriptor": {"topologyIntent": "beveled hard-surface game prop", "edgeTreatment": {"type": "none", "bevelRadius": 0, "segments": 2}, "deformationStack": [], "uvStrategy": "generated procedural coordinates", "normalStrategy": "weighted vertex normals from generated geometry"}, "colorMaterialRecipe": {"dominantAlbedo": "rgba(65, 76, 85, 1)", "secondaryAlbedo": "rgba(12, 17, 22, 1)", "materialClass": "metal", "materialClassConfidence": 0.93, "colorGradient": {"type": "linear", "axis": [0, 1, 0], "stops": [{"position": 0, "color": "rgba(12, 17, 22, 1)"}, {"position": 1, "color": "rgba(65, 76, 85, 1)"}]}}, "parent": "deck-shell", "attachment": {"parentId": "deck-shell", "parentSocket": "deck-shell-surface", "contactType": "overlap", "localStart": [0, 0.13, 0], "localEnd": [0, 0.13, 0], "contactNormal": [0, 1, 0], "overlap": 0.025, "embedDepth": 0.025, "gapTolerance": 0.01, "evidenceRefs": ["top-deck"]}, "dimensions": {"width": 0.018, "height": 0.009, "depth": 0.018, "units": "relative", "confidence": 0.94}, "transform": {"position": [0, 0.13, 0], "rotation": [0, 0, 0], "scale": [0.018, 0.009, 0.018]}, "actionProfile": {"animationRole": "static-presentation", "pivot": {"mode": "center", "localPosition": [0, 0, 0], "axis": [0, 1, 0], "confidence": 0.95}, "transformChannels": {"translate": true, "rotate": false, "scale": false, "bend": false, "twist": false, "detach": false, "visibility": true, "materialState": true}, "sockets": [], "collider": {"type": "none", "offset": [0, 0, 0], "scale": [1, 1, 1], "isTrigger": true, "notes": "Presentation-only; authoritative collision remains on the parent gameplay mesh."}, "constraints": [], "destruction": {"breakable": false, "fractureGroup": "fasteners", "seamRefs": [], "detachableFragments": [], "breakImpulse": 0, "debrisMaterial": "graphite"}}, "material": "dark-detail", "materialLayers": ["dark-detail"], "deformations": [], "joints": [], "seams": [], "localFeatures": ["perimeter-array"], "surfaceDetail": {"macroRoughness": 0.12, "microRoughness": 0.08, "bumpAmplitude": 0.008, "normalPattern": "fine machined-metal variation", "displacementPattern": "none; silhouette relief is geometry", "occlusionPattern": "darken sockets, seams, and chassis overlaps", "edgeWearPattern": "subtle polished bevel crests", "notes": "Keep microstructure below gameplay silhouette scale."}, "evidenceRefs": ["top-deck", "front-fascia"], "details": ["perimeter-array"], "fidelityTier": "surface"};
+  node_fasteners_14.add(mesh_fasteners_14);
+  meshes["fasteners"] = mesh_fasteners_14;
+  colliders["fasteners"] = {"type": "none", "offset": [0, 0, 0], "scale": [1, 1, 1], "isTrigger": true, "notes": "Presentation-only; authoritative collision remains on the parent gameplay mesh."};
+  destructionGroups["fasteners"] ??= [];
+  destructionGroups["fasteners"].push(node_fasteners_14);
+
+  const endpoint_traversal_mark_15 = makeAttachmentEndpoint(null);
+  const node_traversal_mark_15 = new THREE.Group();
+  node_traversal_mark_15.name = "Triangular Traversal fascia mark__pivot";
+  node_traversal_mark_15.scale.set(1, 1, 1);
+  if (endpoint_traversal_mark_15) {
+    node_traversal_mark_15.position.copy(endpoint_traversal_mark_15.start);
+    node_traversal_mark_15.rotation.set(0.0, 0.0, 0.0);
+  } else {
+    node_traversal_mark_15.position.set(0.0, 0.015, 0.041);
+    node_traversal_mark_15.rotation.set(0.0, 0.0, 0.0);
+  }
+  node_traversal_mark_15.userData.sculptComponent = {"id": "traversal-mark", "name": "Triangular Traversal fascia mark", "level": "micro", "role": "decal", "importance": 0.96, "confidence": 0.94, "primitive": "plane-card", "topologyClass": "material-only", "topologyRationale": "The logo is a flat graphic carrier with no independent structural volume.", "geometryDescriptor": {"topologyIntent": "thin two-sided decal carrier", "edgeTreatment": {"type": "none", "bevelRadius": 0, "segments": 2}, "deformationStack": [], "uvStrategy": "generated procedural coordinates", "normalStrategy": "weighted vertex normals from generated geometry"}, "colorMaterialRecipe": {"dominantAlbedo": "rgba(65, 76, 85, 1)", "secondaryAlbedo": "rgba(12, 17, 22, 1)", "materialClass": "metal", "materialClassConfidence": 0.93, "colorGradient": {"type": "linear", "axis": [0, 1, 0], "stops": [{"position": 0, "color": "rgba(12, 17, 22, 1)"}, {"position": 1, "color": "rgba(65, 76, 85, 1)"}]}}, "parent": "fascia", "attachment": {"parentId": "fascia", "parentSocket": "fascia-surface", "contactType": "overlap", "localStart": [0, 0.015, 0.041], "localEnd": [0, 0.015, 0.041], "contactNormal": [0, 1, 0], "overlap": 0.025, "embedDepth": 0.025, "gapTolerance": 0.01, "evidenceRefs": ["front-fascia"]}, "dimensions": {"width": 0.075, "height": 0.075, "depth": 0.004, "units": "relative", "confidence": 0.94}, "transform": {"position": [0, 0.015, 0.041], "rotation": [0, 0, 0], "scale": [0.075, 0.075, 0.004]}, "actionProfile": {"animationRole": "static-presentation", "pivot": {"mode": "center", "localPosition": [0, 0, 0], "axis": [0, 1, 0], "confidence": 0.95}, "transformChannels": {"translate": true, "rotate": false, "scale": false, "bend": false, "twist": false, "detach": false, "visibility": true, "materialState": true}, "sockets": [], "collider": {"type": "none", "offset": [0, 0, 0], "scale": [1, 1, 1], "isTrigger": true, "notes": "Presentation-only; authoritative collision remains on the parent gameplay mesh."}, "constraints": [], "destruction": {"breakable": false, "fractureGroup": "traversal-mark", "seamRefs": [], "detachableFragments": [], "breakImpulse": 0, "debrisMaterial": "graphite"}}, "material": "dark-detail", "materialLayers": ["dark-detail"], "deformations": [], "joints": [], "seams": [], "localFeatures": ["nested-triangle"], "surfaceDetail": {"macroRoughness": 0.12, "microRoughness": 0.08, "bumpAmplitude": 0.008, "normalPattern": "fine machined-metal variation", "displacementPattern": "none; silhouette relief is geometry", "occlusionPattern": "darken sockets, seams, and chassis overlaps", "edgeWearPattern": "subtle polished bevel crests", "notes": "Keep microstructure below gameplay silhouette scale."}, "evidenceRefs": ["front-fascia"], "details": ["nested-triangle"], "fidelityTier": "surface"};
+  node_traversal_mark_15.userData.actionProfile = {"animationRole": "static-presentation", "pivot": {"mode": "center", "localPosition": [0, 0, 0], "axis": [0, 1, 0], "confidence": 0.95}, "transformChannels": {"translate": true, "rotate": false, "scale": false, "bend": false, "twist": false, "detach": false, "visibility": true, "materialState": true}, "sockets": [], "collider": {"type": "none", "offset": [0, 0, 0], "scale": [1, 1, 1], "isTrigger": true, "notes": "Presentation-only; authoritative collision remains on the parent gameplay mesh."}, "constraints": [], "destruction": {"breakable": false, "fractureGroup": "traversal-mark", "seamRefs": [], "detachableFragments": [], "breakImpulse": 0, "debrisMaterial": "graphite"}};
+  (nodes["fascia"] ?? root).add(node_traversal_mark_15);
+  nodes["traversal-mark"] = node_traversal_mark_15;
+  const mesh_traversal_mark_15Geometry = endpoint_traversal_mark_15
+    ? new THREE.CylinderGeometry(endpoint_traversal_mark_15.endRadius, endpoint_traversal_mark_15.baseRadius, endpoint_traversal_mark_15.length, 16, 6)
+    : new THREE.PlaneGeometry(1, 1, 12, 12);
+  if (!endpoint_traversal_mark_15) {
+    mesh_traversal_mark_15Geometry.scale(0.075, 0.075, 0.004);
+  }
+  const mesh_traversal_mark_15 = new THREE.Mesh(
+    mesh_traversal_mark_15Geometry,
+    materialMap["dark-detail"] ?? new THREE.MeshStandardMaterial({ color: 0x888888 })
+  );
+  mesh_traversal_mark_15.name = "Triangular Traversal fascia mark";
+  if (endpoint_traversal_mark_15) {
+    mesh_traversal_mark_15.position.copy(endpoint_traversal_mark_15.midpoint);
+    mesh_traversal_mark_15.quaternion.copy(endpoint_traversal_mark_15.quaternion);
+  }
+  mesh_traversal_mark_15.castShadow = options.castShadow ?? true;
+  mesh_traversal_mark_15.receiveShadow = options.receiveShadow ?? true;
+  mesh_traversal_mark_15.userData.sculptComponent = {"id": "traversal-mark", "name": "Triangular Traversal fascia mark", "level": "micro", "role": "decal", "importance": 0.96, "confidence": 0.94, "primitive": "plane-card", "topologyClass": "material-only", "topologyRationale": "The logo is a flat graphic carrier with no independent structural volume.", "geometryDescriptor": {"topologyIntent": "thin two-sided decal carrier", "edgeTreatment": {"type": "none", "bevelRadius": 0, "segments": 2}, "deformationStack": [], "uvStrategy": "generated procedural coordinates", "normalStrategy": "weighted vertex normals from generated geometry"}, "colorMaterialRecipe": {"dominantAlbedo": "rgba(65, 76, 85, 1)", "secondaryAlbedo": "rgba(12, 17, 22, 1)", "materialClass": "metal", "materialClassConfidence": 0.93, "colorGradient": {"type": "linear", "axis": [0, 1, 0], "stops": [{"position": 0, "color": "rgba(12, 17, 22, 1)"}, {"position": 1, "color": "rgba(65, 76, 85, 1)"}]}}, "parent": "fascia", "attachment": {"parentId": "fascia", "parentSocket": "fascia-surface", "contactType": "overlap", "localStart": [0, 0.015, 0.041], "localEnd": [0, 0.015, 0.041], "contactNormal": [0, 1, 0], "overlap": 0.025, "embedDepth": 0.025, "gapTolerance": 0.01, "evidenceRefs": ["front-fascia"]}, "dimensions": {"width": 0.075, "height": 0.075, "depth": 0.004, "units": "relative", "confidence": 0.94}, "transform": {"position": [0, 0.015, 0.041], "rotation": [0, 0, 0], "scale": [0.075, 0.075, 0.004]}, "actionProfile": {"animationRole": "static-presentation", "pivot": {"mode": "center", "localPosition": [0, 0, 0], "axis": [0, 1, 0], "confidence": 0.95}, "transformChannels": {"translate": true, "rotate": false, "scale": false, "bend": false, "twist": false, "detach": false, "visibility": true, "materialState": true}, "sockets": [], "collider": {"type": "none", "offset": [0, 0, 0], "scale": [1, 1, 1], "isTrigger": true, "notes": "Presentation-only; authoritative collision remains on the parent gameplay mesh."}, "constraints": [], "destruction": {"breakable": false, "fractureGroup": "traversal-mark", "seamRefs": [], "detachableFragments": [], "breakImpulse": 0, "debrisMaterial": "graphite"}}, "material": "dark-detail", "materialLayers": ["dark-detail"], "deformations": [], "joints": [], "seams": [], "localFeatures": ["nested-triangle"], "surfaceDetail": {"macroRoughness": 0.12, "microRoughness": 0.08, "bumpAmplitude": 0.008, "normalPattern": "fine machined-metal variation", "displacementPattern": "none; silhouette relief is geometry", "occlusionPattern": "darken sockets, seams, and chassis overlaps", "edgeWearPattern": "subtle polished bevel crests", "notes": "Keep microstructure below gameplay silhouette scale."}, "evidenceRefs": ["front-fascia"], "details": ["nested-triangle"], "fidelityTier": "surface"};
+  node_traversal_mark_15.add(mesh_traversal_mark_15);
+  meshes["traversal-mark"] = mesh_traversal_mark_15;
+  colliders["traversal-mark"] = {"type": "none", "offset": [0, 0, 0], "scale": [1, 1, 1], "isTrigger": true, "notes": "Presentation-only; authoritative collision remains on the parent gameplay mesh."};
+  destructionGroups["traversal-mark"] ??= [];
+  destructionGroups["traversal-mark"].push(node_traversal_mark_15);
+
+  // repetition system: perimeter-fastener-array (InstancedMesh, radial, count=20, level=micro)
+  {
+    const parent = nodes["deck-shell"] ?? root;
+    const geo = new THREE.CylinderGeometry(0.5, 0.5, 1, 24, 8);
+    const mat = materialMap["dark-detail"] ?? new THREE.MeshStandardMaterial({ color: 0x888888 });
+    // Contract (PLAN_1.5 WS-E): instanceScale is ABSOLUTE, in the parent pivot's
+    // local units -- it is never multiplied by the parent component's own declared
+    // dimensional scale. This falls out of the same fix as componentTree: the pivot
+    // Group this cluster is parented to always carries identity scale (dimensions are
+    // baked into that component's OWN geometry, not exposed on the Group), so an
+    // instanced fastener/tooth/spoke sized [0.05, 0.05, 0.05] renders at exactly that
+    // size regardless of how non-uniformly its host component is shaped, and a
+    // `radial` ring's placement stays circular instead of being squashed into an
+    // ellipse by a non-uniform host.
+    const scl = [0.014, 0.006, 0.014];
+    const axis = new THREE.Vector3(0.0, 1.0, 0.0).normalize();
+    const radius = 0.86;
+    const seed = Math.abs(axis.z) < 0.9 ? new THREE.Vector3(0, 0, 1) : new THREE.Vector3(1, 0, 0);
+    const perp = new THREE.Vector3().crossVectors(axis, seed).normalize();
+    // One InstancedMesh = one draw call for all repeated parts (teeth/fasteners/spokes),
+    // replacing the former per-instance Mesh clone loop (real-time perf principle).
+    const cluster = new THREE.InstancedMesh(geo, mat, 20);
+    const _m = new THREE.Matrix4();
+    const _p = new THREE.Vector3();
+    const _q = new THREE.Quaternion();
+    const _s = new THREE.Vector3(scl[0], scl[1], scl[2]);
+    for (let i = 0; i < 20; i++) {
+      const ang = ((9.0) + (i * 360) / 20) * Math.PI / 180;
+      const dir = perp.clone().applyQuaternion(new THREE.Quaternion().setFromAxisAngle(axis, ang));
+      _p.copy(radius > 0 ? dir.clone().multiplyScalar(radius * 0.5) : new THREE.Vector3());
+      _q.setFromUnitVectors(new THREE.Vector3(1, 0, 0), dir);
+      _m.compose(_p, _q, _s);
+      cluster.setMatrixAt(i, _m);
+    }
+    cluster.instanceMatrix.needsUpdate = true;
+    cluster.castShadow = options.castShadow ?? true;
+    cluster.receiveShadow = options.receiveShadow ?? true;
+    cluster.name = "perimeter-fastener-array";
+    parent.add(cluster);
+  }
+
+  // repetition system: corner-cap-array (InstancedMesh, radial, count=4, level=micro)
+  {
+    const parent = nodes["deck-shell"] ?? root;
+    const geo = new THREE.BoxGeometry(1, 1, 1, 4, 4, 4);
+    const mat = materialMap["dark-detail"] ?? new THREE.MeshStandardMaterial({ color: 0x888888 });
+    // Contract (PLAN_1.5 WS-E): instanceScale is ABSOLUTE, in the parent pivot's
+    // local units -- it is never multiplied by the parent component's own declared
+    // dimensional scale. This falls out of the same fix as componentTree: the pivot
+    // Group this cluster is parented to always carries identity scale (dimensions are
+    // baked into that component's OWN geometry, not exposed on the Group), so an
+    // instanced fastener/tooth/spoke sized [0.05, 0.05, 0.05] renders at exactly that
+    // size regardless of how non-uniformly its host component is shaped, and a
+    // `radial` ring's placement stays circular instead of being squashed into an
+    // ellipse by a non-uniform host.
+    const scl = [0.12, 0.18, 0.12];
+    const axis = new THREE.Vector3(0.0, 1.0, 0.0).normalize();
+    const radius = 1.22;
+    const seed = Math.abs(axis.z) < 0.9 ? new THREE.Vector3(0, 0, 1) : new THREE.Vector3(1, 0, 0);
+    const perp = new THREE.Vector3().crossVectors(axis, seed).normalize();
+    // One InstancedMesh = one draw call for all repeated parts (teeth/fasteners/spokes),
+    // replacing the former per-instance Mesh clone loop (real-time perf principle).
+    const cluster = new THREE.InstancedMesh(geo, mat, 4);
+    const _m = new THREE.Matrix4();
+    const _p = new THREE.Vector3();
+    const _q = new THREE.Quaternion();
+    const _s = new THREE.Vector3(scl[0], scl[1], scl[2]);
+    for (let i = 0; i < 4; i++) {
+      const ang = ((45.0) + (i * 360) / 4) * Math.PI / 180;
+      const dir = perp.clone().applyQuaternion(new THREE.Quaternion().setFromAxisAngle(axis, ang));
+      _p.copy(radius > 0 ? dir.clone().multiplyScalar(radius * 0.5) : new THREE.Vector3());
+      _q.setFromUnitVectors(new THREE.Vector3(1, 0, 0), dir);
+      _m.compose(_p, _q, _s);
+      cluster.setMatrixAt(i, _m);
+    }
+    cluster.instanceMatrix.needsUpdate = true;
+    cluster.castShadow = options.castShadow ?? true;
+    cluster.receiveShadow = options.receiveShadow ?? true;
+    cluster.name = "corner-cap-array";
+    parent.add(cluster);
+  }
+
+  // repetition system: cyan-corner-node-array (InstancedMesh, radial, count=4, level=micro)
+  {
+    const parent = nodes["deck-shell"] ?? root;
+    const geo = new THREE.BoxGeometry(1, 1, 1, 4, 4, 4);
+    const mat = materialMap["emitter-cyan"] ?? new THREE.MeshStandardMaterial({ color: 0x888888 });
+    // Contract (PLAN_1.5 WS-E): instanceScale is ABSOLUTE, in the parent pivot's
+    // local units -- it is never multiplied by the parent component's own declared
+    // dimensional scale. This falls out of the same fix as componentTree: the pivot
+    // Group this cluster is parented to always carries identity scale (dimensions are
+    // baked into that component's OWN geometry, not exposed on the Group), so an
+    // instanced fastener/tooth/spoke sized [0.05, 0.05, 0.05] renders at exactly that
+    // size regardless of how non-uniformly its host component is shaped, and a
+    // `radial` ring's placement stays circular instead of being squashed into an
+    // ellipse by a non-uniform host.
+    const scl = [0.04, 0.025, 0.018];
+    const axis = new THREE.Vector3(0.0, 1.0, 0.0).normalize();
+    const radius = 1.12;
+    const seed = Math.abs(axis.z) < 0.9 ? new THREE.Vector3(0, 0, 1) : new THREE.Vector3(1, 0, 0);
+    const perp = new THREE.Vector3().crossVectors(axis, seed).normalize();
+    // One InstancedMesh = one draw call for all repeated parts (teeth/fasteners/spokes),
+    // replacing the former per-instance Mesh clone loop (real-time perf principle).
+    const cluster = new THREE.InstancedMesh(geo, mat, 4);
+    const _m = new THREE.Matrix4();
+    const _p = new THREE.Vector3();
+    const _q = new THREE.Quaternion();
+    const _s = new THREE.Vector3(scl[0], scl[1], scl[2]);
+    for (let i = 0; i < 4; i++) {
+      const ang = ((45.0) + (i * 360) / 4) * Math.PI / 180;
+      const dir = perp.clone().applyQuaternion(new THREE.Quaternion().setFromAxisAngle(axis, ang));
+      _p.copy(radius > 0 ? dir.clone().multiplyScalar(radius * 0.5) : new THREE.Vector3());
+      _q.setFromUnitVectors(new THREE.Vector3(1, 0, 0), dir);
+      _m.compose(_p, _q, _s);
+      cluster.setMatrixAt(i, _m);
+    }
+    cluster.instanceMatrix.needsUpdate = true;
+    cluster.castShadow = options.castShadow ?? true;
+    cluster.receiveShadow = options.receiveShadow ?? true;
+    cluster.name = "cyan-corner-node-array";
+    parent.add(cluster);
+  }
 
   root.userData.sculptRuntime = { nodes, meshes, sockets, colliders, destructionGroups } satisfies ProceduralModelRuntime;
   root.userData.lookDevTargets = {"qualityPriority": "reference-fidelity", "materialPass": {"albedoPaletteRequired": true, "roughnessVariationRequired": true, "normalOrBumpRequired": true, "localOverridesRequired": true, "minimumTextureResolution": 1024, "preferredTextureResolution": 2048, "independentMapChannels": ["albedo", "roughness", "height", "normal", "ambient-occlusion"], "requiredSurfaceFrequencyBands": ["macro", "meso", "micro"], "geometryReliefRequiredWhenSilhouetteAffected": true, "referencePbrExtraction": {"requiredWhenSourceImagePresent": true, "targetThreshold": 0.7, "stopOnLowConfidence": true, "script": "forge/stage1_intake/extract_pbr_evidence.py", "acceptedLimitation": "single-image extraction is reference-derived inference, not exact photogrammetry"}, "mustAvoid": ["single flat albedo per material", "uniform roughness", "albedo texture reused as roughness/height/normal/AO", "single-frequency random noise", "plastic-looking smooth bark, stone, cloth, foliage, or aged material", "local color/detail described only in prose without material masks", "claiming exact PBR recovery when confidence is below the target threshold"]}, "lightingPass": {"requiredTerms": ["key light", "fill light", "rim or environment light", "exposure", "tone mapping", "background", "contact shadow"], "mustAvoid": ["ambient-only lighting", "flat value range", "missing contact shadow", "reference lighting copied without separating material readability"]}, "screenshotReview": ["Compare albedo palette and local color zones.", "Compare roughness/normal/bump response under light.", "Compare cavity dirt, edge wear, stains, moss, scratches, or other local masks.", "Compare key/fill/rim structure, exposure, tone mapping, background, and contact shadows.", "Capture a neutral-light render to verify material readability without reference lighting.", "Capture a grazing-light close-up to expose flat normals, uniform roughness, tiling, and plastic highlights.", "Capture a reference-matched render from the same camera framing as the source."]};
