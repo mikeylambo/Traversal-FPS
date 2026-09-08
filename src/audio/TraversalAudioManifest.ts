@@ -31,6 +31,12 @@ export interface AudioAssetSpec {
   /** Downsample before encoding. Worth it only for the low-frequency looping bed. */
   readonly sampleRate?: number;
   /**
+   * Extra trim from the front, applied after silence-trim. Used to line a layered
+   * take's transient up with the layer underneath it, so the pair reads as one hit
+   * rather than two.
+   */
+  readonly headTrimSeconds?: number;
+  /**
    * Seamless-loop asset. Encoded as WAV rather than AAC: encoder priming would
    * insert an audible gap at every loop point.
    */
@@ -115,16 +121,40 @@ export type TraversalAudioEvent =
   | "ui.confirm"
   | "ui.back"
   | "ui.select"
-  | "ui.hover"
   | "route.fail";
 
 const S = "Traversal FPS SFX";
 
 export const AUDIO_ASSETS: readonly AudioAssetSpec[] = [
   // ---- Rifle / vector grammar -------------------------------------------------
-  { id: "rifle-fire-a", file: "rifle-fire-a.m4a", source: `${S}/rifle_fire_01/“Futuristic_spatial__#1-1788295355960.wav`, channels: 2, maxSeconds: 1.0 },
-  { id: "rifle-fire-b", file: "rifle-fire-b.m4a", source: `${S}/rifle_fire_01/“Futuristic_spatial__#1-1788295355962.wav`, channels: 2, maxSeconds: 1.0 },
-  { id: "rifle-fire-c", file: "rifle-fire-c.m4a", source: `${S}/rifle_fire_01/“Futuristic_spatial__#4-1788295355961.wav`, channels: 2, maxSeconds: 1.0 },
+  {
+    id: "rifle-fire-body",
+    file: "rifle-fire-body.m4a",
+    source: `${S}/rifle_fire_01/“Futuristic_spatial__#1-1788295355962.wav`,
+    channels: 2,
+    maxSeconds: 1.0
+  },
+  {
+    id: "rifle-fire-air",
+    file: "rifle-fire-air.m4a",
+    source: `${S}/rifle_fire_01/“Futuristic_spatial__#1-1788295355960.wav`,
+    channels: 2,
+    maxSeconds: 1.0,
+    // This take peaks 112.9ms in; the body take peaks at 10.7ms. Trimming the
+    // difference puts both transients on the same instant, so the pair lands as one
+    // report rather than a crack followed by a sizzle. The 102ms discarded here is
+    // this take's slow swell into its peak, which is exactly what we do not want
+    // under a weapon that fires every 320ms.
+    headTrimSeconds: 0.1022
+  },
+  {
+    id: "rifle-fire-swell",
+    file: "rifle-fire-swell.m4a",
+    source: `${S}/rifle_fire_01/“Futuristic_spatial__#4-1788295355961.wav`,
+    channels: 2,
+    maxSeconds: 1.0,
+    unused: "231ms attack — a swell, not a report. At the rifle's 320ms cadence it smears into the following shot, and next to the other two takes it reads as a different weapon."
+  },
   { id: "vector-write-body", file: "vector-write-body.m4a", source: `${S}/vector_write/A_spatial_coordinate_#2-1788295356088.wav`, channels: 2, maxSeconds: 1.0 },
   { id: "vector-write-shimmer", file: "vector-write-shimmer.m4a", source: `${S}/vector_write/A_spatial_coordinate_#3-1788295356089.wav`, channels: 2, maxSeconds: 0.9 },
 
@@ -179,9 +209,23 @@ export const AUDIO_ASSETS: readonly AudioAssetSpec[] = [
   { id: "achievement-air", file: "achievement-air.m4a", source: `${S}/achievement_unlock/“Elegant_futuristic__#4-1788296492939.wav`, channels: 2, maxSeconds: 2.0 },
   { id: "ui-confirm", file: "ui-confirm.m4a", source: `${S}/UI/ui_confirm/“Clean_futuristic_in_#1-1788296934242.wav`, channels: 2, maxSeconds: 0.9 },
   { id: "ui-back", file: "ui-back.m4a", source: `${S}/UI/ui_back/“Clean_futuristic_in_#2-1788296950202.wav`, channels: 2, maxSeconds: 0.9 },
-  { id: "ui-select", file: "ui-select.m4a", source: `${S}/UI/ui_error/menu select SFX TraversalFPS.wav`, channels: 2, maxSeconds: 0.7 },
+  {
+    id: "ui-nav-tick",
+    file: "ui-nav-tick.m4a",
+    source: `${S}/UI/ui_hover/“Extremely_subtle_fu_#1-1788296794580.wav`,
+    channels: 2,
+    maxSeconds: 0.5
+  },
+  {
+    id: "ui-menu-select",
+    file: "ui-menu-select.m4a",
+    source: `${S}/UI/ui_error/menu select SFX TraversalFPS.wav`,
+    channels: 2,
+    maxSeconds: 0.7,
+    unused: "Confirm-weight, too substantial to fire on every row a player passes through. The ui_confirm take already covers activation; this is the alternate for it if that one ever feels too light."
+  },
   { id: "route-fail", file: "route-fail.m4a", source: `${S}/UI/ui_error/“Minimal_futuristic__#4-1788297007444.wav`, channels: 2, maxSeconds: 0.9 },
-  { id: "ui-hover", file: "ui-hover.m4a", source: `${S}/UI/ui_hover/“Extremely_subtle_fu_#1-1788296794580.wav`, channels: 2, maxSeconds: 0.5 },
+
 
   // ---- Authored, intentionally unused ----------------------------------------
   {
@@ -208,11 +252,16 @@ export const AUDIO_CUES: Readonly<Record<TraversalAudioEvent, AudioCueSpec>> = {
     bus: "sfx",
     tier: "core",
     gain: 0.85,
-    pitchJitter: 0.022,
+    // With no round-robin, jitter is what keeps a 320ms cadence from sounding
+    // mechanical. Both layers move together, so the weapon stays one object.
+    pitchJitter: 0.03,
     maxVoices: 4,
-    slots: [{ assets: ["rifle-fire-a", "rifle-fire-b", "rifle-fire-c"], pick: "cycle" }],
+    slots: [
+      { assets: ["rifle-fire-body"] },
+      { assets: ["rifle-fire-air"], gain: 0.5 }
+    ],
     visualPair: "Muzzle FX + shot trace + `body.rifle-fired` impulse.",
-    note: "Three takes round-robin rather than layer: the rifle fires every 320ms and repetition, not thinness, is the failure mode."
+    note: "Layered, not alternated. The three authored takes are not peers: one has a 10.7ms transient and 65% of its energy below 200Hz, one is bright and airy with a weak low end, one is a 231ms swell. Round-robin across them read as three different weapons. The first two are complementary, so they layer into a single consistent report — body plus air — and the swell is held back."
   },
   "vector.write": {
     bus: "sfx",
@@ -481,11 +530,13 @@ export const AUDIO_CUES: Readonly<Record<TraversalAudioEvent, AudioCueSpec>> = {
   "ui.select": {
     bus: "ui",
     tier: "core",
-    gain: 0.7,
-    cooldownMs: 40,
-    slots: [{ assets: ["ui-select"] }],
+    // A row tick fires more often than any other menu sound, so it sits well under
+    // confirm and back rather than level with them.
+    gain: 0.4,
+    cooldownMs: 45,
+    slots: [{ assets: ["ui-nav-tick"] }],
     visualPair: "Focus ring moves. presentation-only.",
-    note: "The author-named `menu select SFX TraversalFPS.wav` was filed under ui_error. Its name is the stronger signal, so it drives menu navigation and the other take in that folder is the error cue."
+    note: "Keyboard and controller only. Moving a mouse across a list is passive — it sweeps several rows in one gesture and the focus styling already shows where you are — so pointer hover is deliberately silent."
   },
   "route.fail": {
     bus: "sfx",
@@ -494,8 +545,7 @@ export const AUDIO_CUES: Readonly<Record<TraversalAudioEvent, AudioCueSpec>> = {
     slots: [{ assets: ["route-fail"] }],
     visualPair: "`CLEAN ROUTE FAILED // …` flash message + the run resetting the room.",
     note: "The authored ui_error take earns its keep on the one denial a player actually meets: a Challenge clean-route failure. The Shell skips disabled menu rows, so a menu error state is unreachable and wiring it there would have been dead audio."
-  },
-  "ui.hover": { bus: "ui", tier: "core", gain: 0.95, cooldownMs: 40, slots: [{ assets: ["ui-hover"] }], visualPair: "Hover styling. presentation-only." }
+  }
 };
 
 export const AUDIO_EVENT_IDS = Object.keys(AUDIO_CUES) as TraversalAudioEvent[];
