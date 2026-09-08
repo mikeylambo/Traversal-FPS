@@ -39,12 +39,14 @@ const model = createTraversalMovingPlatformModel();
 if (!webglRenderer) {
   model.traverse((object) => {
     if (!(object instanceof THREE.Mesh)) return;
-    const componentId = object.userData.sculptComponent?.id as string | undefined;
-    const color = componentId === "deck-shell"
+    const component = object.userData.sculptComponent as { id?: string; material?: string } | undefined;
+    const color = component?.material === "shell-white"
       ? 0xe7ecef
-      : componentId === "central-cassette"
-        ? 0x0a1117
-        : 0x17232c;
+      : component?.material === "emitter-cyan"
+        ? 0x26d9f2
+        : component?.id === "central-cassette" || component?.material === "dark-detail"
+          ? 0x0a1117
+          : 0x17232c;
     object.material = new THREE.MeshBasicMaterial({ color });
   });
 }
