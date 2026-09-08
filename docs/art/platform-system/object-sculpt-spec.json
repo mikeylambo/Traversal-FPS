@@ -714,7 +714,10 @@
       "minimumScore": 0.82,
       "mustPass": true,
       "componentRefs": [
-        "emitter-cyan"
+        "emitter-cyan",
+        "emitter-front-left",
+        "emitter-left-side",
+        "emitter-right-side"
       ],
       "evidenceRefs": [
         "front-fascia"
@@ -3514,6 +3517,582 @@
         "nested-triangle"
       ],
       "fidelityTier": "surface"
+    },
+    {
+      "id": "emitter-front-left",
+      "name": "Mirrored front cyan rail",
+      "level": "micro",
+      "role": "effect-emitter",
+      "importance": 0.95,
+      "confidence": 0.94,
+      "primitive": "box",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "The reference shows a discrete rigid hard-surface part with countable planar faces and manufactured seams.",
+      "geometryDescriptor": {
+        "topologyIntent": "beveled hard-surface game prop",
+        "edgeTreatment": {
+          "type": "chamfer",
+          "bevelRadius": 0.018,
+          "segments": 2
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "weighted vertex normals from generated geometry"
+      },
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(92, 239, 255, 1)",
+        "secondaryAlbedo": "rgba(12, 97, 126, 1)",
+        "materialClass": "plastic",
+        "materialClassConfidence": 0.82,
+        "colorGradient": {
+          "type": "linear",
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "stops": [
+            {
+              "position": 0,
+              "color": "rgba(12, 97, 126, 1)"
+            },
+            {
+              "position": 1,
+              "color": "rgba(92, 239, 255, 1)"
+            }
+          ]
+        }
+      },
+      "parent": "fascia",
+      "attachment": {
+        "parentId": "fascia",
+        "parentSocket": "fascia-surface",
+        "contactType": "overlap",
+        "localStart": [
+          -0.25,
+          -0.04,
+          0.041
+        ],
+        "localEnd": [
+          -0.25,
+          -0.04,
+          0.041
+        ],
+        "contactNormal": [
+          0,
+          1,
+          0
+        ],
+        "overlap": 0.025,
+        "embedDepth": 0.025,
+        "gapTolerance": 0.01,
+        "evidenceRefs": [
+          "front-fascia"
+        ]
+      },
+      "dimensions": {
+        "width": 0.26,
+        "height": 0.032,
+        "depth": 0.018,
+        "units": "relative",
+        "confidence": 0.94
+      },
+      "transform": {
+        "position": [
+          -0.25,
+          -0.04,
+          0.041
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          0.26,
+          0.032,
+          0.018
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static-presentation",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.95
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": false,
+          "scale": false,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [
+          {
+            "id": "cyan-emission",
+            "localPosition": [
+              0,
+              0,
+              0.012
+            ],
+            "localRotation": [
+              0,
+              0,
+              0
+            ]
+          }
+        ],
+        "collider": {
+          "type": "none",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": true,
+          "notes": "Presentation-only; authoritative collision remains on the parent gameplay mesh."
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "emitter-front-left",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0,
+          "debrisMaterial": "graphite"
+        }
+      },
+      "material": "emitter-cyan",
+      "materialLayers": [
+        "emitter-cyan"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [
+        "front-rail",
+        "side-rails"
+      ],
+      "surfaceDetail": {
+        "macroRoughness": 0.12,
+        "microRoughness": 0.08,
+        "bumpAmplitude": 0.008,
+        "normalPattern": "fine machined-metal variation",
+        "displacementPattern": "none; silhouette relief is geometry",
+        "occlusionPattern": "darken sockets, seams, and chassis overlaps",
+        "edgeWearPattern": "subtle polished bevel crests",
+        "notes": "Keep microstructure below gameplay silhouette scale."
+      },
+      "evidenceRefs": [
+        "front-fascia"
+      ],
+      "details": [
+        "front-rail",
+        "side-rails"
+      ],
+      "fidelityTier": "surface"
+    },
+    {
+      "id": "emitter-left-side",
+      "name": "Left lateral cyan rail",
+      "level": "micro",
+      "role": "effect-emitter",
+      "importance": 0.95,
+      "confidence": 0.94,
+      "primitive": "box",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "The reference shows a discrete rigid hard-surface part with countable planar faces and manufactured seams.",
+      "geometryDescriptor": {
+        "topologyIntent": "beveled hard-surface game prop",
+        "edgeTreatment": {
+          "type": "chamfer",
+          "bevelRadius": 0.018,
+          "segments": 2
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "weighted vertex normals from generated geometry"
+      },
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(92, 239, 255, 1)",
+        "secondaryAlbedo": "rgba(12, 97, 126, 1)",
+        "materialClass": "plastic",
+        "materialClassConfidence": 0.82,
+        "colorGradient": {
+          "type": "linear",
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "stops": [
+            {
+              "position": 0,
+              "color": "rgba(12, 97, 126, 1)"
+            },
+            {
+              "position": 1,
+              "color": "rgba(92, 239, 255, 1)"
+            }
+          ]
+        }
+      },
+      "parent": "left-fascia",
+      "attachment": {
+        "parentId": "left-fascia",
+        "parentSocket": "left-fascia-surface",
+        "contactType": "overlap",
+        "localStart": [
+          -0.041,
+          -0.04,
+          0.23
+        ],
+        "localEnd": [
+          -0.041,
+          -0.04,
+          0.23
+        ],
+        "contactNormal": [
+          -1,
+          0,
+          0
+        ],
+        "overlap": 0.025,
+        "embedDepth": 0.025,
+        "gapTolerance": 0.01,
+        "evidenceRefs": [
+          "front-fascia"
+        ]
+      },
+      "dimensions": {
+        "width": 0.018,
+        "height": 0.032,
+        "depth": 0.26,
+        "units": "relative",
+        "confidence": 0.94
+      },
+      "transform": {
+        "position": [
+          -0.041,
+          -0.04,
+          0.23
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          0.018,
+          0.032,
+          0.26
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static-presentation",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.95
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": false,
+          "scale": false,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [
+          {
+            "id": "cyan-emission",
+            "localPosition": [
+              0,
+              0,
+              0.012
+            ],
+            "localRotation": [
+              0,
+              0,
+              0
+            ]
+          }
+        ],
+        "collider": {
+          "type": "none",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": true,
+          "notes": "Presentation-only; authoritative collision remains on the parent gameplay mesh."
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "emitter-left-side",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0,
+          "debrisMaterial": "graphite"
+        }
+      },
+      "material": "emitter-cyan",
+      "materialLayers": [
+        "emitter-cyan"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [
+        "front-rail",
+        "side-rails"
+      ],
+      "surfaceDetail": {
+        "macroRoughness": 0.12,
+        "microRoughness": 0.08,
+        "bumpAmplitude": 0.008,
+        "normalPattern": "fine machined-metal variation",
+        "displacementPattern": "none; silhouette relief is geometry",
+        "occlusionPattern": "darken sockets, seams, and chassis overlaps",
+        "edgeWearPattern": "subtle polished bevel crests",
+        "notes": "Keep microstructure below gameplay silhouette scale."
+      },
+      "evidenceRefs": [
+        "front-fascia"
+      ],
+      "details": [
+        "front-rail",
+        "side-rails"
+      ],
+      "fidelityTier": "surface"
+    },
+    {
+      "id": "emitter-right-side",
+      "name": "Right lateral cyan rail",
+      "level": "micro",
+      "role": "effect-emitter",
+      "importance": 0.95,
+      "confidence": 0.94,
+      "primitive": "box",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "The reference shows a discrete rigid hard-surface part with countable planar faces and manufactured seams.",
+      "geometryDescriptor": {
+        "topologyIntent": "beveled hard-surface game prop",
+        "edgeTreatment": {
+          "type": "chamfer",
+          "bevelRadius": 0.018,
+          "segments": 2
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "weighted vertex normals from generated geometry"
+      },
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(92, 239, 255, 1)",
+        "secondaryAlbedo": "rgba(12, 97, 126, 1)",
+        "materialClass": "plastic",
+        "materialClassConfidence": 0.82,
+        "colorGradient": {
+          "type": "linear",
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "stops": [
+            {
+              "position": 0,
+              "color": "rgba(12, 97, 126, 1)"
+            },
+            {
+              "position": 1,
+              "color": "rgba(92, 239, 255, 1)"
+            }
+          ]
+        }
+      },
+      "parent": "right-fascia",
+      "attachment": {
+        "parentId": "right-fascia",
+        "parentSocket": "right-fascia-surface",
+        "contactType": "overlap",
+        "localStart": [
+          0.041,
+          -0.04,
+          -0.23
+        ],
+        "localEnd": [
+          0.041,
+          -0.04,
+          -0.23
+        ],
+        "contactNormal": [
+          1,
+          0,
+          0
+        ],
+        "overlap": 0.025,
+        "embedDepth": 0.025,
+        "gapTolerance": 0.01,
+        "evidenceRefs": [
+          "front-fascia"
+        ]
+      },
+      "dimensions": {
+        "width": 0.018,
+        "height": 0.032,
+        "depth": 0.26,
+        "units": "relative",
+        "confidence": 0.94
+      },
+      "transform": {
+        "position": [
+          0.041,
+          -0.04,
+          -0.23
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          0.018,
+          0.032,
+          0.26
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static-presentation",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.95
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": false,
+          "scale": false,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [
+          {
+            "id": "cyan-emission",
+            "localPosition": [
+              0,
+              0,
+              0.012
+            ],
+            "localRotation": [
+              0,
+              0,
+              0
+            ]
+          }
+        ],
+        "collider": {
+          "type": "none",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": true,
+          "notes": "Presentation-only; authoritative collision remains on the parent gameplay mesh."
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "emitter-right-side",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0,
+          "debrisMaterial": "graphite"
+        }
+      },
+      "material": "emitter-cyan",
+      "materialLayers": [
+        "emitter-cyan"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [
+        "front-rail",
+        "side-rails"
+      ],
+      "surfaceDetail": {
+        "macroRoughness": 0.12,
+        "microRoughness": 0.08,
+        "bumpAmplitude": 0.008,
+        "normalPattern": "fine machined-metal variation",
+        "displacementPattern": "none; silhouette relief is geometry",
+        "occlusionPattern": "darken sockets, seams, and chassis overlaps",
+        "edgeWearPattern": "subtle polished bevel crests",
+        "notes": "Keep microstructure below gameplay silhouette scale."
+      },
+      "evidenceRefs": [
+        "front-fascia"
+      ],
+      "details": [
+        "front-rail",
+        "side-rails"
+      ],
+      "fidelityTier": "surface"
     }
   ],
   "materials": [
@@ -4776,19 +5355,22 @@
       "id": "form-refinement",
       "goal": "Refine shape, deformation, bevels, tapers, curves, asymmetry, and visible local geometry.",
       "componentRefs": [
-        "deck-shell",
-        "undercarriage",
-        "top-panel-x",
-        "top-panel-z",
-        "fascia",
-        "rear-fascia",
-        "left-fascia",
-        "right-fascia",
         "central-cassette",
+        "deck-shell",
+        "emitter-cyan",
+        "emitter-front-left",
+        "emitter-left-side",
+        "emitter-right-side",
+        "fascia",
+        "left-fascia",
+        "rear-fascia",
+        "right-fascia",
         "support-fin-left",
         "support-fin-right",
-        "emitter-cyan",
-        "traversal-mark"
+        "top-panel-x",
+        "top-panel-z",
+        "traversal-mark",
+        "undercarriage"
       ],
       "acceptance": [
         "Important visible forms are represented in component geometryDescriptor, deformations, localFeatures, or repetitionSystems.",
@@ -4800,20 +5382,23 @@
       "id": "material-pass",
       "goal": "Match material color, roughness, bump, and local variation.",
       "componentRefs": [
-        "root",
-        "deck-shell",
-        "undercarriage",
-        "top-panel-x",
-        "top-panel-z",
-        "fascia",
-        "rear-fascia",
-        "left-fascia",
-        "right-fascia",
         "central-cassette",
+        "deck-shell",
+        "emitter-cyan",
+        "emitter-front-left",
+        "emitter-left-side",
+        "emitter-right-side",
+        "fascia",
+        "left-fascia",
+        "rear-fascia",
+        "right-fascia",
+        "root",
         "support-fin-left",
         "support-fin-right",
-        "emitter-cyan",
-        "traversal-mark"
+        "top-panel-x",
+        "top-panel-z",
+        "traversal-mark",
+        "undercarriage"
       ],
       "acceptance": [
         "Reference-derived albedo palette records dominant, secondary, and accent colors per visible material.",
@@ -4831,20 +5416,23 @@
       "id": "surface-pass",
       "goal": "Add procedural surface locality such as normal/bump/displacement, AO, dirt, stains, chips, grain, moss, scratches, and wear.",
       "componentRefs": [
-        "root",
-        "deck-shell",
-        "undercarriage",
-        "top-panel-x",
-        "top-panel-z",
-        "fascia",
-        "rear-fascia",
-        "left-fascia",
-        "right-fascia",
         "central-cassette",
+        "deck-shell",
+        "emitter-cyan",
+        "emitter-front-left",
+        "emitter-left-side",
+        "emitter-right-side",
+        "fascia",
+        "left-fascia",
+        "rear-fascia",
+        "right-fascia",
+        "root",
         "support-fin-left",
         "support-fin-right",
-        "emitter-cyan",
-        "traversal-mark"
+        "top-panel-x",
+        "top-panel-z",
+        "traversal-mark",
+        "undercarriage"
       ],
       "acceptance": [
         "Every required material feature group has local overrides or surfaceDetail tied to evidenceRefs.",
@@ -4856,20 +5444,23 @@
       "id": "lighting-pass",
       "goal": "Make material and form readable under neutral turntable lighting plus optional reference lighting.",
       "componentRefs": [
-        "root",
-        "deck-shell",
-        "undercarriage",
-        "top-panel-x",
-        "top-panel-z",
-        "fascia",
-        "rear-fascia",
-        "left-fascia",
-        "right-fascia",
         "central-cassette",
+        "deck-shell",
+        "emitter-cyan",
+        "emitter-front-left",
+        "emitter-left-side",
+        "emitter-right-side",
+        "fascia",
+        "left-fascia",
+        "rear-fascia",
+        "right-fascia",
+        "root",
         "support-fin-left",
         "support-fin-right",
-        "emitter-cyan",
-        "traversal-mark"
+        "top-panel-x",
+        "top-panel-z",
+        "traversal-mark",
+        "undercarriage"
       ],
       "acceptance": [
         "lightingFromPhoto identifies key light direction/color/intensity, fill light, rim or environment light, and ambient color.",
@@ -4883,20 +5474,23 @@
       "id": "interaction-pass",
       "goal": "Make the model ready for future animation, transformation, physics, or destruction.",
       "componentRefs": [
-        "root",
-        "deck-shell",
-        "undercarriage",
-        "top-panel-x",
-        "top-panel-z",
-        "fascia",
-        "rear-fascia",
-        "left-fascia",
-        "right-fascia",
         "central-cassette",
+        "deck-shell",
+        "emitter-cyan",
+        "emitter-front-left",
+        "emitter-left-side",
+        "emitter-right-side",
+        "fascia",
+        "left-fascia",
+        "rear-fascia",
+        "right-fascia",
+        "root",
         "support-fin-left",
         "support-fin-right",
-        "emitter-cyan",
-        "traversal-mark"
+        "top-panel-x",
+        "top-panel-z",
+        "traversal-mark",
+        "undercarriage"
       ],
       "acceptance": [
         "Macro and movable meso components have stable pivot nodes.",
@@ -4908,20 +5502,23 @@
       "id": "optimization-pass",
       "goal": "Protect runtime performance after visual fidelity is accepted.",
       "componentRefs": [
-        "root",
-        "deck-shell",
-        "undercarriage",
-        "top-panel-x",
-        "top-panel-z",
-        "fascia",
-        "rear-fascia",
-        "left-fascia",
-        "right-fascia",
         "central-cassette",
+        "deck-shell",
+        "emitter-cyan",
+        "emitter-front-left",
+        "emitter-left-side",
+        "emitter-right-side",
+        "fascia",
+        "left-fascia",
+        "rear-fascia",
+        "right-fascia",
+        "root",
         "support-fin-left",
         "support-fin-right",
-        "emitter-cyan",
-        "traversal-mark"
+        "top-panel-x",
+        "top-panel-z",
+        "traversal-mark",
+        "undercarriage"
       ],
       "acceptance": [
         "Triangle count, draw calls, instancing, LOD strategy, and FPS target are documented or verified.",
@@ -5042,6 +5639,36 @@
       "cameraView": "three-quarter",
       "notes": "Rejected after one deployed screenshot; more angles would repeat the same renderer defect.",
       "aiVisionNotes": "The rendered image is not a meaningful likeness of the reference because SVGRenderer does not apply Three.js InstancedMesh transforms. The failure is isolated to review rendering; the generated WebGL asset should remain instanced."
+    },
+    {
+      "timestamp": "2026-09-08T04:51:51.634774+00:00",
+      "passId": "form-refinement",
+      "estimatedFidelity": 0.63,
+      "aiVisionScore": 0.63,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.82,
+        "componentStructure": 0.78,
+        "formDetail": 0.67,
+        "materialSurface": 0.48,
+        "lightingCamera": 0.61
+      },
+      "featureReviews": [
+        {
+          "id": "layered-platform-structure",
+          "score": 0.8
+        },
+        {
+          "id": "cyan-rail-rhythm",
+          "score": 0.52
+        }
+      ],
+      "referenceScreenshot": "public/ui/traversal-platform-hero.png",
+      "renderScreenshot": "docs/art/platform-system/review/form-refinement/render-single-rail-failed.jpg",
+      "comparisonImage": "docs/art/platform-system/review/form-refinement/comparison-single-rail-failed.png",
+      "cameraView": "three-quarter",
+      "notes": "One deployed three-quarter view is sufficient to identify the missing repeated rail system.",
+      "aiVisionNotes": "The core structure is now readable, but the cyan light language is an identity-defining system and is visibly underrepresented. The next spec revision should mirror the front rail and add lateral rails at the same fascia height."
     }
   ],
   "reviewHistory": [
@@ -5261,6 +5888,59 @@
         "cameraView": "three-quarter",
         "notes": "Rejected after one deployed screenshot; more angles would repeat the same renderer defect.",
         "aiVisionNotes": "The rendered image is not a meaningful likeness of the reference because SVGRenderer does not apply Three.js InstancedMesh transforms. The failure is isolated to review rendering; the generated WebGL asset should remain instanced."
+      }
+    },
+    {
+      "timestamp": "2026-09-08T04:51:51.634774+00:00",
+      "passId": "form-refinement",
+      "estimatedFidelity": 0.63,
+      "aiVisionScore": 0.63,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.82,
+        "componentStructure": 0.78,
+        "formDetail": 0.67,
+        "materialSurface": 0.48,
+        "lightingCamera": 0.61
+      },
+      "featureReviews": [
+        {
+          "id": "layered-platform-structure",
+          "score": 0.8
+        },
+        {
+          "id": "cyan-rail-rhythm",
+          "score": 0.52
+        }
+      ],
+      "action": "refine-spec",
+      "summary": "Form pass remains below acceptance because the reference-defining cyan perimeter rhythm is represented by only one fascia rail.",
+      "matched": [
+        "Instance expansion now preserves the platform silhouette",
+        "corner cap and fastener arrays occupy the intended perimeter",
+        "top seam system is visible"
+      ],
+      "mismatches": [
+        "Only one cyan fascia rail is authored",
+        "the reference repeats cyan bars across the front and lateral faces",
+        "corner overlap remains coarse in SVG"
+      ],
+      "specFixes": [
+        "Add a mirrored front cyan rail and one rail on each lateral fascia as explicit attached components",
+        "retain corner cyan nodes as the repeated system"
+      ],
+      "codeFixes": [],
+      "evidence": [],
+      "reviewViewpoints": [
+        "three-quarter"
+      ],
+      "visualEvidence": {
+        "referenceScreenshot": "public/ui/traversal-platform-hero.png",
+        "renderScreenshot": "docs/art/platform-system/review/form-refinement/render-single-rail-failed.jpg",
+        "comparisonImage": "docs/art/platform-system/review/form-refinement/comparison-single-rail-failed.png",
+        "cameraView": "three-quarter",
+        "notes": "One deployed three-quarter view is sufficient to identify the missing repeated rail system.",
+        "aiVisionNotes": "The core structure is now readable, but the cyan light language is an identity-defining system and is visibly underrepresented. The next spec revision should mirror the front rail and add lateral rails at the same fascia height."
       }
     }
   ],
@@ -6005,6 +6685,85 @@
         "render: image is not clearly isolated from background; using most pixels as material evidence"
       ],
       "renderHash": "5c88fb0aff8b5fd9",
+      "passId": "form-refinement"
+    },
+    {
+      "passed": true,
+      "checks": {
+        "silhouetteIoU": 0.8903,
+        "aspectRatioDelta": 0.0,
+        "scaleDelta": 0.0,
+        "bilateralSymmetryError": 0.0001,
+        "colorDelta": {
+          "checked": 14,
+          "maxDeltaE": 37.2,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 1.91
+            },
+            {
+              "componentId": null,
+              "deltaE": 2.14
+            },
+            {
+              "componentId": null,
+              "deltaE": 1.91
+            },
+            {
+              "componentId": null,
+              "deltaE": 18.27
+            },
+            {
+              "componentId": null,
+              "deltaE": 18.27
+            },
+            {
+              "componentId": null,
+              "deltaE": 2.14
+            },
+            {
+              "componentId": null,
+              "deltaE": 2.14
+            },
+            {
+              "componentId": null,
+              "deltaE": 2.14
+            },
+            {
+              "componentId": null,
+              "deltaE": 2.14
+            },
+            {
+              "componentId": null,
+              "deltaE": 1.91
+            },
+            {
+              "componentId": null,
+              "deltaE": 18.27
+            },
+            {
+              "componentId": null,
+              "deltaE": 18.27
+            },
+            {
+              "componentId": null,
+              "deltaE": 37.2
+            },
+            {
+              "componentId": null,
+              "deltaE": 18.27
+            }
+          ],
+          "gated": false
+        }
+      },
+      "failures": [],
+      "maskWarnings": [
+        "reference: image is not clearly isolated from background; using most pixels as material evidence",
+        "render: image is not clearly isolated from background; using most pixels as material evidence"
+      ],
+      "renderHash": "0212fc14760f26e5",
       "passId": "form-refinement"
     }
   ]
