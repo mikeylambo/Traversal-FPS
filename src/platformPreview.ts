@@ -36,6 +36,18 @@ if (webglRenderer) scene.environment = createTraversalMovingPlatformEnvironment(
 scene.add(createTraversalMovingPlatformLookDevLights("reference"));
 
 const model = createTraversalMovingPlatformModel();
+if (!webglRenderer) {
+  model.traverse((object) => {
+    if (!(object instanceof THREE.Mesh)) return;
+    const componentId = object.userData.sculptComponent?.id as string | undefined;
+    const color = componentId === "deck-shell"
+      ? 0xe7ecef
+      : componentId === "central-cassette"
+        ? 0x0a1117
+        : 0x17232c;
+    object.material = new THREE.MeshBasicMaterial({ color });
+  });
+}
 model.rotation.y = THREE.MathUtils.degToRad(Number(new URLSearchParams(location.search).get("angle") ?? 24));
 scene.add(model);
 
