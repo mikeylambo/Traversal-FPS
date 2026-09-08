@@ -1,5 +1,7 @@
+import { setTraversalAudioSuspended } from "../audio/TraversalAudio";
 import { resolveTraversalAction } from "../input/TraversalBindings";
 import type { TraversalActionId } from "../input/TraversalActions";
+import { installAimAssistRuntime } from "./AimAssistRuntime";
 import type { TraversalSettingsStore } from "./TraversalSettings";
 
 type GameplayInput = {
@@ -15,7 +17,13 @@ type GameplayInput = {
 
 type RuntimeState = {
   input: GameplayInput;
+  shell: {
+    events: { on(event: string, handler: () => void): void };
+  };
+  tutorialUntil: number;
   update(dt: number): void;
+  loadRoom(index: number): void;
+  flashMessage(message: string, duration: number): void;
 };
 
 type PadFrame = {
@@ -67,7 +75,7 @@ export function installGamepadGameplay(game: object, settings: TraversalSettings
     previousWarp = frame.warpHeld;
     if (frame.wheelDelta !== 0) {
       adjustRepeatAt = performance.now() + 82;
-      rumbleLandingAdjustment();
+      if (settings.value.accessibility.haptics) rumbleLandingAdjustment();
     }
     document.body.classList.toggle("gamepad-active", hasStandardGamepad());
     if (frame.scopePressed) {
@@ -95,6 +103,73 @@ export function installGamepadGameplay(game: object, settings: TraversalSettings
   input.consumeWarpRelease = () => original.consumeWarpRelease() || frame.warpReleased;
   input.consumeWheel = () => original.consumeWheel() + frame.wheelDelta;
   input.consumeReset = () => original.consumeReset() || frame.resetPressed;
+
+  installComfortAccessLayer(state, settings);
+  installAimAssistRuntime(game, settings);
+  installAudioPauseLifecycle(state);
+}
+
+/**
+ * Input/accessibility options that need the fully-combined keyboard, touch and
+ * gamepad stream live here so they do not duplicate binding logic in each device
+ * implementation. Touch crouch is already latched by FPSInput and stays that way.
+ */
+function installComfortAccessLayer(state: RuntimeState, settings: TraversalSettingsStore): void {
+  const input = state.input;
+
+  const originalLook = input.consumeLook.bind(input);
+  input.consumeLook = () => {
+    const value = originalLook();
+    return {
+      x: settings.value.invertX ? -value.x : value.x,
+      y: value.y
+    };
+  };
+
+  const originalCrouch = input.isCrouchHeld.bind(input);
+  let wasHeld = false;
+  let crouchLatched = false;
+  input.isCrouchHeld = () => {
+    const held = originalCrouch();
+
+    // Touch already uses tap-to-toggle, independent of the sustained-input option.
+    if (document.body.classList.contains("touch-device")) {
+      wasHeld = held;
+      return held;
+    }
+
+    if (!settings.value.crouchToggle) {
+      crouchLatched = false;
+      wasHeld = held;
+      return held;
+    }
+
+    if (held && !wasHeld) crouchLatched = !crouchLatched;
+    wasHeld = held;
+    return crouchLatched;
+  };
+
+  const originalFlash = state.flashMessage.bind(state);
+  state.flashMessage = (message: string, duration: number) => {
+    const scale = Math.max(1, Math.min(10, settings.value.accessibility.timedTextScale));
+    originalFlash(message, duration * scale);
+  };
+
+  const originalLoadRoom = state.loadRoom.bind(state);
+  state.loadRoom = (index: number) => {
+    originalLoadRoom(index);
+    const now = performance.now();
+    const baseRemaining = Math.max(0, state.tutorialUntil - now);
+    const scale = Math.max(1, Math.min(10, settings.value.accessibility.timedTextScale));
+    state.tutorialUntil = now + baseRemaining * scale;
+  };
+}
+
+function installAudioPauseLifecycle(state: RuntimeState): void {
+  state.shell.events.on("game:pause", () => setTraversalAudioSuspended("game-pause", true));
+  state.shell.events.on("game:resume", () => setTraversalAudioSuspended("game-pause", false));
+  state.shell.events.on("game:quit", () => setTraversalAudioSuspended("game-pause", false));
+  state.shell.events.on("level:loaded", () => setTraversalAudioSuspended("game-pause", false));
 }
 
 function pollGamepad(

@@ -15,11 +15,13 @@ const ADJUSTABLE = new Set([
   "traversal-controller-deadzone",
   "traversal-fov",
   "traversal-aim-smoothing",
+  "traversal-aim-assist",
   "traversal-reticle-scale",
   // Accessibility rows with more than two states adjust the same way; the plain
   // on/off toggles activate directly, like Invert Y.
   "traversal-color-profile",
   "traversal-ui-scale",
+  "traversal-text-timing",
   "traversal-cvd-preview"
 ]);
 
@@ -104,6 +106,8 @@ export function installSettingsAdjustmentRuntime(
     }
     originalBack(screenId);
   };
+
+  window.addEventListener("traversal:settings-tab-change", clearEditing);
 
   window.addEventListener("keydown", (event) => {
     if (!editingId || !isSettingsOpen()) return;

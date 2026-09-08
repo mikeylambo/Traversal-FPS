@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { traversalAccessibility } from "../game/TraversalAccessibility";
 
 const starVertex = /* glsl */`
   attribute float aPhase;
@@ -10,6 +11,7 @@ const starVertex = /* glsl */`
 
   uniform float uTime;
   uniform float uTwinkle;
+  uniform float uFlashScale;
 
   varying float vBrightness;
   varying float vSparkle;
@@ -21,7 +23,7 @@ const starVertex = /* glsl */`
     float fastWave = sin(uTime * (aSpeed * 2.43) + aPhase * 1.71);
     float organicTwinkle = 0.90 + slowWave * 0.07 + fastWave * 0.035;
     float flareWave = max(0.0, sin(uTime * (aSpeed * 0.47) + aPhase * 2.31));
-    float rareFlare = pow(flareWave, 18.0) * aSparkle;
+    float rareFlare = pow(flareWave, 18.0) * aSparkle * uFlashScale;
 
     vBrightness = aIntensity * mix(1.0, organicTwinkle + rareFlare * 1.65, uTwinkle);
     vSparkle = aSparkle * (0.2 + rareFlare);
@@ -136,7 +138,8 @@ export class TwinklingStarfield {
       fragmentShader: starFragment,
       uniforms: {
         uTime: { value: 0 },
-        uTwinkle: { value: 0.82 }
+        uTwinkle: { value: 0.82 },
+        uFlashScale: { value: 1 }
       },
       transparent: true,
       depthWrite: false,
@@ -154,8 +157,16 @@ export class TwinklingStarfield {
 
   update(dt: number, twinkleStrength: number): void {
     this.time += dt;
+    const reduceFlash = traversalAccessibility().reduceFlash;
     this.material.uniforms.uTime.value = this.time;
-    this.material.uniforms.uTwinkle.value = THREE.MathUtils.clamp(twinkleStrength, 0, 1.5);
+    this.material.uniforms.uTwinkle.value = THREE.MathUtils.clamp(
+      twinkleStrength,
+      0,
+      reduceFlash ? 0.35 : 1.5
+    );
+    // Rare sparkle flares also alter point size, so cap them independently rather
+    // than assuming the normal twinkle-strength uniform covers photosensitivity.
+    this.material.uniforms.uFlashScale.value = reduceFlash ? 0.15 : 1;
     // Follow slowly rather than locking to camera: the sky never exposes an empty edge,
     // but nearby hero stars still create a whisper of parallax during traversal.
     this.points.position.lerp(this.camera.position, 1 - Math.pow(0.0008, dt));

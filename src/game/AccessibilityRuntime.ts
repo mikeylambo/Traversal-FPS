@@ -1,14 +1,15 @@
 import "../accessibility.css";
+import { setTraversalAudioMono } from "../audio/TraversalAudio";
 import { onAccessibilityChange, traversalAccessibility } from "./TraversalAccessibility";
 import type { CvdPreview } from "./TraversalSettings";
 
 /**
  * Turns the accessibility settings into something the rest of the game can read
- * without importing anything: body classes, CSS custom properties, and — for the
- * authoring aid — an SVG colour-vision filter over the frame.
+ * without importing anything: body classes, CSS custom properties, audio output,
+ * and — for the authoring aid — an SVG colour-vision filter over the frame.
  *
  * World-space consequences (hazard hues, pulse rates, capped FX) are applied by the
- * systems that own those objects; this runtime owns everything in the DOM.
+ * systems that own those objects; this runtime owns the shared presentation state.
  */
 const FILTER_HOST_ID = "traversal-cvd-filters";
 
@@ -56,6 +57,7 @@ function apply(): void {
   // toggle caps every screen-space flash in the game at once.
   root.style.setProperty("--flash-scale", access.reduceFlash ? "0.34" : "1");
   root.style.setProperty("--motion-scale", access.reduceMotion ? "0.15" : "1");
+  setTraversalAudioMono(access.monoAudio);
 
   const game = document.getElementById("game");
   if (game) {

@@ -4,6 +4,7 @@ import { actorColor, utilityRingColor } from "./TraversalAccessibility";
 import { evaluateActorOrigin, resolveOriginConstraint } from "../world/spatialActors";
 import { ROOMS, type EnemySpec } from "../world/stages";
 import { installActorGeometryRuntime } from "./ActorGeometryRuntime";
+import { installRoomAccentAccessibilityRuntime } from "./RoomAccentAccessibilityRuntime";
 
 type ActiveEnemy = {
   spec: EnemySpec;
@@ -187,6 +188,7 @@ export function installSpatialActorRuntime(game: object): void {
   };
 
   installActorGeometryRuntime(game);
+  installRoomAccentAccessibilityRuntime(game);
 }
 
 function decorateActorVisuals(enemies: ActiveEnemy[]): void {

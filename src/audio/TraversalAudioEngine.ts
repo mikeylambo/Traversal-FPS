@@ -28,47 +28,108 @@ const VOICE_DEFAULT_LIMIT = 8;
 /**
  * The single WebAudio graph for the game.
  *
- * destination <- master <- { sfx, ui, world, music }
+ * destination <- night makeup <- compressor <- stereo/mono output <- master <- { sfx, ui, world, music }
  *
  * Every sound in the game — authored sample, procedural fallback, positional
  * hazard, looping bed — is connected to one of those four buses, so the Shell's
- * Master / Music / SFX sliders stay accurate for all of it. Nothing connects to
- * `context.destination` directly.
+ * Master / Music / SFX sliders stay accurate for all of it. Nothing bypasses the
+ * final master/output stage.
  */
 class TraversalAudioEngine {
   private context: AudioContext | null = null;
   private master: GainNode | null = null;
   private buses: BusNodes | null = null;
+  private stereoOutput: GainNode | null = null;
+  private monoOutput: GainNode | null = null;
+  private compressor: DynamicsCompressorNode | null = null;
+  private nightMakeup: GainNode | null = null;
   private readonly buffers = new Map<string, AudioBuffer>();
   private readonly pending = new Map<string, Promise<AudioBuffer | null>>();
   private readonly failed = new Set<string>();
   private readonly cursors = new Map<string, number>();
   private readonly cooldowns = new Map<string, number>();
   private readonly voices = new Map<string, number>();
+  private readonly suspensionReasons = new Set<string>();
   private volumes: () => TraversalVolumeSnapshot = () => ({ master: 1, music: 1, sfx: 1 });
   private lastVolumes = "";
+  private monoEnabled = false;
+  private nightModeEnabled = false;
   private unlockBound = false;
+  private lifecycleBound = false;
 
   configure(volumes: () => TraversalVolumeSnapshot): void {
     this.volumes = volumes;
+    this.bindLifecycle();
     this.syncVolumes(true);
+  }
+
+  setMono(enabled: boolean): void {
+    if (this.monoEnabled === enabled) return;
+    this.monoEnabled = enabled;
+    this.syncOutputMode(true);
+  }
+
+  /**
+   * Full is transparent. Night trims peaks and adds a small amount of makeup gain
+   * so quiet spatial cues stay readable at lower speaker/headphone volume.
+   */
+  setNightMode(enabled: boolean): void {
+    if (this.nightModeEnabled === enabled) return;
+    this.nightModeEnabled = enabled;
+    this.syncDynamics(false);
+  }
+
+  setSuspended(reason: string, suspended: boolean): void {
+    if (suspended) this.suspensionReasons.add(reason);
+    else this.suspensionReasons.delete(reason);
+    this.syncContextState();
   }
 
   /**
    * Browsers refuse to start an AudioContext outside a user gesture. Creating it
    * lazily and resuming on the first interaction keeps the very first shot audible
-   * instead of swallowing it.
+   * instead of swallowing it. Intentional pause/blur suspension is never overridden
+   * by this automatic resume path.
    */
   ensureContext(): AudioContext | null {
     if (this.context) {
-      if (this.context.state === "suspended") void this.context.resume();
+      if (this.context.state === "suspended" && !this.isPlaybackSuspended()) {
+        void this.context.resume().catch(() => undefined);
+      }
       return this.context;
     }
 
     try {
       const context = new AudioContext();
       const master = context.createGain();
-      master.connect(context.destination);
+      // Force a predictable two-channel mix before the optional fold. Mono sources
+      // are upmixed first, so averaging L+R does not halve their loudness.
+      master.channelCount = 2;
+      master.channelCountMode = "explicit";
+      master.channelInterpretation = "speakers";
+
+      const output = context.createGain();
+      const compressor = context.createDynamicsCompressor();
+      const nightMakeup = context.createGain();
+      output.connect(compressor).connect(nightMakeup).connect(context.destination);
+
+      const stereoOutput = context.createGain();
+      master.connect(stereoOutput).connect(output);
+
+      const splitter = context.createChannelSplitter(2);
+      const left = context.createGain();
+      const right = context.createGain();
+      const monoMerger = context.createChannelMerger(1);
+      const monoOutput = context.createGain();
+      monoOutput.gain.value = 0;
+      left.gain.value = 0.5;
+      right.gain.value = 0.5;
+      master.connect(splitter);
+      splitter.connect(left, 0);
+      splitter.connect(right, 1);
+      left.connect(monoMerger, 0, 0);
+      right.connect(monoMerger, 0, 0);
+      monoMerger.connect(monoOutput).connect(output);
 
       const makeBus = (): GainNode => {
         const gain = context.createGain();
@@ -78,9 +139,17 @@ class TraversalAudioEngine {
 
       this.context = context;
       this.master = master;
+      this.stereoOutput = stereoOutput;
+      this.monoOutput = monoOutput;
+      this.compressor = compressor;
+      this.nightMakeup = nightMakeup;
       this.buses = { sfx: makeBus(), ui: makeBus(), world: makeBus(), music: makeBus() };
       this.bindUnlock();
+      this.bindLifecycle();
       this.syncVolumes(true);
+      this.syncOutputMode(true);
+      this.syncDynamics(true);
+      this.syncContextState();
       return context;
     } catch {
       // Audio is presentation-only and must never affect gameplay.
@@ -92,15 +161,47 @@ class TraversalAudioEngine {
     if (this.unlockBound) return;
     this.unlockBound = true;
     const unlock = () => {
-      if (this.context?.state === "suspended") void this.context.resume();
+      if (this.context?.state === "suspended" && !this.isPlaybackSuspended()) {
+        void this.context.resume().catch(() => undefined);
+      }
     };
     for (const type of ["pointerdown", "keydown", "touchstart"]) {
       window.addEventListener(type, unlock, { passive: true });
     }
   }
 
+  private bindLifecycle(): void {
+    if (this.lifecycleBound) return;
+    this.lifecycleBound = true;
+
+    const syncVisibility = () => {
+      this.setSuspended("document-hidden", document.visibilityState !== "visible");
+    };
+    document.addEventListener("visibilitychange", syncVisibility);
+    window.addEventListener("blur", () => this.setSuspended("window-blur", true));
+    window.addEventListener("focus", () => this.setSuspended("window-blur", false));
+    syncVisibility();
+  }
+
+  private isPlaybackSuspended(): boolean {
+    return this.suspensionReasons.size > 0;
+  }
+
+  private syncContextState(): void {
+    const context = this.context;
+    if (!context || context.state === "closed") return;
+
+    if (this.isPlaybackSuspended()) {
+      if (context.state === "running") void context.suspend().catch(() => undefined);
+      return;
+    }
+
+    if (context.state === "suspended") void context.resume().catch(() => undefined);
+  }
+
   /** Bus node for callers that generate their own sound (the procedural fallback). */
   busNode(bus: AudioBus): GainNode | null {
+    if (this.isPlaybackSuspended()) return null;
     this.ensureContext();
     this.syncVolumes(false);
     return this.buses?.[bus] ?? null;
@@ -123,6 +224,48 @@ class TraversalAudioEngine {
     ramp(this.buses.ui, sfx);
     ramp(this.buses.world, sfx);
     ramp(this.buses.music, music);
+  }
+
+  private syncOutputMode(force: boolean): void {
+    if (!this.context || !this.stereoOutput || !this.monoOutput) return;
+    const stereoTarget = this.monoEnabled ? 0 : 1;
+    const monoTarget = this.monoEnabled ? 1 : 0;
+    const now = this.context.currentTime;
+    const set = (node: GainNode, value: number) => {
+      node.gain.cancelScheduledValues(now);
+      if (force) node.gain.setValueAtTime(value, now);
+      else node.gain.setTargetAtTime(value, now, 0.015);
+    };
+    set(this.stereoOutput, stereoTarget);
+    set(this.monoOutput, monoTarget);
+  }
+
+  private syncDynamics(force: boolean): void {
+    if (!this.context || !this.compressor || !this.nightMakeup) return;
+    const now = this.context.currentTime;
+    const compressor = this.compressor;
+    const set = (param: AudioParam, value: number) => {
+      param.cancelScheduledValues(now);
+      if (force) param.setValueAtTime(value, now);
+      else param.setTargetAtTime(value, now, 0.025);
+    };
+
+    if (this.nightModeEnabled) {
+      set(compressor.threshold, -28);
+      set(compressor.knee, 18);
+      set(compressor.ratio, 4.5);
+      set(compressor.attack, 0.008);
+      set(compressor.release, 0.22);
+      set(this.nightMakeup.gain, 1.08);
+      return;
+    }
+
+    set(compressor.threshold, 0);
+    set(compressor.knee, 0);
+    set(compressor.ratio, 1);
+    set(compressor.attack, 0.003);
+    set(compressor.release, 0.25);
+    set(this.nightMakeup.gain, 1);
   }
 
   /** Call once per frame so volume changes and the 3D listener stay live. */
@@ -179,7 +322,8 @@ class TraversalAudioEngine {
 
   /**
    * @returns true when at least one authored layer played. False tells the caller
-   * to fall back to the procedural tone layer.
+   * to fall back to the procedural tone layer. Intentional suspension returns true
+   * so a paused cue is discarded rather than queued for resume.
    */
   play(
     event: TraversalAudioEvent,
@@ -187,6 +331,7 @@ class TraversalAudioEngine {
   ): boolean {
     const cue = AUDIO_CUES[event];
     if (!cue || cue.loop) return false;
+    if (this.isPlaybackSuspended()) return true;
 
     const context = this.ensureContext();
     const bus = this.buses?.[cue.bus];
@@ -255,6 +400,7 @@ class TraversalAudioEngine {
     event: TraversalAudioEvent,
     position: { x: number; y: number; z: number }
   ): TraversalAudioLoopHandle | null {
+    if (this.isPlaybackSuspended()) return null;
     const cue = AUDIO_CUES[event];
     const context = this.ensureContext();
     const bus = this.buses?.[cue?.bus ?? "world"];
