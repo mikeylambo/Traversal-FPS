@@ -7,6 +7,7 @@ import { activeTraversalProgression } from "./Progression";
 type RuntimeState = {
   modeId: string;
   totalKills: number;
+  shell: any;
   extraKills(): number;
   beginRun(): void;
   finishRun(): void;
@@ -32,20 +33,43 @@ const SECTOR_HANDOFF_MS = 620;
 export function installCampaignFlow(game: object, content: ContentRuntime): void {
   const state = game as unknown as RuntimeState;
   const originalFinishRun = state.finishRun.bind(game);
+  const originalBeginRun = state.beginRun.bind(game);
   const progression = activeTraversalProgression();
+  const telemetry = state.shell.studio.telemetry;
   if (progression) installCampaignPersistenceRuntime(game, progression, content);
 
   state.extraKills = () => Math.max(0, state.totalKills - content.activeParKills());
   ensureSectorClearFx();
 
+  state.beginRun = () => {
+    telemetry.record("run.start", {
+      modeId: state.shell.modes.active()?.id ?? "unknown",
+      difficultyId: state.shell.difficulty.active()?.id ?? "unknown",
+      contentId: content.selectedContentId(),
+      contentForm: content.activeForm(),
+      roomCount: content.activeRooms().length
+    });
+    originalBeginRun();
+  };
+
   state.finishRun = () => {
+    const currentId = content.selectedContentId();
+    telemetry.record("run.complete", {
+      modeId: state.modeId,
+      contentId: currentId,
+      contentForm: content.activeForm(),
+      roomCount: content.activeRooms().length,
+      totalKills: state.totalKills
+    });
+
     const campaign = state.modeId === "standard" && content.activeForm() === "campaign-field";
     if (!campaign) {
+      telemetry.record("level.complete", { levelId: currentId });
       originalFinishRun();
       return;
     }
 
-    const currentId = content.selectedContentId();
+    telemetry.record("level.complete", { levelId: currentId });
     const currentIndex = CAMPAIGN_MAPS.findIndex((entry) => entry.id === currentId);
     const laterMaps = currentIndex >= 0 ? CAMPAIGN_MAPS.slice(currentIndex + 1) : [];
     const nextMap = laterMaps.find((entry) => entry.implemented);
@@ -96,6 +120,7 @@ export function installCampaignFlow(game: object, content: ContentRuntime): void
     }
 
     void activeProgression?.completeCampaignSector(currentId, nextMap.id);
+    telemetry.record("campaign.advance", { from: currentId, to: nextMap.id });
     playSectorClearCue();
 
     window.setTimeout(() => {
