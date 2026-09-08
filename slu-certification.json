@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "requiredFiles": [
+    "src/main.ts",
+    "src/game/TraversalGame.ts",
+    "src/world/contentValidation.ts",
+    "index.html",
+    "AGENTS.md"
+  ],
+  "requiredScripts": [
+    "build",
+    "check",
+    "verify",
+    "content:doctor",
+    "audio:doctor",
+    "test:regression"
+  ],
+  "declarations": [
+    "web-runtime",
+    "controller-ui",
+    "touch-gameplay",
+    "accessibility-settings",
+    "semantic-audio",
+    "content-validation",
+    "campaign-persistence"
+  ],
+  "forbiddenSourceTokens": [
+    "TODO_PLAYER",
+    "PLACEHOLDER_PLAYER",
+    "LOREM_IPSUM"
+  ],
+  "profiles": {
+    "web": {
+      "requiredDeclarations": ["web-runtime", "content-validation"]
+    },
+    "controller": {
+      "requiredDeclarations": ["controller-ui"]
+    },
+    "mobile": {
+      "requiredDeclarations": ["touch-gameplay"]
+    },
+    "release": {
+      "requiredFiles": ["docs/PLAYTEST-PASS.md"],
+      "requiredDeclarations": [
+        "web-runtime",
+        "controller-ui",
+        "touch-gameplay",
+        "accessibility-settings",
+        "semantic-audio",
+        "content-validation",
+        "campaign-persistence"
+      ]
+    }
+  }
+}
