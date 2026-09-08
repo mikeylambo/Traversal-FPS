@@ -1,0 +1,12 @@
+[
+  {
+    "id": "cyan-rail-rhythm",
+    "score": 0.52,
+    "notes": "Placement is visible, but SVG cannot display the authored emissive intensity, bloom, lens roughness, or texture response."
+  },
+  {
+    "id": "traversal-mark",
+    "score": 0.3,
+    "notes": "The fascia region exists, but a flat fallback cannot validate the decal material response or final in-game readability."
+  }
+]

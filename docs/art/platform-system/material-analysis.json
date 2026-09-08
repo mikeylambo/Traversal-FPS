@@ -1,0 +1,1936 @@
+{
+  "schemaVersion": 1,
+  "kind": "img2threejs.material-analysis",
+  "referenceId": "traversal-standard-deck",
+  "manifest": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-regions.json",
+  "registry": "/workspace/scratch/d1c5d8f30fba/img2threejs/docs/materials/material-reference.json",
+  "targetThreshold": 0.7,
+  "notObservedMaterials": [],
+  "unresolvedNotObservedMaterials": [],
+  "regions": [
+    {
+      "componentId": "deck-shell",
+      "regionId": "shell-white-coating",
+      "materialSpecId": "shell-white",
+      "hypothesis": {
+        "componentId": "deck-shell",
+        "regionId": "shell-white-coating",
+        "materialId": "coating.painted-metal",
+        "family": "coating",
+        "subtype": "paint-over-metal",
+        "finish": "gloss-or-satin",
+        "aliases": [],
+        "confidence": 0.829,
+        "source": "approved-reference"
+      },
+      "assignment": {
+        "materialId": "coating.painted-metal",
+        "status": "proceed",
+        "source": "approved-reference",
+        "confidence": 1.0,
+        "method": "explicit-material-id",
+        "alternatives": [],
+        "evidence": {
+          "crop": {
+            "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/00-shell-white-coating.png",
+            "bbox": {
+              "x": 0,
+              "y": 0,
+              "width": 300,
+              "height": 88
+            },
+            "sourceWidth": 300,
+            "sourceHeight": 88,
+            "loaderWarnings": [],
+            "coverage": 1.0
+          },
+          "pbr": {
+            "ok": true,
+            "verdict": "pass",
+            "confidence": 0.829,
+            "estimatedFidelity": 0.829,
+            "targetThreshold": 0.7,
+            "materialId": "shell-white",
+            "sourceImage": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/00-shell-white-coating.png",
+            "outDir": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-00-shell-white-coating",
+            "palette": [
+              "#DEDCE3",
+              "#1C2227",
+              "#D4D3DA",
+              "#EFEEF3",
+              "#A19FA5"
+            ],
+            "maps": {
+              "albedo": {
+                "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-00-shell-white-coating/shell-white_albedo.png",
+                "url": "shell-white_albedo.png",
+                "channel": "albedo",
+                "source": "reference-pixel-extraction"
+              },
+              "roughness": {
+                "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-00-shell-white-coating/shell-white_roughness.png",
+                "url": "shell-white_roughness.png",
+                "channel": "roughness",
+                "source": "reference-pixel-extraction"
+              },
+              "height": {
+                "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-00-shell-white-coating/shell-white_height.png",
+                "url": "shell-white_height.png",
+                "channel": "height",
+                "source": "reference-pixel-extraction"
+              },
+              "normal": {
+                "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-00-shell-white-coating/shell-white_normal.png",
+                "url": "shell-white_normal.png",
+                "channel": "normal",
+                "source": "reference-pixel-extraction"
+              },
+              "ao": {
+                "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-00-shell-white-coating/shell-white_ao.png",
+                "url": "shell-white_ao.png",
+                "channel": "ao",
+                "source": "reference-pixel-extraction"
+              }
+            },
+            "diagnostics": {
+              "sourceWidth": 300,
+              "sourceHeight": 88,
+              "mapSize": 512,
+              "cropBBoxPixels": {
+                "x": 0,
+                "y": 0,
+                "width": 300,
+                "height": 88
+              },
+              "mask": {
+                "backgroundColor": "#161B1F",
+                "backgroundNoise": 24.249,
+                "transparentPixelFraction": 0.0,
+                "foregroundCoverage": 0.9955
+              },
+              "mapStats": {
+                "valueRange": 0.8386,
+                "heightP90Gradient": 0.04646,
+                "roughnessBase": 0.69,
+                "roughnessVariation": 0.061,
+                "normalStrength": 0.211,
+                "blurRadius": 10
+              },
+              "palette": [
+                "#DEDCE3",
+                "#1C2227",
+                "#D4D3DA",
+                "#EFEEF3",
+                "#A19FA5"
+              ]
+            },
+            "warnings": [
+              "image is not clearly isolated from background; using most pixels as material evidence",
+              "object/background separation is weak",
+              "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+            ],
+            "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+          },
+          "texture": {
+            "finishClass": "brushed-steel",
+            "recipe": {
+              "metalness": 1.0,
+              "roughness": 0.35,
+              "clearcoat": 0.0,
+              "clearcoatRoughness": 0.0,
+              "transmission": 0.0,
+              "ior": 1.5,
+              "envMapIntensity": 1.0,
+              "anisotropy": 1.0,
+              "procedural": "brushed"
+            },
+            "palette": [
+              "#161C21",
+              "#A8A9B0",
+              "#DBDAE0",
+              "#D4D3D8",
+              "#BCBAC0"
+            ],
+            "paletteHueRisk": [
+              {
+                "stop": "#161C21",
+                "hueRisk": "blue-collapse",
+                "suggestedRgb": [
+                  33,
+                  28,
+                  22
+                ]
+              }
+            ],
+            "gradientAxis": "vertical",
+            "stats": {
+              "meanLum": 179.4,
+              "meanSaturation": 0.082,
+              "gradientStrength": 0.762,
+              "mottle": 0.031,
+              "streakRatio": 0.87,
+              "hueSpread": 0.004,
+              "specularFraction": 0.065
+            }
+          }
+        },
+        "profileId": "coating.painted-metal",
+        "family": "coating",
+        "subtype": "paint-over-metal",
+        "finish": "gloss-or-satin",
+        "renderPrior": {
+          "metalness": 0.0,
+          "roughness": 0.45,
+          "clearcoat": 0.75,
+          "clearcoatRoughness": 0.12,
+          "ior": 1.5
+        },
+        "requiredMaps": [
+          "map",
+          "roughnessMap"
+        ],
+        "optionalMaps": [
+          "normalMap",
+          "clearcoatMap",
+          "clearcoatRoughnessMap",
+          "metalnessMap"
+        ],
+        "validationViews": [
+          "albedo-unlit",
+          "neutral-studio",
+          "grazing",
+          "environment-reflection",
+          "reference-beauty"
+        ],
+        "sourceRefs": [
+          "three.mesh-physical",
+          "gltf.2",
+          "khronos.gltf-pbr",
+          "adobe.pbr-guide-1",
+          "adobe.pbr-guide-2"
+        ],
+        "visualCues": [
+          "diffuse paint colour under a separate glossy coat",
+          "chips may expose metallic substrate"
+        ]
+      },
+      "observations": [
+        "near-neutral colour response",
+        "strong image-space gradient; verify it is material pattern, not lighting",
+        "single-image PBR inference requires controlled render validation"
+      ],
+      "crop": {
+        "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/00-shell-white-coating.png",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 300,
+          "height": 88
+        },
+        "sourceWidth": 300,
+        "sourceHeight": 88,
+        "loaderWarnings": [],
+        "coverage": 1.0
+      },
+      "textureAnalysis": {
+        "finishClass": "brushed-steel",
+        "recipe": {
+          "metalness": 1.0,
+          "roughness": 0.35,
+          "clearcoat": 0.0,
+          "clearcoatRoughness": 0.0,
+          "transmission": 0.0,
+          "ior": 1.5,
+          "envMapIntensity": 1.0,
+          "anisotropy": 1.0,
+          "procedural": "brushed"
+        },
+        "palette": [
+          "#161C21",
+          "#A8A9B0",
+          "#DBDAE0",
+          "#D4D3D8",
+          "#BCBAC0"
+        ],
+        "paletteHueRisk": [
+          {
+            "stop": "#161C21",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              33,
+              28,
+              22
+            ]
+          }
+        ],
+        "gradientAxis": "vertical",
+        "stats": {
+          "meanLum": 179.4,
+          "meanSaturation": 0.082,
+          "gradientStrength": 0.762,
+          "mottle": 0.031,
+          "streakRatio": 0.87,
+          "hueSpread": 0.004,
+          "specularFraction": 0.065
+        }
+      },
+      "pbrReport": {
+        "ok": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "materialId": "shell-white",
+        "sourceImage": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/00-shell-white-coating.png",
+        "outDir": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-00-shell-white-coating",
+        "palette": [
+          "#DEDCE3",
+          "#1C2227",
+          "#D4D3DA",
+          "#EFEEF3",
+          "#A19FA5"
+        ],
+        "maps": {
+          "albedo": {
+            "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-00-shell-white-coating/shell-white_albedo.png",
+            "url": "shell-white_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-00-shell-white-coating/shell-white_roughness.png",
+            "url": "shell-white_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-00-shell-white-coating/shell-white_height.png",
+            "url": "shell-white_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-00-shell-white-coating/shell-white_normal.png",
+            "url": "shell-white_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-00-shell-white-coating/shell-white_ao.png",
+            "url": "shell-white_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 300,
+          "sourceHeight": 88,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 300,
+            "height": 88
+          },
+          "mask": {
+            "backgroundColor": "#161B1F",
+            "backgroundNoise": 24.249,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9955
+          },
+          "mapStats": {
+            "valueRange": 0.8386,
+            "heightP90Gradient": 0.04646,
+            "roughnessBase": 0.69,
+            "roughnessVariation": 0.061,
+            "normalStrength": 0.211,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#DEDCE3",
+            "#1C2227",
+            "#D4D3DA",
+            "#EFEEF3",
+            "#A19FA5"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ],
+        "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+      },
+      "referencePbr": {
+        "version": "1.0",
+        "sourceImage": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/00-shell-white-coating.png",
+        "extractor": "stage1_intake/extract_pbr_evidence.py",
+        "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
+        "usable": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
+        "maps": {
+          "albedo": {
+            "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-00-shell-white-coating/shell-white_albedo.png",
+            "url": "shell-white_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-00-shell-white-coating/shell-white_roughness.png",
+            "url": "shell-white_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-00-shell-white-coating/shell-white_height.png",
+            "url": "shell-white_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-00-shell-white-coating/shell-white_normal.png",
+            "url": "shell-white_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-00-shell-white-coating/shell-white_ao.png",
+            "url": "shell-white_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 300,
+          "sourceHeight": 88,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 300,
+            "height": 88
+          },
+          "mask": {
+            "backgroundColor": "#161B1F",
+            "backgroundNoise": 24.249,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9955
+          },
+          "mapStats": {
+            "valueRange": 0.8386,
+            "heightP90Gradient": 0.04646,
+            "roughnessBase": 0.69,
+            "roughnessVariation": 0.061,
+            "normalStrength": 0.211,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#DEDCE3",
+            "#1C2227",
+            "#D4D3DA",
+            "#EFEEF3",
+            "#A19FA5"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ]
+      },
+      "maps": {
+        "albedo": {
+          "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-00-shell-white-coating/shell-white_albedo.png",
+          "url": "shell-white_albedo.png",
+          "channel": "albedo",
+          "source": "reference-pixel-extraction"
+        },
+        "roughness": {
+          "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-00-shell-white-coating/shell-white_roughness.png",
+          "url": "shell-white_roughness.png",
+          "channel": "roughness",
+          "source": "reference-pixel-extraction"
+        },
+        "height": {
+          "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-00-shell-white-coating/shell-white_height.png",
+          "url": "shell-white_height.png",
+          "channel": "height",
+          "source": "reference-pixel-extraction"
+        },
+        "normal": {
+          "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-00-shell-white-coating/shell-white_normal.png",
+          "url": "shell-white_normal.png",
+          "channel": "normal",
+          "source": "reference-pixel-extraction"
+        },
+        "ao": {
+          "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-00-shell-white-coating/shell-white_ao.png",
+          "url": "shell-white_ao.png",
+          "channel": "ao",
+          "source": "reference-pixel-extraction"
+        }
+      }
+    },
+    {
+      "componentId": "undercarriage",
+      "regionId": "graphite-coating",
+      "materialSpecId": "graphite",
+      "hypothesis": {
+        "componentId": "undercarriage",
+        "regionId": "graphite-coating",
+        "materialId": "coating.painted-metal",
+        "family": "coating",
+        "subtype": "paint-over-metal",
+        "finish": "gloss-or-satin",
+        "aliases": [],
+        "confidence": 0.86,
+        "source": "approved-reference"
+      },
+      "assignment": {
+        "materialId": "coating.painted-metal",
+        "status": "proceed",
+        "source": "approved-reference",
+        "confidence": 1.0,
+        "method": "explicit-material-id",
+        "alternatives": [],
+        "evidence": {
+          "crop": {
+            "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/01-graphite-coating.png",
+            "bbox": {
+              "x": 0,
+              "y": 0,
+              "width": 260,
+              "height": 82
+            },
+            "sourceWidth": 260,
+            "sourceHeight": 82,
+            "loaderWarnings": [],
+            "coverage": 1.0
+          },
+          "pbr": {
+            "ok": true,
+            "verdict": "pass",
+            "confidence": 0.86,
+            "estimatedFidelity": 0.86,
+            "targetThreshold": 0.7,
+            "materialId": "graphite",
+            "sourceImage": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/01-graphite-coating.png",
+            "outDir": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-01-graphite-coating",
+            "palette": [
+              "#0F1417",
+              "#191F23",
+              "#07080A",
+              "#6EAAC2",
+              "#2E4D5D"
+            ],
+            "maps": {
+              "albedo": {
+                "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-01-graphite-coating/graphite_albedo.png",
+                "url": "graphite_albedo.png",
+                "channel": "albedo",
+                "source": "reference-pixel-extraction"
+              },
+              "roughness": {
+                "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-01-graphite-coating/graphite_roughness.png",
+                "url": "graphite_roughness.png",
+                "channel": "roughness",
+                "source": "reference-pixel-extraction"
+              },
+              "height": {
+                "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-01-graphite-coating/graphite_height.png",
+                "url": "graphite_height.png",
+                "channel": "height",
+                "source": "reference-pixel-extraction"
+              },
+              "normal": {
+                "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-01-graphite-coating/graphite_normal.png",
+                "url": "graphite_normal.png",
+                "channel": "normal",
+                "source": "reference-pixel-extraction"
+              },
+              "ao": {
+                "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-01-graphite-coating/graphite_ao.png",
+                "url": "graphite_ao.png",
+                "channel": "ao",
+                "source": "reference-pixel-extraction"
+              }
+            },
+            "diagnostics": {
+              "sourceWidth": 260,
+              "sourceHeight": 82,
+              "mapSize": 512,
+              "cropBBoxPixels": {
+                "x": 0,
+                "y": 0,
+                "width": 260,
+                "height": 82
+              },
+              "mask": {
+                "backgroundColor": "#141519",
+                "backgroundNoise": 166.856,
+                "transparentPixelFraction": 0.0,
+                "foregroundCoverage": 0.4108
+              },
+              "mapStats": {
+                "valueRange": 0.4299,
+                "heightP90Gradient": 0.04175,
+                "roughnessBase": 0.686,
+                "roughnessVariation": 0.071,
+                "normalStrength": 0.205,
+                "blurRadius": 10
+              },
+              "palette": [
+                "#0F1417",
+                "#191F23",
+                "#07080A",
+                "#6EAAC2",
+                "#2E4D5D"
+              ]
+            },
+            "warnings": [
+              "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+            ],
+            "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+          },
+          "texture": {
+            "finishClass": "candy-coat",
+            "recipe": {
+              "metalness": 0.35,
+              "roughness": 0.18,
+              "clearcoat": 0.6,
+              "clearcoatRoughness": 0.15,
+              "transmission": 0.0,
+              "ior": 1.5,
+              "envMapIntensity": 0.7,
+              "anisotropy": 0.0,
+              "procedural": "gradient-smoke"
+            },
+            "palette": [
+              "#AAA9AD",
+              "#4D5358",
+              "#1D1F21",
+              "#15191B",
+              "#0E1317"
+            ],
+            "paletteHueRisk": [
+              {
+                "stop": "#15191B",
+                "hueRisk": "blue-collapse",
+                "suggestedRgb": [
+                  27,
+                  25,
+                  21
+                ]
+              },
+              {
+                "stop": "#0E1317",
+                "hueRisk": "blue-collapse",
+                "suggestedRgb": [
+                  23,
+                  19,
+                  14
+                ]
+              }
+            ],
+            "gradientAxis": "vertical",
+            "stats": {
+              "meanLum": 57.1,
+              "meanSaturation": 0.193,
+              "gradientStrength": 0.594,
+              "mottle": 0.054,
+              "streakRatio": 1.34,
+              "hueSpread": 0.025,
+              "specularFraction": 0.011
+            }
+          }
+        },
+        "profileId": "coating.painted-metal",
+        "family": "coating",
+        "subtype": "paint-over-metal",
+        "finish": "gloss-or-satin",
+        "renderPrior": {
+          "metalness": 0.0,
+          "roughness": 0.45,
+          "clearcoat": 0.75,
+          "clearcoatRoughness": 0.12,
+          "ior": 1.5
+        },
+        "requiredMaps": [
+          "map",
+          "roughnessMap"
+        ],
+        "optionalMaps": [
+          "normalMap",
+          "clearcoatMap",
+          "clearcoatRoughnessMap",
+          "metalnessMap"
+        ],
+        "validationViews": [
+          "albedo-unlit",
+          "neutral-studio",
+          "grazing",
+          "environment-reflection",
+          "reference-beauty"
+        ],
+        "sourceRefs": [
+          "three.mesh-physical",
+          "gltf.2",
+          "khronos.gltf-pbr",
+          "adobe.pbr-guide-1",
+          "adobe.pbr-guide-2"
+        ],
+        "visualCues": [
+          "diffuse paint colour under a separate glossy coat",
+          "chips may expose metallic substrate"
+        ]
+      },
+      "observations": [
+        "chromatic base-colour response",
+        "visible meso/micro variation",
+        "strong image-space gradient; verify it is material pattern, not lighting",
+        "single-image PBR inference requires controlled render validation"
+      ],
+      "crop": {
+        "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/01-graphite-coating.png",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 260,
+          "height": 82
+        },
+        "sourceWidth": 260,
+        "sourceHeight": 82,
+        "loaderWarnings": [],
+        "coverage": 1.0
+      },
+      "textureAnalysis": {
+        "finishClass": "candy-coat",
+        "recipe": {
+          "metalness": 0.35,
+          "roughness": 0.18,
+          "clearcoat": 0.6,
+          "clearcoatRoughness": 0.15,
+          "transmission": 0.0,
+          "ior": 1.5,
+          "envMapIntensity": 0.7,
+          "anisotropy": 0.0,
+          "procedural": "gradient-smoke"
+        },
+        "palette": [
+          "#AAA9AD",
+          "#4D5358",
+          "#1D1F21",
+          "#15191B",
+          "#0E1317"
+        ],
+        "paletteHueRisk": [
+          {
+            "stop": "#15191B",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              27,
+              25,
+              21
+            ]
+          },
+          {
+            "stop": "#0E1317",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              23,
+              19,
+              14
+            ]
+          }
+        ],
+        "gradientAxis": "vertical",
+        "stats": {
+          "meanLum": 57.1,
+          "meanSaturation": 0.193,
+          "gradientStrength": 0.594,
+          "mottle": 0.054,
+          "streakRatio": 1.34,
+          "hueSpread": 0.025,
+          "specularFraction": 0.011
+        }
+      },
+      "pbrReport": {
+        "ok": true,
+        "verdict": "pass",
+        "confidence": 0.86,
+        "estimatedFidelity": 0.86,
+        "targetThreshold": 0.7,
+        "materialId": "graphite",
+        "sourceImage": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/01-graphite-coating.png",
+        "outDir": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-01-graphite-coating",
+        "palette": [
+          "#0F1417",
+          "#191F23",
+          "#07080A",
+          "#6EAAC2",
+          "#2E4D5D"
+        ],
+        "maps": {
+          "albedo": {
+            "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-01-graphite-coating/graphite_albedo.png",
+            "url": "graphite_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-01-graphite-coating/graphite_roughness.png",
+            "url": "graphite_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-01-graphite-coating/graphite_height.png",
+            "url": "graphite_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-01-graphite-coating/graphite_normal.png",
+            "url": "graphite_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-01-graphite-coating/graphite_ao.png",
+            "url": "graphite_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 260,
+          "sourceHeight": 82,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 260,
+            "height": 82
+          },
+          "mask": {
+            "backgroundColor": "#141519",
+            "backgroundNoise": 166.856,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.4108
+          },
+          "mapStats": {
+            "valueRange": 0.4299,
+            "heightP90Gradient": 0.04175,
+            "roughnessBase": 0.686,
+            "roughnessVariation": 0.071,
+            "normalStrength": 0.205,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#0F1417",
+            "#191F23",
+            "#07080A",
+            "#6EAAC2",
+            "#2E4D5D"
+          ]
+        },
+        "warnings": [
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ],
+        "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+      },
+      "referencePbr": {
+        "version": "1.0",
+        "sourceImage": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/01-graphite-coating.png",
+        "extractor": "stage1_intake/extract_pbr_evidence.py",
+        "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
+        "usable": true,
+        "verdict": "pass",
+        "confidence": 0.86,
+        "estimatedFidelity": 0.86,
+        "targetThreshold": 0.7,
+        "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
+        "maps": {
+          "albedo": {
+            "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-01-graphite-coating/graphite_albedo.png",
+            "url": "graphite_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-01-graphite-coating/graphite_roughness.png",
+            "url": "graphite_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-01-graphite-coating/graphite_height.png",
+            "url": "graphite_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-01-graphite-coating/graphite_normal.png",
+            "url": "graphite_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-01-graphite-coating/graphite_ao.png",
+            "url": "graphite_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 260,
+          "sourceHeight": 82,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 260,
+            "height": 82
+          },
+          "mask": {
+            "backgroundColor": "#141519",
+            "backgroundNoise": 166.856,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.4108
+          },
+          "mapStats": {
+            "valueRange": 0.4299,
+            "heightP90Gradient": 0.04175,
+            "roughnessBase": 0.686,
+            "roughnessVariation": 0.071,
+            "normalStrength": 0.205,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#0F1417",
+            "#191F23",
+            "#07080A",
+            "#6EAAC2",
+            "#2E4D5D"
+          ]
+        },
+        "warnings": [
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ]
+      },
+      "maps": {
+        "albedo": {
+          "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-01-graphite-coating/graphite_albedo.png",
+          "url": "graphite_albedo.png",
+          "channel": "albedo",
+          "source": "reference-pixel-extraction"
+        },
+        "roughness": {
+          "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-01-graphite-coating/graphite_roughness.png",
+          "url": "graphite_roughness.png",
+          "channel": "roughness",
+          "source": "reference-pixel-extraction"
+        },
+        "height": {
+          "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-01-graphite-coating/graphite_height.png",
+          "url": "graphite_height.png",
+          "channel": "height",
+          "source": "reference-pixel-extraction"
+        },
+        "normal": {
+          "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-01-graphite-coating/graphite_normal.png",
+          "url": "graphite_normal.png",
+          "channel": "normal",
+          "source": "reference-pixel-extraction"
+        },
+        "ao": {
+          "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-01-graphite-coating/graphite_ao.png",
+          "url": "graphite_ao.png",
+          "channel": "ao",
+          "source": "reference-pixel-extraction"
+        }
+      }
+    },
+    {
+      "componentId": "emitter-cyan",
+      "regionId": "cyan-emitter-lens",
+      "materialSpecId": "emitter-cyan",
+      "hypothesis": {
+        "componentId": "emitter-cyan",
+        "regionId": "cyan-emitter-lens",
+        "materialId": "plastic.glossy",
+        "family": "plastic",
+        "subtype": "generic-polymer",
+        "finish": "glossy",
+        "aliases": [],
+        "confidence": 0.86,
+        "source": "approved-reference"
+      },
+      "assignment": {
+        "materialId": "plastic.glossy",
+        "status": "proceed",
+        "source": "approved-reference",
+        "confidence": 1.0,
+        "method": "explicit-material-id",
+        "alternatives": [],
+        "evidence": {
+          "crop": {
+            "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/02-cyan-emitter-lens.png",
+            "bbox": {
+              "x": 0,
+              "y": 0,
+              "width": 130,
+              "height": 62
+            },
+            "sourceWidth": 130,
+            "sourceHeight": 62,
+            "loaderWarnings": [],
+            "coverage": 1.0
+          },
+          "pbr": {
+            "ok": true,
+            "verdict": "pass",
+            "confidence": 0.86,
+            "estimatedFidelity": 0.86,
+            "targetThreshold": 0.7,
+            "materialId": "emitter-cyan",
+            "sourceImage": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/02-cyan-emitter-lens.png",
+            "outDir": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-02-cyan-emitter-lens",
+            "palette": [
+              "#171D21",
+              "#A0A2A8",
+              "#111518",
+              "#E7F3F7",
+              "#4E5F6D"
+            ],
+            "maps": {
+              "albedo": {
+                "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-02-cyan-emitter-lens/emitter-cyan_albedo.png",
+                "url": "emitter-cyan_albedo.png",
+                "channel": "albedo",
+                "source": "reference-pixel-extraction"
+              },
+              "roughness": {
+                "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-02-cyan-emitter-lens/emitter-cyan_roughness.png",
+                "url": "emitter-cyan_roughness.png",
+                "channel": "roughness",
+                "source": "reference-pixel-extraction"
+              },
+              "height": {
+                "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-02-cyan-emitter-lens/emitter-cyan_height.png",
+                "url": "emitter-cyan_height.png",
+                "channel": "height",
+                "source": "reference-pixel-extraction"
+              },
+              "normal": {
+                "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-02-cyan-emitter-lens/emitter-cyan_normal.png",
+                "url": "emitter-cyan_normal.png",
+                "channel": "normal",
+                "source": "reference-pixel-extraction"
+              },
+              "ao": {
+                "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-02-cyan-emitter-lens/emitter-cyan_ao.png",
+                "url": "emitter-cyan_ao.png",
+                "channel": "ao",
+                "source": "reference-pixel-extraction"
+              }
+            },
+            "diagnostics": {
+              "sourceWidth": 130,
+              "sourceHeight": 62,
+              "mapSize": 512,
+              "cropBBoxPixels": {
+                "x": 0,
+                "y": 0,
+                "width": 130,
+                "height": 62
+              },
+              "mask": {
+                "backgroundColor": "#29292B",
+                "backgroundNoise": 61.205,
+                "transparentPixelFraction": 0.0,
+                "foregroundCoverage": 0.7795
+              },
+              "mapStats": {
+                "valueRange": 0.5729,
+                "heightP90Gradient": 0.04008,
+                "roughnessBase": 0.686,
+                "roughnessVariation": 0.05,
+                "normalStrength": 0.203,
+                "blurRadius": 10
+              },
+              "palette": [
+                "#171D21",
+                "#A0A2A8",
+                "#111518",
+                "#E7F3F7",
+                "#4E5F6D"
+              ]
+            },
+            "warnings": [
+              "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+            ],
+            "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+          },
+          "texture": {
+            "finishClass": "painted-metal",
+            "recipe": {
+              "metalness": 0.0,
+              "roughness": 0.5,
+              "clearcoat": 1.0,
+              "clearcoatRoughness": 0.05,
+              "transmission": 0.0,
+              "ior": 1.5,
+              "envMapIntensity": 1.0,
+              "anisotropy": 0.0,
+              "procedural": "flat-clearcoat"
+            },
+            "palette": [
+              "#9FA2A9",
+              "#6C6C71",
+              "#3B3D41",
+              "#171C20",
+              "#151A1E"
+            ],
+            "paletteHueRisk": [
+              {
+                "stop": "#171C20",
+                "hueRisk": "blue-collapse",
+                "suggestedRgb": [
+                  32,
+                  28,
+                  23
+                ]
+              },
+              {
+                "stop": "#151A1E",
+                "hueRisk": "blue-collapse",
+                "suggestedRgb": [
+                  30,
+                  26,
+                  21
+                ]
+              }
+            ],
+            "gradientAxis": "vertical",
+            "stats": {
+              "meanLum": 72.6,
+              "meanSaturation": 0.184,
+              "gradientStrength": 0.539,
+              "mottle": 0.024,
+              "streakRatio": 1.03,
+              "hueSpread": 0.005,
+              "specularFraction": 0.014
+            }
+          }
+        },
+        "profileId": "plastic.glossy",
+        "family": "plastic",
+        "subtype": "generic-polymer",
+        "finish": "glossy",
+        "renderPrior": {
+          "metalness": 0.0,
+          "roughness": 0.28,
+          "clearcoat": 0.2,
+          "clearcoatRoughness": 0.18,
+          "ior": 1.5
+        },
+        "requiredMaps": [
+          "map",
+          "roughnessMap"
+        ],
+        "optionalMaps": [
+          "normalMap",
+          "clearcoatMap"
+        ],
+        "validationViews": [
+          "neutral-studio",
+          "grazing",
+          "environment-reflection",
+          "reference-beauty"
+        ],
+        "sourceRefs": [
+          "three.mesh-physical",
+          "three.mesh-standard",
+          "adobe.pbr-guide-1",
+          "google.filament-pbr",
+          "mit.material-recognition"
+        ],
+        "visualCues": [
+          "untinted or light-coloured specular over coloured diffuse body",
+          "smooth molded surface"
+        ]
+      },
+      "observations": [
+        "chromatic base-colour response",
+        "strong image-space gradient; verify it is material pattern, not lighting",
+        "single-image PBR inference requires controlled render validation"
+      ],
+      "crop": {
+        "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/02-cyan-emitter-lens.png",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 130,
+          "height": 62
+        },
+        "sourceWidth": 130,
+        "sourceHeight": 62,
+        "loaderWarnings": [],
+        "coverage": 1.0
+      },
+      "textureAnalysis": {
+        "finishClass": "painted-metal",
+        "recipe": {
+          "metalness": 0.0,
+          "roughness": 0.5,
+          "clearcoat": 1.0,
+          "clearcoatRoughness": 0.05,
+          "transmission": 0.0,
+          "ior": 1.5,
+          "envMapIntensity": 1.0,
+          "anisotropy": 0.0,
+          "procedural": "flat-clearcoat"
+        },
+        "palette": [
+          "#9FA2A9",
+          "#6C6C71",
+          "#3B3D41",
+          "#171C20",
+          "#151A1E"
+        ],
+        "paletteHueRisk": [
+          {
+            "stop": "#171C20",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              32,
+              28,
+              23
+            ]
+          },
+          {
+            "stop": "#151A1E",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              30,
+              26,
+              21
+            ]
+          }
+        ],
+        "gradientAxis": "vertical",
+        "stats": {
+          "meanLum": 72.6,
+          "meanSaturation": 0.184,
+          "gradientStrength": 0.539,
+          "mottle": 0.024,
+          "streakRatio": 1.03,
+          "hueSpread": 0.005,
+          "specularFraction": 0.014
+        }
+      },
+      "pbrReport": {
+        "ok": true,
+        "verdict": "pass",
+        "confidence": 0.86,
+        "estimatedFidelity": 0.86,
+        "targetThreshold": 0.7,
+        "materialId": "emitter-cyan",
+        "sourceImage": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/02-cyan-emitter-lens.png",
+        "outDir": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-02-cyan-emitter-lens",
+        "palette": [
+          "#171D21",
+          "#A0A2A8",
+          "#111518",
+          "#E7F3F7",
+          "#4E5F6D"
+        ],
+        "maps": {
+          "albedo": {
+            "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-02-cyan-emitter-lens/emitter-cyan_albedo.png",
+            "url": "emitter-cyan_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-02-cyan-emitter-lens/emitter-cyan_roughness.png",
+            "url": "emitter-cyan_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-02-cyan-emitter-lens/emitter-cyan_height.png",
+            "url": "emitter-cyan_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-02-cyan-emitter-lens/emitter-cyan_normal.png",
+            "url": "emitter-cyan_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-02-cyan-emitter-lens/emitter-cyan_ao.png",
+            "url": "emitter-cyan_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 130,
+          "sourceHeight": 62,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 130,
+            "height": 62
+          },
+          "mask": {
+            "backgroundColor": "#29292B",
+            "backgroundNoise": 61.205,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.7795
+          },
+          "mapStats": {
+            "valueRange": 0.5729,
+            "heightP90Gradient": 0.04008,
+            "roughnessBase": 0.686,
+            "roughnessVariation": 0.05,
+            "normalStrength": 0.203,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#171D21",
+            "#A0A2A8",
+            "#111518",
+            "#E7F3F7",
+            "#4E5F6D"
+          ]
+        },
+        "warnings": [
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ],
+        "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+      },
+      "referencePbr": {
+        "version": "1.0",
+        "sourceImage": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/02-cyan-emitter-lens.png",
+        "extractor": "stage1_intake/extract_pbr_evidence.py",
+        "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
+        "usable": true,
+        "verdict": "pass",
+        "confidence": 0.86,
+        "estimatedFidelity": 0.86,
+        "targetThreshold": 0.7,
+        "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
+        "maps": {
+          "albedo": {
+            "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-02-cyan-emitter-lens/emitter-cyan_albedo.png",
+            "url": "emitter-cyan_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-02-cyan-emitter-lens/emitter-cyan_roughness.png",
+            "url": "emitter-cyan_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-02-cyan-emitter-lens/emitter-cyan_height.png",
+            "url": "emitter-cyan_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-02-cyan-emitter-lens/emitter-cyan_normal.png",
+            "url": "emitter-cyan_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-02-cyan-emitter-lens/emitter-cyan_ao.png",
+            "url": "emitter-cyan_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 130,
+          "sourceHeight": 62,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 130,
+            "height": 62
+          },
+          "mask": {
+            "backgroundColor": "#29292B",
+            "backgroundNoise": 61.205,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.7795
+          },
+          "mapStats": {
+            "valueRange": 0.5729,
+            "heightP90Gradient": 0.04008,
+            "roughnessBase": 0.686,
+            "roughnessVariation": 0.05,
+            "normalStrength": 0.203,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#171D21",
+            "#A0A2A8",
+            "#111518",
+            "#E7F3F7",
+            "#4E5F6D"
+          ]
+        },
+        "warnings": [
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ]
+      },
+      "maps": {
+        "albedo": {
+          "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-02-cyan-emitter-lens/emitter-cyan_albedo.png",
+          "url": "emitter-cyan_albedo.png",
+          "channel": "albedo",
+          "source": "reference-pixel-extraction"
+        },
+        "roughness": {
+          "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-02-cyan-emitter-lens/emitter-cyan_roughness.png",
+          "url": "emitter-cyan_roughness.png",
+          "channel": "roughness",
+          "source": "reference-pixel-extraction"
+        },
+        "height": {
+          "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-02-cyan-emitter-lens/emitter-cyan_height.png",
+          "url": "emitter-cyan_height.png",
+          "channel": "height",
+          "source": "reference-pixel-extraction"
+        },
+        "normal": {
+          "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-02-cyan-emitter-lens/emitter-cyan_normal.png",
+          "url": "emitter-cyan_normal.png",
+          "channel": "normal",
+          "source": "reference-pixel-extraction"
+        },
+        "ao": {
+          "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-02-cyan-emitter-lens/emitter-cyan_ao.png",
+          "url": "emitter-cyan_ao.png",
+          "channel": "ao",
+          "source": "reference-pixel-extraction"
+        }
+      }
+    },
+    {
+      "componentId": "corner-cap-array",
+      "regionId": "dark-machined-hardware",
+      "materialSpecId": "dark-detail",
+      "hypothesis": {
+        "componentId": "corner-cap-array",
+        "regionId": "dark-machined-hardware",
+        "materialId": "metal.steel-brushed",
+        "family": "metal",
+        "subtype": "steel",
+        "finish": "brushed",
+        "aliases": [],
+        "confidence": 0.86,
+        "source": "approved-reference"
+      },
+      "assignment": {
+        "materialId": "metal.steel-brushed",
+        "status": "proceed",
+        "source": "approved-reference",
+        "confidence": 1.0,
+        "method": "explicit-material-id",
+        "alternatives": [],
+        "evidence": {
+          "crop": {
+            "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/03-dark-machined-hardware.png",
+            "bbox": {
+              "x": 0,
+              "y": 0,
+              "width": 165,
+              "height": 74
+            },
+            "sourceWidth": 165,
+            "sourceHeight": 74,
+            "loaderWarnings": [],
+            "coverage": 1.0
+          },
+          "pbr": {
+            "ok": true,
+            "verdict": "pass",
+            "confidence": 0.86,
+            "estimatedFidelity": 0.86,
+            "targetThreshold": 0.7,
+            "materialId": "dark-detail",
+            "sourceImage": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/03-dark-machined-hardware.png",
+            "outDir": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-03-dark-machined-hardware",
+            "palette": [
+              "#0E1316",
+              "#D7DCE2",
+              "#07090B",
+              "#293741",
+              "#558FA8"
+            ],
+            "maps": {
+              "albedo": {
+                "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-03-dark-machined-hardware/dark-detail_albedo.png",
+                "url": "dark-detail_albedo.png",
+                "channel": "albedo",
+                "source": "reference-pixel-extraction"
+              },
+              "roughness": {
+                "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-03-dark-machined-hardware/dark-detail_roughness.png",
+                "url": "dark-detail_roughness.png",
+                "channel": "roughness",
+                "source": "reference-pixel-extraction"
+              },
+              "height": {
+                "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-03-dark-machined-hardware/dark-detail_height.png",
+                "url": "dark-detail_height.png",
+                "channel": "height",
+                "source": "reference-pixel-extraction"
+              },
+              "normal": {
+                "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-03-dark-machined-hardware/dark-detail_normal.png",
+                "url": "dark-detail_normal.png",
+                "channel": "normal",
+                "source": "reference-pixel-extraction"
+              },
+              "ao": {
+                "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-03-dark-machined-hardware/dark-detail_ao.png",
+                "url": "dark-detail_ao.png",
+                "channel": "ao",
+                "source": "reference-pixel-extraction"
+              }
+            },
+            "diagnostics": {
+              "sourceWidth": 165,
+              "sourceHeight": 74,
+              "mapSize": 512,
+              "cropBBoxPixels": {
+                "x": 0,
+                "y": 0,
+                "width": 165,
+                "height": 74
+              },
+              "mask": {
+                "backgroundColor": "#0F1315",
+                "backgroundNoise": 99.358,
+                "transparentPixelFraction": 0.0,
+                "foregroundCoverage": 0.4712
+              },
+              "mapStats": {
+                "valueRange": 0.8753,
+                "heightP90Gradient": 0.02779,
+                "roughnessBase": 0.683,
+                "roughnessVariation": 0.05,
+                "normalStrength": 0.189,
+                "blurRadius": 10
+              },
+              "palette": [
+                "#0E1316",
+                "#D7DCE2",
+                "#07090B",
+                "#293741",
+                "#558FA8"
+              ]
+            },
+            "warnings": [
+              "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+            ],
+            "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+          },
+          "texture": {
+            "finishClass": "painted-metal",
+            "recipe": {
+              "metalness": 0.0,
+              "roughness": 0.5,
+              "clearcoat": 1.0,
+              "clearcoatRoughness": 0.05,
+              "transmission": 0.0,
+              "ior": 1.5,
+              "envMapIntensity": 1.0,
+              "anisotropy": 0.0,
+              "procedural": "flat-clearcoat"
+            },
+            "palette": [
+              "#9C9EA5",
+              "#5A5C61",
+              "#20282C",
+              "#131619",
+              "#0F1214"
+            ],
+            "paletteHueRisk": [
+              {
+                "stop": "#20282C",
+                "hueRisk": "blue-collapse",
+                "suggestedRgb": [
+                  44,
+                  40,
+                  32
+                ]
+              },
+              {
+                "stop": "#131619",
+                "hueRisk": "blue-collapse",
+                "suggestedRgb": [
+                  25,
+                  22,
+                  19
+                ]
+              },
+              {
+                "stop": "#0F1214",
+                "hueRisk": "blue-collapse",
+                "suggestedRgb": [
+                  20,
+                  18,
+                  15
+                ]
+              }
+            ],
+            "gradientAxis": "vertical",
+            "stats": {
+              "meanLum": 61.7,
+              "meanSaturation": 0.196,
+              "gradientStrength": 0.559,
+              "mottle": 0.031,
+              "streakRatio": 1.04,
+              "hueSpread": 0.01,
+              "specularFraction": 0.02
+            }
+          }
+        },
+        "profileId": "metal.steel-brushed",
+        "family": "metal",
+        "subtype": "steel",
+        "finish": "brushed",
+        "renderPrior": {
+          "metalness": 1.0,
+          "roughness": 0.35,
+          "anisotropy": 0.85
+        },
+        "requiredMaps": [
+          "map",
+          "roughnessMap",
+          "normalMap",
+          "anisotropyMap"
+        ],
+        "optionalMaps": [
+          "metalnessMap"
+        ],
+        "validationViews": [
+          "neutral-studio",
+          "grazing",
+          "environment-reflection",
+          "reference-beauty"
+        ],
+        "sourceRefs": [
+          "three.mesh-physical",
+          "three.pmrem",
+          "gltf.2",
+          "khronos.gltf-pbr",
+          "adobe.pbr-guide-2",
+          "google.filament-pbr"
+        ],
+        "visualCues": [
+          "elongated highlight aligned to brushing",
+          "neutral conductor reflection",
+          "parallel micro-scratches"
+        ]
+      },
+      "observations": [
+        "chromatic base-colour response",
+        "strong image-space gradient; verify it is material pattern, not lighting",
+        "single-image PBR inference requires controlled render validation"
+      ],
+      "crop": {
+        "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/03-dark-machined-hardware.png",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 165,
+          "height": 74
+        },
+        "sourceWidth": 165,
+        "sourceHeight": 74,
+        "loaderWarnings": [],
+        "coverage": 1.0
+      },
+      "textureAnalysis": {
+        "finishClass": "painted-metal",
+        "recipe": {
+          "metalness": 0.0,
+          "roughness": 0.5,
+          "clearcoat": 1.0,
+          "clearcoatRoughness": 0.05,
+          "transmission": 0.0,
+          "ior": 1.5,
+          "envMapIntensity": 1.0,
+          "anisotropy": 0.0,
+          "procedural": "flat-clearcoat"
+        },
+        "palette": [
+          "#9C9EA5",
+          "#5A5C61",
+          "#20282C",
+          "#131619",
+          "#0F1214"
+        ],
+        "paletteHueRisk": [
+          {
+            "stop": "#20282C",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              44,
+              40,
+              32
+            ]
+          },
+          {
+            "stop": "#131619",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              25,
+              22,
+              19
+            ]
+          },
+          {
+            "stop": "#0F1214",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              20,
+              18,
+              15
+            ]
+          }
+        ],
+        "gradientAxis": "vertical",
+        "stats": {
+          "meanLum": 61.7,
+          "meanSaturation": 0.196,
+          "gradientStrength": 0.559,
+          "mottle": 0.031,
+          "streakRatio": 1.04,
+          "hueSpread": 0.01,
+          "specularFraction": 0.02
+        }
+      },
+      "pbrReport": {
+        "ok": true,
+        "verdict": "pass",
+        "confidence": 0.86,
+        "estimatedFidelity": 0.86,
+        "targetThreshold": 0.7,
+        "materialId": "dark-detail",
+        "sourceImage": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/03-dark-machined-hardware.png",
+        "outDir": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-03-dark-machined-hardware",
+        "palette": [
+          "#0E1316",
+          "#D7DCE2",
+          "#07090B",
+          "#293741",
+          "#558FA8"
+        ],
+        "maps": {
+          "albedo": {
+            "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-03-dark-machined-hardware/dark-detail_albedo.png",
+            "url": "dark-detail_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-03-dark-machined-hardware/dark-detail_roughness.png",
+            "url": "dark-detail_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-03-dark-machined-hardware/dark-detail_height.png",
+            "url": "dark-detail_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-03-dark-machined-hardware/dark-detail_normal.png",
+            "url": "dark-detail_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-03-dark-machined-hardware/dark-detail_ao.png",
+            "url": "dark-detail_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 165,
+          "sourceHeight": 74,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 165,
+            "height": 74
+          },
+          "mask": {
+            "backgroundColor": "#0F1315",
+            "backgroundNoise": 99.358,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.4712
+          },
+          "mapStats": {
+            "valueRange": 0.8753,
+            "heightP90Gradient": 0.02779,
+            "roughnessBase": 0.683,
+            "roughnessVariation": 0.05,
+            "normalStrength": 0.189,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#0E1316",
+            "#D7DCE2",
+            "#07090B",
+            "#293741",
+            "#558FA8"
+          ]
+        },
+        "warnings": [
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ],
+        "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+      },
+      "referencePbr": {
+        "version": "1.0",
+        "sourceImage": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/03-dark-machined-hardware.png",
+        "extractor": "stage1_intake/extract_pbr_evidence.py",
+        "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
+        "usable": true,
+        "verdict": "pass",
+        "confidence": 0.86,
+        "estimatedFidelity": 0.86,
+        "targetThreshold": 0.7,
+        "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
+        "maps": {
+          "albedo": {
+            "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-03-dark-machined-hardware/dark-detail_albedo.png",
+            "url": "dark-detail_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-03-dark-machined-hardware/dark-detail_roughness.png",
+            "url": "dark-detail_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-03-dark-machined-hardware/dark-detail_height.png",
+            "url": "dark-detail_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-03-dark-machined-hardware/dark-detail_normal.png",
+            "url": "dark-detail_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-03-dark-machined-hardware/dark-detail_ao.png",
+            "url": "dark-detail_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 165,
+          "sourceHeight": 74,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 165,
+            "height": 74
+          },
+          "mask": {
+            "backgroundColor": "#0F1315",
+            "backgroundNoise": 99.358,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.4712
+          },
+          "mapStats": {
+            "valueRange": 0.8753,
+            "heightP90Gradient": 0.02779,
+            "roughnessBase": 0.683,
+            "roughnessVariation": 0.05,
+            "normalStrength": 0.189,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#0E1316",
+            "#D7DCE2",
+            "#07090B",
+            "#293741",
+            "#558FA8"
+          ]
+        },
+        "warnings": [
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ]
+      },
+      "maps": {
+        "albedo": {
+          "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-03-dark-machined-hardware/dark-detail_albedo.png",
+          "url": "dark-detail_albedo.png",
+          "channel": "albedo",
+          "source": "reference-pixel-extraction"
+        },
+        "roughness": {
+          "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-03-dark-machined-hardware/dark-detail_roughness.png",
+          "url": "dark-detail_roughness.png",
+          "channel": "roughness",
+          "source": "reference-pixel-extraction"
+        },
+        "height": {
+          "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-03-dark-machined-hardware/dark-detail_height.png",
+          "url": "dark-detail_height.png",
+          "channel": "height",
+          "source": "reference-pixel-extraction"
+        },
+        "normal": {
+          "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-03-dark-machined-hardware/dark-detail_normal.png",
+          "url": "dark-detail_normal.png",
+          "channel": "normal",
+          "source": "reference-pixel-extraction"
+        },
+        "ao": {
+          "path": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-region-evidence/pbr-03-dark-machined-hardware/dark-detail_ao.png",
+          "url": "dark-detail_ao.png",
+          "channel": "ao",
+          "source": "reference-pixel-extraction"
+        }
+      }
+    }
+  ],
+  "status": "proceed",
+  "limitations": [
+    "PBR extraction is reference-derived inference, not inverse rendering.",
+    "A crop must be checked against the component visible footprint before accepting material scores."
+  ],
+  "artifact": "/workspace/scratch/d1c5d8f30fba/Traversal-FPS/docs/art/platform-system/material-analysis.json"
+}

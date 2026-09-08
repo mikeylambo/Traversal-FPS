@@ -1,0 +1,58 @@
+{
+  "referenceId": "traversal-standard-deck",
+  "regions": [
+    {
+      "componentId": "deck-shell",
+      "regionId": "shell-white-coating",
+      "sourceImage": "material-crops/shell-white.png",
+      "bbox": { "x": 0, "y": 0, "width": 300, "height": 88 },
+      "family": "coating",
+      "subtype": "paint-over-metal",
+      "finish": "gloss-or-satin",
+      "materialId": "coating.painted-metal",
+      "materialSpecId": "shell-white",
+      "confidence": 0.829,
+      "source": "approved-reference"
+    },
+    {
+      "componentId": "undercarriage",
+      "regionId": "graphite-coating",
+      "sourceImage": "material-crops/graphite.png",
+      "bbox": { "x": 0, "y": 0, "width": 260, "height": 82 },
+      "family": "coating",
+      "subtype": "paint-over-metal",
+      "finish": "gloss-or-satin",
+      "materialId": "coating.painted-metal",
+      "materialSpecId": "graphite",
+      "confidence": 0.86,
+      "source": "approved-reference"
+    },
+    {
+      "componentId": "emitter-cyan",
+      "regionId": "cyan-emitter-lens",
+      "sourceImage": "material-crops/emitter-cyan.png",
+      "bbox": { "x": 0, "y": 0, "width": 130, "height": 62 },
+      "family": "plastic",
+      "subtype": "generic-polymer",
+      "finish": "glossy",
+      "materialId": "plastic.glossy",
+      "materialSpecId": "emitter-cyan",
+      "confidence": 0.86,
+      "source": "approved-reference"
+    },
+    {
+      "componentId": "corner-cap-array",
+      "regionId": "dark-machined-hardware",
+      "sourceImage": "material-crops/dark-detail.png",
+      "bbox": { "x": 0, "y": 0, "width": 165, "height": 74 },
+      "family": "metal",
+      "subtype": "steel",
+      "finish": "brushed",
+      "materialId": "metal.steel-brushed",
+      "materialSpecId": "dark-detail",
+      "confidence": 0.86,
+      "source": "approved-reference"
+    }
+  ],
+  "notObservedMaterials": []
+}
