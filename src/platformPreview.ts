@@ -38,7 +38,9 @@ scene.add(createTraversalMovingPlatformLookDevLights("reference"));
 const model = createTraversalMovingPlatformModel();
 if (!webglRenderer) {
   const fallbackMaterial = (materialId?: string, componentId?: string): THREE.MeshBasicMaterial => {
-    const color = materialId === "shell-white"
+    const color = componentId === "top-panel-x" || componentId === "top-panel-z"
+      ? 0x7d8a91
+      : materialId === "shell-white"
       ? 0xe7ecef
       : materialId === "emitter-cyan"
         ? 0x26d9f2

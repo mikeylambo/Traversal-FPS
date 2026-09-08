@@ -188,7 +188,7 @@
           "affects": "corner silhouette and white-to-graphite material break",
           "mapsTo": {
             "type": "component.localFeatures",
-            "ref": "corner-caps/cap-array"
+            "ref": "deck-shell/corner-cap-array"
           },
           "evidenceRef": "docs/art/platform-system/detail-inventory/zone-r1c0.png",
           "confidence": 0.93
@@ -248,7 +248,7 @@
           "affects": "corner cap local emission",
           "mapsTo": {
             "type": "component.localFeatures",
-            "ref": "corner-caps/cyan-nodes"
+            "ref": "deck-shell/corner-cyan-nodes"
           },
           "evidenceRef": "docs/art/platform-system/detail-inventory/zone-r1c2.png",
           "confidence": 0.88
@@ -268,7 +268,7 @@
           "affects": "shell and fascia microstructure",
           "mapsTo": {
             "type": "component.localFeatures",
-            "ref": "fasteners/perimeter-array"
+            "ref": "deck-shell/fastener-rows"
           },
           "evidenceRef": "docs/art/platform-system/detail-inventory/zone-r1c1.png",
           "confidence": 0.84
@@ -694,8 +694,7 @@
       "componentRefs": [
         "deck-shell",
         "undercarriage",
-        "fascia",
-        "corner-caps"
+        "fascia"
       ],
       "evidenceRefs": [
         "full-object",
@@ -715,8 +714,7 @@
       "minimumScore": 0.82,
       "mustPass": true,
       "componentRefs": [
-        "emitter-cyan",
-        "corner-caps"
+        "emitter-cyan"
       ],
       "evidenceRefs": [
         "front-fascia"
@@ -735,8 +733,7 @@
       "componentRefs": [
         "deck-shell",
         "top-panel-x",
-        "top-panel-z",
-        "fasteners"
+        "top-panel-z"
       ],
       "evidenceRefs": [
         "top-deck"
@@ -1359,6 +1356,9 @@
       "joints": [],
       "seams": [],
       "localFeatures": [
+        "corner-cap-array",
+        "corner-cyan-nodes",
+        "fastener-rows",
         "perimeter-chamfer",
         "top-panel-seams"
       ],
@@ -3148,184 +3148,6 @@
       "fidelityTier": "structural"
     },
     {
-      "id": "corner-caps",
-      "name": "Graphite corner cap array",
-      "level": "micro",
-      "role": "hardware",
-      "importance": 0.9,
-      "confidence": 0.94,
-      "primitive": "box",
-      "topologyClass": "assembled-solid",
-      "topologyRationale": "The reference shows a discrete rigid hard-surface part with countable planar faces and manufactured seams.",
-      "geometryDescriptor": {
-        "topologyIntent": "beveled hard-surface game prop",
-        "edgeTreatment": {
-          "type": "chamfer",
-          "bevelRadius": 0.018,
-          "segments": 2
-        },
-        "deformationStack": [],
-        "uvStrategy": "generated procedural coordinates",
-        "normalStrategy": "weighted vertex normals from generated geometry"
-      },
-      "colorMaterialRecipe": {
-        "dominantAlbedo": "rgba(65, 76, 85, 1)",
-        "secondaryAlbedo": "rgba(12, 17, 22, 1)",
-        "materialClass": "metal",
-        "materialClassConfidence": 0.93,
-        "colorGradient": {
-          "type": "linear",
-          "axis": [
-            0,
-            1,
-            0
-          ],
-          "stops": [
-            {
-              "position": 0,
-              "color": "rgba(12, 17, 22, 1)"
-            },
-            {
-              "position": 1,
-              "color": "rgba(65, 76, 85, 1)"
-            }
-          ]
-        }
-      },
-      "parent": "deck-shell",
-      "attachment": {
-        "parentId": "deck-shell",
-        "parentSocket": "deck-shell-surface",
-        "contactType": "overlap",
-        "localStart": [
-          0.43,
-          -0.055,
-          0.43
-        ],
-        "localEnd": [
-          0.43,
-          -0.055,
-          0.43
-        ],
-        "contactNormal": [
-          0,
-          1,
-          0
-        ],
-        "overlap": 0.025,
-        "embedDepth": 0.025,
-        "gapTolerance": 0.01,
-        "evidenceRefs": [
-          "front-fascia"
-        ]
-      },
-      "dimensions": {
-        "width": 0.13,
-        "height": 0.2,
-        "depth": 0.13,
-        "units": "relative",
-        "confidence": 0.94
-      },
-      "transform": {
-        "position": [
-          0.43,
-          -0.055,
-          0.43
-        ],
-        "rotation": [
-          0,
-          0,
-          0
-        ],
-        "scale": [
-          0.13,
-          0.2,
-          0.13
-        ]
-      },
-      "actionProfile": {
-        "animationRole": "static-presentation",
-        "pivot": {
-          "mode": "center",
-          "localPosition": [
-            0,
-            0,
-            0
-          ],
-          "axis": [
-            0,
-            1,
-            0
-          ],
-          "confidence": 0.95
-        },
-        "transformChannels": {
-          "translate": true,
-          "rotate": false,
-          "scale": false,
-          "bend": false,
-          "twist": false,
-          "detach": false,
-          "visibility": true,
-          "materialState": true
-        },
-        "sockets": [],
-        "collider": {
-          "type": "none",
-          "offset": [
-            0,
-            0,
-            0
-          ],
-          "scale": [
-            1,
-            1,
-            1
-          ],
-          "isTrigger": true,
-          "notes": "Presentation-only; authoritative collision remains on the parent gameplay mesh."
-        },
-        "constraints": [],
-        "destruction": {
-          "breakable": false,
-          "fractureGroup": "corner-caps",
-          "seamRefs": [],
-          "detachableFragments": [],
-          "breakImpulse": 0,
-          "debrisMaterial": "graphite"
-        }
-      },
-      "material": "dark-detail",
-      "materialLayers": [
-        "dark-detail"
-      ],
-      "deformations": [],
-      "joints": [],
-      "seams": [],
-      "localFeatures": [
-        "cap-array",
-        "cyan-nodes"
-      ],
-      "surfaceDetail": {
-        "macroRoughness": 0.12,
-        "microRoughness": 0.08,
-        "bumpAmplitude": 0.008,
-        "normalPattern": "fine machined-metal variation",
-        "displacementPattern": "none; silhouette relief is geometry",
-        "occlusionPattern": "darken sockets, seams, and chassis overlaps",
-        "edgeWearPattern": "subtle polished bevel crests",
-        "notes": "Keep microstructure below gameplay silhouette scale."
-      },
-      "evidenceRefs": [
-        "front-fascia"
-      ],
-      "details": [
-        "cap-array",
-        "cyan-nodes"
-      ],
-      "fidelityTier": "surface"
-    },
-    {
       "id": "emitter-cyan",
       "name": "Cyan rail emitters",
       "level": "micro",
@@ -3514,183 +3336,6 @@
       "details": [
         "front-rail",
         "side-rails"
-      ],
-      "fidelityTier": "surface"
-    },
-    {
-      "id": "fasteners",
-      "name": "Countersunk perimeter fasteners",
-      "level": "micro",
-      "role": "hardware",
-      "importance": 0.62,
-      "confidence": 0.94,
-      "primitive": "instanced-cluster",
-      "topologyClass": "surface-relief",
-      "topologyRationale": "Repeated fastener heads add shallow local relief without defining the platform volume.",
-      "geometryDescriptor": {
-        "topologyIntent": "beveled hard-surface game prop",
-        "edgeTreatment": {
-          "type": "none",
-          "bevelRadius": 0,
-          "segments": 2
-        },
-        "deformationStack": [],
-        "uvStrategy": "generated procedural coordinates",
-        "normalStrategy": "weighted vertex normals from generated geometry"
-      },
-      "colorMaterialRecipe": {
-        "dominantAlbedo": "rgba(65, 76, 85, 1)",
-        "secondaryAlbedo": "rgba(12, 17, 22, 1)",
-        "materialClass": "metal",
-        "materialClassConfidence": 0.93,
-        "colorGradient": {
-          "type": "linear",
-          "axis": [
-            0,
-            1,
-            0
-          ],
-          "stops": [
-            {
-              "position": 0,
-              "color": "rgba(12, 17, 22, 1)"
-            },
-            {
-              "position": 1,
-              "color": "rgba(65, 76, 85, 1)"
-            }
-          ]
-        }
-      },
-      "parent": "deck-shell",
-      "attachment": {
-        "parentId": "deck-shell",
-        "parentSocket": "deck-shell-surface",
-        "contactType": "overlap",
-        "localStart": [
-          0,
-          0.13,
-          0
-        ],
-        "localEnd": [
-          0,
-          0.13,
-          0
-        ],
-        "contactNormal": [
-          0,
-          1,
-          0
-        ],
-        "overlap": 0.025,
-        "embedDepth": 0.025,
-        "gapTolerance": 0.01,
-        "evidenceRefs": [
-          "top-deck"
-        ]
-      },
-      "dimensions": {
-        "width": 0.018,
-        "height": 0.009,
-        "depth": 0.018,
-        "units": "relative",
-        "confidence": 0.94
-      },
-      "transform": {
-        "position": [
-          0,
-          0.13,
-          0
-        ],
-        "rotation": [
-          0,
-          0,
-          0
-        ],
-        "scale": [
-          0.018,
-          0.009,
-          0.018
-        ]
-      },
-      "actionProfile": {
-        "animationRole": "static-presentation",
-        "pivot": {
-          "mode": "center",
-          "localPosition": [
-            0,
-            0,
-            0
-          ],
-          "axis": [
-            0,
-            1,
-            0
-          ],
-          "confidence": 0.95
-        },
-        "transformChannels": {
-          "translate": true,
-          "rotate": false,
-          "scale": false,
-          "bend": false,
-          "twist": false,
-          "detach": false,
-          "visibility": true,
-          "materialState": true
-        },
-        "sockets": [],
-        "collider": {
-          "type": "none",
-          "offset": [
-            0,
-            0,
-            0
-          ],
-          "scale": [
-            1,
-            1,
-            1
-          ],
-          "isTrigger": true,
-          "notes": "Presentation-only; authoritative collision remains on the parent gameplay mesh."
-        },
-        "constraints": [],
-        "destruction": {
-          "breakable": false,
-          "fractureGroup": "fasteners",
-          "seamRefs": [],
-          "detachableFragments": [],
-          "breakImpulse": 0,
-          "debrisMaterial": "graphite"
-        }
-      },
-      "material": "dark-detail",
-      "materialLayers": [
-        "dark-detail"
-      ],
-      "deformations": [],
-      "joints": [],
-      "seams": [],
-      "localFeatures": [
-        "perimeter-array"
-      ],
-      "surfaceDetail": {
-        "macroRoughness": 0.12,
-        "microRoughness": 0.08,
-        "bumpAmplitude": 0.008,
-        "normalPattern": "fine machined-metal variation",
-        "displacementPattern": "none; silhouette relief is geometry",
-        "occlusionPattern": "darken sockets, seams, and chassis overlaps",
-        "edgeWearPattern": "subtle polished bevel crests",
-        "notes": "Keep microstructure below gameplay silhouette scale."
-      },
-      "evidenceRefs": [
-        "top-deck",
-        "front-fascia"
-      ],
-      "details": [
-        "perimeter-array"
       ],
       "fidelityTier": "surface"
     },
@@ -5142,9 +4787,7 @@
         "central-cassette",
         "support-fin-left",
         "support-fin-right",
-        "corner-caps",
         "emitter-cyan",
-        "fasteners",
         "traversal-mark"
       ],
       "acceptance": [
@@ -5169,9 +4812,7 @@
         "central-cassette",
         "support-fin-left",
         "support-fin-right",
-        "corner-caps",
         "emitter-cyan",
-        "fasteners",
         "traversal-mark"
       ],
       "acceptance": [
@@ -5202,9 +4843,7 @@
         "central-cassette",
         "support-fin-left",
         "support-fin-right",
-        "corner-caps",
         "emitter-cyan",
-        "fasteners",
         "traversal-mark"
       ],
       "acceptance": [
@@ -5229,9 +4868,7 @@
         "central-cassette",
         "support-fin-left",
         "support-fin-right",
-        "corner-caps",
         "emitter-cyan",
-        "fasteners",
         "traversal-mark"
       ],
       "acceptance": [
@@ -5258,9 +4895,7 @@
         "central-cassette",
         "support-fin-left",
         "support-fin-right",
-        "corner-caps",
         "emitter-cyan",
-        "fasteners",
         "traversal-mark"
       ],
       "acceptance": [
@@ -5285,9 +4920,7 @@
         "central-cassette",
         "support-fin-left",
         "support-fin-right",
-        "corner-caps",
         "emitter-cyan",
-        "fasteners",
         "traversal-mark"
       ],
       "acceptance": [
