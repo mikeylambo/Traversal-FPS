@@ -9,7 +9,7 @@ This repository is the native SLU Web Shell build.
 - Renderer: Three.js
 - Shell Frames: `fps`, `arcade`
 - Shell target: `@slu/web-shell` 1.0.2 studio infrastructure
-- Shell commit: `a895920cdf151f23a5aaeb525ac72024b29101b5`
+- Shell commit: `750972a4292a0cf430ca9980671a84a61e83491e`
 - Current game milestone: full-content playtest build
 
 The old standalone HTML prototype is reference material only. Game systems in this repository are native Shell consumers.
