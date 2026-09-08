@@ -775,13 +775,15 @@
     "currentPass": "blockout",
     "completedPasses": [],
     "lastCompletedPass": "",
-    "blockedReason": "blockout requires a browser screenshot and self-correction review before structural-pass unlocks",
+    "blockedReason": "",
     "nextRequiredEvidence": [
-      "blockout browser render screenshot from your agent's browser/screenshot tool",
-      "side-by-side reference/render comparison sheet",
-      "AI vision score >= 0.7 with layer scores and mismatch critique",
-      "critical semantic feature scores from the same image pair meeting their individual thresholds",
-      "reviewHistory entry for blockout with action=continue"
+      "Silhouette reads correctly without materials.",
+      "Quality contract has named all required macro feature groups before code generation.",
+      "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold.",
+      "browser render screenshot from your agent's browser/screenshot tool",
+      "single side-by-side full reference/render comparison sheet",
+      "all critical semantic feature scores at or above their thresholds",
+      "self-correction review appended with action=continue before the next pass"
     ]
   },
   "lookDevTargets": {
@@ -1062,9 +1064,9 @@
           0
         ],
         "scale": [
-          1,
-          1,
-          1
+          0.72,
+          0.08,
+          0.66
         ]
       },
       "actionProfile": {
@@ -1288,7 +1290,7 @@
         ],
         "scale": [
           1,
-          1,
+          0.25,
           1
         ]
       },
@@ -1466,9 +1468,9 @@
           0
         ],
         "scale": [
-          1,
-          1,
-          1
+          0.9,
+          0.24,
+          0.86
         ]
       },
       "actionProfile": {
@@ -1645,9 +1647,9 @@
           0
         ],
         "scale": [
-          1,
-          1,
-          1
+          0.012,
+          0.008,
+          0.78
         ]
       },
       "actionProfile": {
@@ -1821,9 +1823,9 @@
           0
         ],
         "scale": [
-          1,
-          1,
-          1
+          0.78,
+          0.008,
+          0.012
         ]
       },
       "actionProfile": {
@@ -1997,9 +1999,9 @@
           0
         ],
         "scale": [
-          1,
-          1,
-          1
+          0.76,
+          0.14,
+          0.07
         ]
       },
       "actionProfile": {
@@ -2173,9 +2175,9 @@
           0
         ],
         "scale": [
-          1,
-          1,
-          1
+          0.76,
+          0.14,
+          0.07
         ]
       },
       "actionProfile": {
@@ -2349,9 +2351,9 @@
           0
         ],
         "scale": [
-          1,
-          1,
-          1
+          0.07,
+          0.14,
+          0.76
         ]
       },
       "actionProfile": {
@@ -2525,9 +2527,9 @@
           0
         ],
         "scale": [
-          1,
-          1,
-          1
+          0.07,
+          0.14,
+          0.76
         ]
       },
       "actionProfile": {
@@ -2701,9 +2703,9 @@
           0
         ],
         "scale": [
-          1,
-          1,
-          1
+          0.38,
+          0.23,
+          0.42
         ]
       },
       "actionProfile": {
@@ -2879,9 +2881,9 @@
           0
         ],
         "scale": [
-          1,
-          1,
-          1
+          0.16,
+          0.24,
+          0.5
         ]
       },
       "actionProfile": {
@@ -3055,9 +3057,9 @@
           0
         ],
         "scale": [
-          1,
-          1,
-          1
+          0.16,
+          0.24,
+          0.5
         ]
       },
       "actionProfile": {
@@ -3231,9 +3233,9 @@
           0
         ],
         "scale": [
-          1,
-          1,
-          1
+          0.13,
+          0.2,
+          0.13
         ]
       },
       "actionProfile": {
@@ -3409,9 +3411,9 @@
           0
         ],
         "scale": [
-          1,
-          1,
-          1
+          0.26,
+          0.032,
+          0.018
         ]
       },
       "actionProfile": {
@@ -3601,9 +3603,9 @@
           0
         ],
         "scale": [
-          1,
-          1,
-          1
+          0.018,
+          0.009,
+          0.018
         ]
       },
       "actionProfile": {
@@ -3778,9 +3780,9 @@
           0
         ],
         "scale": [
-          1,
-          1,
-          1
+          0.075,
+          0.075,
+          0.004
         ]
       },
       "actionProfile": {
@@ -5289,8 +5291,89 @@
       ]
     }
   ],
-  "visualEvidence": [],
-  "reviewHistory": [],
+  "visualEvidence": [
+    {
+      "timestamp": "2026-09-08T04:21:21.016708+00:00",
+      "passId": "blockout",
+      "estimatedFidelity": 0.12,
+      "aiVisionScore": 0.12,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.08,
+        "componentStructure": 0.14,
+        "formDetail": 0.08,
+        "materialSurface": 0.22,
+        "lightingCamera": 0.3
+      },
+      "featureReviews": [
+        {
+          "id": "overall-silhouette",
+          "score": 0.08,
+          "notes": "The reference is a thin layered deck; the render is a tall unit cube stack."
+        }
+      ],
+      "referenceScreenshot": "public/ui/traversal-platform-hero.png",
+      "renderScreenshot": "docs/art/platform-system/review/blockout/render-unit-scale-failed.jpg",
+      "comparisonImage": "docs/art/platform-system/review/blockout/comparison-unit-scale-failed.png",
+      "cameraView": "three-quarter",
+      "notes": "SVG fallback used because cloud Chrome has WebGL disabled; acceptable for this silhouette-only rejection.",
+      "aiVisionNotes": "The global category matches only at the level of a white hard-surface object. The height-to-footprint ratio, layered deck silhouette, undercarriage read, and camera-facing proportions are decisively incorrect because geometry dimensions were not applied to transforms."
+    }
+  ],
+  "reviewHistory": [
+    {
+      "timestamp": "2026-09-08T04:21:21.016708+00:00",
+      "passId": "blockout",
+      "estimatedFidelity": 0.12,
+      "aiVisionScore": 0.12,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.08,
+        "componentStructure": 0.14,
+        "formDetail": 0.08,
+        "materialSurface": 0.22,
+        "lightingCamera": 0.3
+      },
+      "featureReviews": [
+        {
+          "id": "overall-silhouette",
+          "score": 0.08,
+          "notes": "The reference is a thin layered deck; the render is a tall unit cube stack."
+        }
+      ],
+      "action": "refine-spec",
+      "summary": "Blockout rejected: primitive transforms ignored the authored part dimensions and produced stacked unit cubes.",
+      "matched": [
+        "Scene loads in deployed browser",
+        "macro nodes are present",
+        "reference and render evidence captured"
+      ],
+      "mismatches": [
+        "Platform is cube-like instead of a thin horizontal deck",
+        "undercarriage hierarchy is visually collapsed",
+        "overall silhouette fails the approved reference"
+      ],
+      "specFixes": [
+        "Set every component transform.scale from its authored width height depth dimensions"
+      ],
+      "codeFixes": [
+        "Keep SVG review floor disabled so fallback evidence isolates the asset"
+      ],
+      "evidence": [],
+      "mapStrippedRender": "docs/art/platform-system/review/blockout/render-unit-scale-failed.jpg",
+      "reviewViewpoints": [
+        "three-quarter"
+      ],
+      "visualEvidence": {
+        "referenceScreenshot": "public/ui/traversal-platform-hero.png",
+        "renderScreenshot": "docs/art/platform-system/review/blockout/render-unit-scale-failed.jpg",
+        "comparisonImage": "docs/art/platform-system/review/blockout/comparison-unit-scale-failed.png",
+        "cameraView": "three-quarter",
+        "notes": "SVG fallback used because cloud Chrome has WebGL disabled; acceptable for this silhouette-only rejection.",
+        "aiVisionNotes": "The global category matches only at the level of a white hard-surface object. The height-to-footprint ratio, layered deck silhouette, undercarriage read, and camera-facing proportions are decisively incorrect because geometry dimensions were not applied to transforms."
+      }
+    }
+  ],
   "lodPlan": [
     {
       "tier": "near",
@@ -5503,6 +5586,274 @@
           "source": "reference-pixel-extraction"
         }
       }
+    }
+  ],
+  "tier1Results": [
+    {
+      "passed": false,
+      "checks": {
+        "silhouetteIoU": 0.8886,
+        "aspectRatioDelta": 0.0,
+        "scaleDelta": 0.0,
+        "bilateralSymmetryError": 0.0008,
+        "colorDelta": {
+          "checked": 16,
+          "maxDeltaE": 41.21,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 7.2
+            },
+            {
+              "componentId": null,
+              "deltaE": 5.84
+            },
+            {
+              "componentId": null,
+              "deltaE": 7.2
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.95
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.95
+            },
+            {
+              "componentId": null,
+              "deltaE": 5.84
+            },
+            {
+              "componentId": null,
+              "deltaE": 5.84
+            },
+            {
+              "componentId": null,
+              "deltaE": 5.84
+            },
+            {
+              "componentId": null,
+              "deltaE": 5.84
+            },
+            {
+              "componentId": null,
+              "deltaE": 7.2
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.95
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.95
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.95
+            },
+            {
+              "componentId": null,
+              "deltaE": 41.21
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.95
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.95
+            }
+          ],
+          "gated": false
+        }
+      },
+      "failures": [
+        "blockout requires --map-stripped-render evidence"
+      ],
+      "maskWarnings": [
+        "reference: image is not clearly isolated from background; using most pixels as material evidence",
+        "render: image is not clearly isolated from background; using most pixels as material evidence"
+      ],
+      "renderHash": "b5c05a1f1f0ce89e",
+      "passId": "blockout"
+    },
+    {
+      "passed": false,
+      "checks": {
+        "silhouetteIoU": 0.8886,
+        "aspectRatioDelta": 0.0,
+        "scaleDelta": 0.0,
+        "bilateralSymmetryError": 0.0008,
+        "colorDelta": {
+          "checked": 16,
+          "maxDeltaE": 41.21,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 7.2
+            },
+            {
+              "componentId": null,
+              "deltaE": 5.84
+            },
+            {
+              "componentId": null,
+              "deltaE": 7.2
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.95
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.95
+            },
+            {
+              "componentId": null,
+              "deltaE": 5.84
+            },
+            {
+              "componentId": null,
+              "deltaE": 5.84
+            },
+            {
+              "componentId": null,
+              "deltaE": 5.84
+            },
+            {
+              "componentId": null,
+              "deltaE": 5.84
+            },
+            {
+              "componentId": null,
+              "deltaE": 7.2
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.95
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.95
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.95
+            },
+            {
+              "componentId": null,
+              "deltaE": 41.21
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.95
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.95
+            }
+          ],
+          "gated": false
+        }
+      },
+      "failures": [
+        "blockout requires --map-stripped-render evidence"
+      ],
+      "maskWarnings": [
+        "reference: image is not clearly isolated from background; using most pixels as material evidence",
+        "render: image is not clearly isolated from background; using most pixels as material evidence"
+      ],
+      "renderHash": "b5c05a1f1f0ce89e",
+      "passId": "blockout"
+    },
+    {
+      "passed": true,
+      "checks": {
+        "silhouetteIoU": 0.8886,
+        "aspectRatioDelta": 0.0,
+        "scaleDelta": 0.0,
+        "bilateralSymmetryError": 0.0008,
+        "colorDelta": {
+          "checked": 16,
+          "maxDeltaE": 41.21,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 7.2
+            },
+            {
+              "componentId": null,
+              "deltaE": 5.84
+            },
+            {
+              "componentId": null,
+              "deltaE": 7.2
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.95
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.95
+            },
+            {
+              "componentId": null,
+              "deltaE": 5.84
+            },
+            {
+              "componentId": null,
+              "deltaE": 5.84
+            },
+            {
+              "componentId": null,
+              "deltaE": 5.84
+            },
+            {
+              "componentId": null,
+              "deltaE": 5.84
+            },
+            {
+              "componentId": null,
+              "deltaE": 7.2
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.95
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.95
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.95
+            },
+            {
+              "componentId": null,
+              "deltaE": 41.21
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.95
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.95
+            }
+          ],
+          "gated": false
+        }
+      },
+      "failures": [],
+      "maskWarnings": [
+        "reference: image is not clearly isolated from background; using most pixels as material evidence",
+        "render: image is not clearly isolated from background; using most pixels as material evidence"
+      ],
+      "renderHash": "b5c05a1f1f0ce89e",
+      "passId": "blockout",
+      "mapStrippedRender": "docs/art/platform-system/review/blockout/render-unit-scale-failed.jpg"
     }
   ]
 }
