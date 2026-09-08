@@ -1615,12 +1615,12 @@
         "contactType": "overlap",
         "localStart": [
           0,
-          0.505,
+          0.13,
           0
         ],
         "localEnd": [
           0,
-          0.505,
+          0.13,
           0
         ],
         "contactNormal": [
@@ -1645,7 +1645,7 @@
       "transform": {
         "position": [
           0,
-          0.505,
+          0.13,
           0
         ],
         "rotation": [
@@ -1791,12 +1791,12 @@
         "contactType": "overlap",
         "localStart": [
           0,
-          0.505,
+          0.13,
           0
         ],
         "localEnd": [
           0,
-          0.505,
+          0.13,
           0
         ],
         "contactNormal": [
@@ -1821,7 +1821,7 @@
       "transform": {
         "position": [
           0,
-          0.505,
+          0.13,
           0
         ],
         "rotation": [
@@ -1967,12 +1967,12 @@
         "contactType": "overlap",
         "localStart": [
           0,
-          0.325,
+          -0.05,
           0.475
         ],
         "localEnd": [
           0,
-          0.325,
+          -0.05,
           0.475
         ],
         "contactNormal": [
@@ -1997,7 +1997,7 @@
       "transform": {
         "position": [
           0,
-          0.325,
+          -0.05,
           0.475
         ],
         "rotation": [
@@ -2143,12 +2143,12 @@
         "contactType": "overlap",
         "localStart": [
           0,
-          0.325,
+          -0.05,
           -0.475
         ],
         "localEnd": [
           0,
-          0.325,
+          -0.05,
           -0.475
         ],
         "contactNormal": [
@@ -2173,7 +2173,7 @@
       "transform": {
         "position": [
           0,
-          0.325,
+          -0.05,
           -0.475
         ],
         "rotation": [
@@ -2319,12 +2319,12 @@
         "contactType": "overlap",
         "localStart": [
           -0.475,
-          0.325,
+          -0.05,
           0
         ],
         "localEnd": [
           -0.475,
-          0.325,
+          -0.05,
           0
         ],
         "contactNormal": [
@@ -2349,7 +2349,7 @@
       "transform": {
         "position": [
           -0.475,
-          0.325,
+          -0.05,
           0
         ],
         "rotation": [
@@ -2495,12 +2495,12 @@
         "contactType": "overlap",
         "localStart": [
           0.475,
-          0.325,
+          -0.05,
           0
         ],
         "localEnd": [
           0.475,
-          0.325,
+          -0.05,
           0
         ],
         "contactNormal": [
@@ -2525,7 +2525,7 @@
       "transform": {
         "position": [
           0.475,
-          0.325,
+          -0.05,
           0
         ],
         "rotation": [
@@ -2671,12 +2671,12 @@
         "contactType": "overlap",
         "localStart": [
           0,
-          0.015,
+          -0.155,
           0.02
         ],
         "localEnd": [
           0,
-          0.015,
+          -0.155,
           0.02
         ],
         "contactNormal": [
@@ -2701,7 +2701,7 @@
       "transform": {
         "position": [
           0,
-          0.015,
+          -0.155,
           0.02
         ],
         "rotation": [
@@ -2849,12 +2849,12 @@
         "contactType": "overlap",
         "localStart": [
           -0.28,
-          0.04,
+          -0.13,
           0
         ],
         "localEnd": [
           -0.28,
-          0.04,
+          -0.13,
           0
         ],
         "contactNormal": [
@@ -2879,7 +2879,7 @@
       "transform": {
         "position": [
           -0.28,
-          0.04,
+          -0.13,
           0
         ],
         "rotation": [
@@ -3025,12 +3025,12 @@
         "contactType": "overlap",
         "localStart": [
           0.28,
-          0.04,
+          -0.13,
           0
         ],
         "localEnd": [
           0.28,
-          0.04,
+          -0.13,
           0
         ],
         "contactNormal": [
@@ -3055,7 +3055,7 @@
       "transform": {
         "position": [
           0.28,
-          0.04,
+          -0.13,
           0
         ],
         "rotation": [
@@ -3201,12 +3201,12 @@
         "contactType": "overlap",
         "localStart": [
           0.43,
-          0.32,
+          -0.055,
           0.43
         ],
         "localEnd": [
           0.43,
-          0.32,
+          -0.055,
           0.43
         ],
         "contactNormal": [
@@ -3231,7 +3231,7 @@
       "transform": {
         "position": [
           0.43,
-          0.32,
+          -0.055,
           0.43
         ],
         "rotation": [
@@ -3379,13 +3379,13 @@
         "contactType": "overlap",
         "localStart": [
           0.25,
-          0.285,
-          0.516
+          -0.04,
+          0.041
         ],
         "localEnd": [
           0.25,
-          0.285,
-          0.516
+          -0.04,
+          0.041
         ],
         "contactNormal": [
           0,
@@ -3409,8 +3409,8 @@
       "transform": {
         "position": [
           0.25,
-          0.285,
-          0.516
+          -0.04,
+          0.041
         ],
         "rotation": [
           0,
@@ -3571,12 +3571,12 @@
         "contactType": "overlap",
         "localStart": [
           0,
-          0.505,
+          0.13,
           0
         ],
         "localEnd": [
           0,
-          0.505,
+          0.13,
           0
         ],
         "contactNormal": [
@@ -3601,7 +3601,7 @@
       "transform": {
         "position": [
           0,
-          0.505,
+          0.13,
           0
         ],
         "rotation": [
@@ -3748,13 +3748,13 @@
         "contactType": "overlap",
         "localStart": [
           0,
-          0.34,
-          0.516
+          0.015,
+          0.041
         ],
         "localEnd": [
           0,
-          0.34,
-          0.516
+          0.015,
+          0.041
         ],
         "contactNormal": [
           0,
@@ -3778,8 +3778,8 @@
       "transform": {
         "position": [
           0,
-          0.34,
-          0.516
+          0.015,
+          0.041
         ],
         "rotation": [
           0,
