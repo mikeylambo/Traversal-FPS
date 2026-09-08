@@ -772,17 +772,24 @@
       "interaction-pass",
       "optimization-pass"
     ],
-    "currentPass": "blockout",
-    "completedPasses": [],
-    "lastCompletedPass": "",
+    "currentPass": "structural-pass",
+    "completedPasses": [
+      "blockout"
+    ],
+    "lastCompletedPass": "blockout",
     "blockedReason": "",
     "nextRequiredEvidence": [
-      "Silhouette reads correctly without materials.",
-      "Quality contract has named all required macro feature groups before code generation.",
+      "Macro, meso, and repeated structures meet qualityContract.minimumSpecDepth.",
+      "Parent-child relations, joints, seams, sockets, and contact points are explicit.",
+      "Every attached child appendage/connector has parentSocket, localStart/localEnd, contactType, embedDepth or overlap, and gapTolerance.",
       "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold.",
+      "attachment contracts for child appendages/connectors",
+      "no floating child roots/joints in the browser screenshot",
       "browser render screenshot from your agent's browser/screenshot tool",
-      "single side-by-side full reference/render comparison sheet",
-      "all critical semantic feature scores at or above their thresholds",
+      "side-by-side reference/render comparison sheet for AI vision review",
+      "banded interior difference vs the reference baseline (forge/stage4_review/interior_difference.py --from/--to per region)",
+      "AI vision score at or above the visual acceptance threshold",
+      "all critical semantic feature scores from the shared image pair at or above their thresholds",
       "self-correction review appended with action=continue before the next pass"
     ]
   },
@@ -5318,6 +5325,33 @@
       "cameraView": "three-quarter",
       "notes": "SVG fallback used because cloud Chrome has WebGL disabled; acceptable for this silhouette-only rejection.",
       "aiVisionNotes": "The global category matches only at the level of a white hard-surface object. The height-to-footprint ratio, layered deck silhouette, undercarriage read, and camera-facing proportions are decisively incorrect because geometry dimensions were not applied to transforms."
+    },
+    {
+      "timestamp": "2026-09-08T04:29:46.474547+00:00",
+      "passId": "blockout",
+      "estimatedFidelity": 0.74,
+      "aiVisionScore": 0.74,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.82,
+        "componentStructure": 0.75,
+        "formDetail": 0.48,
+        "materialSurface": 0.36,
+        "lightingCamera": 0.61
+      },
+      "featureReviews": [
+        {
+          "id": "overall-silhouette",
+          "score": 0.81,
+          "notes": "The square deck, thin upper mass, inset chassis, and stepped underside match the reference family at blockout fidelity."
+        }
+      ],
+      "referenceScreenshot": "public/ui/traversal-platform-hero.png",
+      "renderScreenshot": "docs/art/platform-system/review/blockout/render-three-quarter.jpg",
+      "comparisonImage": "docs/art/platform-system/review/blockout/comparison.png",
+      "cameraView": "three-quarter",
+      "notes": "Primary comparison uses the reference-matched three-quarter; front and side orbit captures confirm the silhouette is stable. SVG is used only as map-stripped silhouette evidence because cloud WebGL is disabled.",
+      "aiVisionNotes": "The corrected render now presents the same broad Standard Deck silhouette: a light square slab above a recessed dark mechanical mass. Fine chamfers, fascia rails, feet, seams, logo, and emissive rhythm remain intentionally absent at blockout and are assigned to later passes."
     }
   ],
   "reviewHistory": [
@@ -5371,6 +5405,61 @@
         "cameraView": "three-quarter",
         "notes": "SVG fallback used because cloud Chrome has WebGL disabled; acceptable for this silhouette-only rejection.",
         "aiVisionNotes": "The global category matches only at the level of a white hard-surface object. The height-to-footprint ratio, layered deck silhouette, undercarriage read, and camera-facing proportions are decisively incorrect because geometry dimensions were not applied to transforms."
+      }
+    },
+    {
+      "timestamp": "2026-09-08T04:29:46.474547+00:00",
+      "passId": "blockout",
+      "estimatedFidelity": 0.74,
+      "aiVisionScore": 0.74,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.82,
+        "componentStructure": 0.75,
+        "formDetail": 0.48,
+        "materialSurface": 0.36,
+        "lightingCamera": 0.61
+      },
+      "featureReviews": [
+        {
+          "id": "overall-silhouette",
+          "score": 0.81,
+          "notes": "The square deck, thin upper mass, inset chassis, and stepped underside match the reference family at blockout fidelity."
+        }
+      ],
+      "action": "continue",
+      "summary": "Blockout accepted: a thin white deck, inset graphite chassis, and stepped central cassette now read consistently across three deployed views.",
+      "matched": [
+        "Horizontal square deck mass matches the Standard Deck top-view family",
+        "white shell over inset dark chassis reads immediately",
+        "stepped underside survives front three-quarter and side views"
+      ],
+      "mismatches": [
+        "Chamfered corners and separated support fins are deferred to form and structural passes",
+        "deployed SVG fallback cannot judge PBR response"
+      ],
+      "specFixes": [],
+      "codeFixes": [
+        "Advance through structural and form passes before registry integration"
+      ],
+      "evidence": [
+        "docs/art/platform-system/review/blockout/render-three-quarter.jpg",
+        "docs/art/platform-system/review/blockout/render-front.jpg",
+        "docs/art/platform-system/review/blockout/render-side.jpg"
+      ],
+      "mapStrippedRender": "docs/art/platform-system/review/blockout/render-three-quarter.jpg",
+      "reviewViewpoints": [
+        "three-quarter",
+        "long-axis",
+        "thickness-axis"
+      ],
+      "visualEvidence": {
+        "referenceScreenshot": "public/ui/traversal-platform-hero.png",
+        "renderScreenshot": "docs/art/platform-system/review/blockout/render-three-quarter.jpg",
+        "comparisonImage": "docs/art/platform-system/review/blockout/comparison.png",
+        "cameraView": "three-quarter",
+        "notes": "Primary comparison uses the reference-matched three-quarter; front and side orbit captures confirm the silhouette is stable. SVG is used only as map-stripped silhouette evidence because cloud WebGL is disabled.",
+        "aiVisionNotes": "The corrected render now presents the same broad Standard Deck silhouette: a light square slab above a recessed dark mechanical mass. Fine chamfers, fascia rails, feet, seams, logo, and emissive rhythm remain intentionally absent at blockout and are assigned to later passes."
       }
     }
   ],
@@ -5854,6 +5943,94 @@
       "renderHash": "b5c05a1f1f0ce89e",
       "passId": "blockout",
       "mapStrippedRender": "docs/art/platform-system/review/blockout/render-unit-scale-failed.jpg"
+    },
+    {
+      "passed": true,
+      "checks": {
+        "silhouetteIoU": 0.8903,
+        "aspectRatioDelta": 0.0,
+        "scaleDelta": 0.0,
+        "bilateralSymmetryError": 0.0001,
+        "colorDelta": {
+          "checked": 16,
+          "maxDeltaE": 37.73,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 1.89
+            },
+            {
+              "componentId": null,
+              "deltaE": 1.24
+            },
+            {
+              "componentId": null,
+              "deltaE": 1.89
+            },
+            {
+              "componentId": null,
+              "deltaE": 18.43
+            },
+            {
+              "componentId": null,
+              "deltaE": 18.43
+            },
+            {
+              "componentId": null,
+              "deltaE": 1.24
+            },
+            {
+              "componentId": null,
+              "deltaE": 1.24
+            },
+            {
+              "componentId": null,
+              "deltaE": 1.24
+            },
+            {
+              "componentId": null,
+              "deltaE": 1.24
+            },
+            {
+              "componentId": null,
+              "deltaE": 1.89
+            },
+            {
+              "componentId": null,
+              "deltaE": 18.43
+            },
+            {
+              "componentId": null,
+              "deltaE": 18.43
+            },
+            {
+              "componentId": null,
+              "deltaE": 18.43
+            },
+            {
+              "componentId": null,
+              "deltaE": 37.73
+            },
+            {
+              "componentId": null,
+              "deltaE": 18.43
+            },
+            {
+              "componentId": null,
+              "deltaE": 18.43
+            }
+          ],
+          "gated": false
+        }
+      },
+      "failures": [],
+      "maskWarnings": [
+        "reference: image is not clearly isolated from background; using most pixels as material evidence",
+        "render: image is not clearly isolated from background; using most pixels as material evidence"
+      ],
+      "renderHash": "8425134086c74315",
+      "passId": "blockout",
+      "mapStrippedRender": "docs/art/platform-system/review/blockout/render-three-quarter.jpg"
     }
   ]
 }
