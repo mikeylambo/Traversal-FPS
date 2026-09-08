@@ -36,7 +36,12 @@ const scene = new THREE.Scene();
 // part of the silhouette. The in-game environment remains unchanged.
 scene.background = new THREE.Color(0x0a0a0a);
 if (webglRenderer) scene.environment = createTraversalMovingPlatformEnvironment(webglRenderer);
-scene.add(createTraversalMovingPlatformLookDevLights("reference"));
+const reviewParams = new URLSearchParams(location.search);
+const requestedLight = reviewParams.get("light");
+const lightMode = requestedLight === "neutral" || requestedLight === "grazing"
+  ? requestedLight
+  : "reference";
+scene.add(createTraversalMovingPlatformLookDevLights(lightMode));
 
 const model = createTraversalMovingPlatformModel();
 if (!webglRenderer) {
@@ -84,7 +89,7 @@ if (!webglRenderer) {
     if (component) object.material = fallbackMaterial(component.material, component.id);
   });
 }
-model.rotation.y = THREE.MathUtils.degToRad(Number(new URLSearchParams(location.search).get("angle") ?? 24));
+model.rotation.y = THREE.MathUtils.degToRad(Number(reviewParams.get("angle") ?? 24));
 scene.add(model);
 
 if (webglRenderer) {
