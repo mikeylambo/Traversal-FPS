@@ -272,8 +272,7 @@ function playProcedural(event: TraversalAudioEvent, detail: TraversalAudioDetail
       return;
 
     case "ui.select":
-    case "ui.hover":
-      tone(ctx, bus, 880, 900, 0.03, "sine", 0.012);
+      tone(ctx, bus, 880, 900, 0.03, "sine", 0.008);
       return;
 
     case "route.fail":

@@ -9,7 +9,7 @@ their takes together; cues marked **alternating** rotate between takes.
 
 | Trigger | Bus | Load | Assets | Composition | Visual pairing |
 | --- | --- | --- | --- | --- | --- |
-| `rifle.fire` | sfx | core | `rifle-fire-a`<br>`rifle-fire-b`<br>`rifle-fire-c` | alternating | Muzzle FX + shot trace + `body.rifle-fired` impulse. |
+| `rifle.fire` | sfx | core | `rifle-fire-body`<br>`rifle-fire-air` | layered | Muzzle FX + shot trace + `body.rifle-fired` impulse. |
 | `vector.write` | sfx | core | `vector-write-body`<br>`vector-write-shimmer` | layered | Live warp vector line + beam + `WARP VECTOR WRITTEN` flash message. |
 | `warp.commit` | sfx | core | `warp-commit`<br>`warp-transit-a`<br>`warp-transit-b` | layered | Endpoint burst, destination lock, warp streaks, `body.warp-committed`. |
 | `warp.arrive` | sfx | core | `warp-arrive-a`<br>`warp-arrive-b` | alternating | Arrival burst FX + `body.warp-arrival` flash. |
@@ -38,13 +38,12 @@ their takes together; cues marked **alternating** rotate between takes.
 | `achievement.unlock` | music | deferred | `achievement-body`<br>`achievement-air` | layered | Achievement toast. |
 | `ui.confirm` | ui | core | `ui-confirm` | single | Screen change / row activation. presentation-only. |
 | `ui.back` | ui | core | `ui-back` | single | Screen change. presentation-only. |
-| `ui.select` | ui | core | `ui-select` | single | Focus ring moves. presentation-only. |
+| `ui.select` | ui | core | `ui-nav-tick` | single | Focus ring moves. presentation-only. |
 | `route.fail` | sfx | core | `route-fail` | single | `CLEAN ROUTE FAILED // …` flash message + the run resetting the room. |
-| `ui.hover` | ui | core | `ui-hover` | single | Hover styling. presentation-only. |
 
 ## Notes
 
-- **`rifle.fire`** — Three takes round-robin rather than layer: the rifle fires every 320ms and repetition, not thinness, is the failure mode.
+- **`rifle.fire`** — Layered, not alternated. The three authored takes are not peers: one has a 10.7ms transient and 65% of its energy below 200Hz, one is bright and airy with a weak low end, one is a 231ms swell. Round-robin across them read as three different weapons. The first two are complementary, so they layer into a single consistent report — body plus air — and the swell is held back.
 - **`vector.write`** — Layered: take #2 is the body, take #3 is a near-silent bright shimmer. Complementary, so both play.
 - **`warp.commit`** — Layered: commit transient + both short-transit takes staggered. Transits are usually under 200ms, so transit reads as the tail of the commit rather than a separate cue.
 - **`warp.arrive`** — Peer takes at similar level and brightness, so they alternate instead of layering.
@@ -59,11 +58,13 @@ their takes together; cues marked **alternating** rotate between takes.
 - **`exit.loop`** — Positional bed that only runs while the exit is actually open. It tells you where the exit is without looking — the same job the ground cue does for landings.
 - **`sector.enter`** — Not a round-robin: Campaign picks the fuller take, timed/challenge modes the leaner one. Selected by `detail.campaign`.
 - **`achievement.unlock`** — Layered: a warm take and a bright take. Rare enough that richness wins.
-- **`ui.select`** — The author-named `menu select SFX TraversalFPS.wav` was filed under ui_error. Its name is the stronger signal, so it drives menu navigation and the other take in that folder is the error cue.
+- **`ui.select`** — Keyboard and controller only. Moving a mouse across a list is passive — it sweeps several rows in one gesture and the focus styling already shows where you are — so pointer hover is deliberately silent.
 - **`route.fail`** — The authored ui_error take earns its keep on the one denial a player actually meets: a Challenge clean-route failure. The Shell skips disabled menu rows, so a menu error state is unreachable and wiring it there would have been dead audio.
 
 ## Authored but not shipped
 
+- **`rifle-fire-swell`** (`Traversal FPS SFX/rifle_fire_01/“Futuristic_spatial__#4-1788295355961.wav`) — 231ms attack — a swell, not a report. At the rifle's 320ms cadence it smears into the following shot, and next to the other two takes it reads as a different weapon.
+- **`ui-menu-select`** (`Traversal FPS SFX/UI/ui_error/menu select SFX TraversalFPS.wav`) — Confirm-weight, too substantial to fire on every row a player passes through. The ui_confirm take already covers activation; this is the alternate for it if that one ever feels too light.
 - **`gravity-ring-dormant-a`** (`Traversal FPS SFX/gravity ring/gravity_ring_dormant_loop — optional later/“Very_quiet_dormant__#1-1788297135237.wav`) — Author marked this 'optional later'. A dormant-ring bed would sit under every locked exit for the whole run; held back until the mix is judged with the active loop in place.
 - **`gravity-ring-dormant-b`** (`Traversal FPS SFX/gravity ring/gravity_ring_dormant_loop — optional later/“Very_quiet_dormant__#3-1788297140026.wav`) — Second dormant take. Same reasoning as gravity-ring-dormant-a.
 

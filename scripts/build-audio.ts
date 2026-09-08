@@ -248,7 +248,8 @@ function buildAsset(ffmpeg: string, sourceRoot: string, spec: AudioAssetSpec, sc
 
   const bounds = contentBounds(pcm);
   const preRoll = Math.floor(pcm.sampleRate * PRE_ROLL_SECONDS);
-  const start = Math.max(0, bounds.start - preRoll);
+  const headTrim = Math.floor(pcm.sampleRate * (spec.headTrimSeconds ?? 0));
+  const start = Math.max(0, bounds.start - preRoll) + headTrim;
   const end = Math.min(bounds.end, start + Math.round(pcm.sampleRate * spec.maxSeconds));
   pcm = slice(pcm, start, Math.max(start + 1, end));
 
