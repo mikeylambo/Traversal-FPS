@@ -19,7 +19,7 @@
     "audio:doctor": "tsx scripts/audio-doctor.ts"
   },
   "dependencies": {
-    "@slu/web-shell": "github:mikeylambo/Web-Game-Shell-v1.02#a895920cdf151f23a5aaeb525ac72024b29101b5",
+    "@slu/web-shell": "github:mikeylambo/Web-Game-Shell-v1.02#750972a4292a0cf430ca9980671a84a61e83491e",
     "three": "^0.180.0"
   },
   "devDependencies": {
