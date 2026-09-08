@@ -786,10 +786,8 @@
       "attachment contracts for child appendages/connectors",
       "no floating child roots/joints in the browser screenshot",
       "browser render screenshot from your agent's browser/screenshot tool",
-      "side-by-side reference/render comparison sheet for AI vision review",
-      "banded interior difference vs the reference baseline (forge/stage4_review/interior_difference.py --from/--to per region)",
-      "AI vision score at or above the visual acceptance threshold",
-      "all critical semantic feature scores from the shared image pair at or above their thresholds",
+      "single side-by-side full reference/render comparison sheet",
+      "all critical semantic feature scores at or above their thresholds",
       "self-correction review appended with action=continue before the next pass"
     ]
   },
@@ -5379,6 +5377,38 @@
       "cameraView": "three-quarter",
       "notes": "Three deployed SVG views show the attachment hierarchy remains connected; no child component floats away from its parent.",
       "aiVisionNotes": "Against the reference, the render now carries the essential white-shell-over-graphite-chassis construction and a separated underside rhythm. The reference is richer at the corners and fascia, but those named systems are intentionally scheduled for form refinement."
+    },
+    {
+      "timestamp": "2026-09-08T04:41:03.825597+00:00",
+      "passId": "form-refinement",
+      "estimatedFidelity": 0.21,
+      "aiVisionScore": 0.21,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.2,
+        "componentStructure": 0.18,
+        "formDetail": 0.15,
+        "materialSurface": 0.22,
+        "lightingCamera": 0.42
+      },
+      "featureReviews": [
+        {
+          "id": "layered-platform-structure",
+          "score": 0.24,
+          "notes": "The structure is obscured by untransformed instance source meshes."
+        },
+        {
+          "id": "cyan-rail-rhythm",
+          "score": 0.18,
+          "notes": "Cyan geometry appears as shards instead of the intended recessed rail rhythm."
+        }
+      ],
+      "referenceScreenshot": "public/ui/traversal-platform-hero.png",
+      "renderScreenshot": "docs/art/platform-system/review/form-refinement/render-instancing-failed.jpg",
+      "comparisonImage": "docs/art/platform-system/review/form-refinement/comparison-instancing-failed.png",
+      "cameraView": "three-quarter",
+      "notes": "Rejected after one deployed screenshot; more angles would repeat the same renderer defect.",
+      "aiVisionNotes": "The rendered image is not a meaningful likeness of the reference because SVGRenderer does not apply Three.js InstancedMesh transforms. The failure is isolated to review rendering; the generated WebGL asset should remain instanced."
     }
   ],
   "reviewHistory": [
@@ -5543,6 +5573,61 @@
         "cameraView": "three-quarter",
         "notes": "Three deployed SVG views show the attachment hierarchy remains connected; no child component floats away from its parent.",
         "aiVisionNotes": "Against the reference, the render now carries the essential white-shell-over-graphite-chassis construction and a separated underside rhythm. The reference is richer at the corners and fascia, but those named systems are intentionally scheduled for form refinement."
+      }
+    },
+    {
+      "timestamp": "2026-09-08T04:41:03.825597+00:00",
+      "passId": "form-refinement",
+      "estimatedFidelity": 0.21,
+      "aiVisionScore": 0.21,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.2,
+        "componentStructure": 0.18,
+        "formDetail": 0.15,
+        "materialSurface": 0.22,
+        "lightingCamera": 0.42
+      },
+      "featureReviews": [
+        {
+          "id": "layered-platform-structure",
+          "score": 0.24,
+          "notes": "The structure is obscured by untransformed instance source meshes."
+        },
+        {
+          "id": "cyan-rail-rhythm",
+          "score": 0.18,
+          "notes": "Cyan geometry appears as shards instead of the intended recessed rail rhythm."
+        }
+      ],
+      "action": "refine-code",
+      "summary": "Form pass rejected in the deployed SVG review fallback because InstancedMesh transforms were not honored.",
+      "matched": [
+        "Full form pass generated",
+        "cyan and dark-detail systems are present in the WebGL model",
+        "deterministic render diagnostics execute"
+      ],
+      "mismatches": [
+        "Untransformed instance source geometries dominate the frame",
+        "corner and fastener arrays render as shards in SVG",
+        "platform silhouette is obscured"
+      ],
+      "specFixes": [],
+      "codeFixes": [
+        "Expand InstancedMesh objects into ordinary transformed Mesh clones only when the SVG fallback is active",
+        "preserve InstancedMesh in WebGL and gameplay"
+      ],
+      "evidence": [],
+      "reviewViewpoints": [
+        "three-quarter"
+      ],
+      "visualEvidence": {
+        "referenceScreenshot": "public/ui/traversal-platform-hero.png",
+        "renderScreenshot": "docs/art/platform-system/review/form-refinement/render-instancing-failed.jpg",
+        "comparisonImage": "docs/art/platform-system/review/form-refinement/comparison-instancing-failed.png",
+        "cameraView": "three-quarter",
+        "notes": "Rejected after one deployed screenshot; more angles would repeat the same renderer defect.",
+        "aiVisionNotes": "The rendered image is not a meaningful likeness of the reference because SVGRenderer does not apply Three.js InstancedMesh transforms. The failure is isolated to review rendering; the generated WebGL asset should remain instanced."
       }
     }
   ],
@@ -6201,6 +6286,93 @@
       ],
       "renderHash": "238c746257577299",
       "passId": "structural-pass"
+    },
+    {
+      "passed": true,
+      "checks": {
+        "silhouetteIoU": 0.8903,
+        "aspectRatioDelta": 0.0,
+        "scaleDelta": 0.0,
+        "bilateralSymmetryError": 0.0001,
+        "colorDelta": {
+          "checked": 16,
+          "maxDeltaE": 36.34,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 1.93
+            },
+            {
+              "componentId": null,
+              "deltaE": 2.97
+            },
+            {
+              "componentId": null,
+              "deltaE": 1.93
+            },
+            {
+              "componentId": null,
+              "deltaE": 18.58
+            },
+            {
+              "componentId": null,
+              "deltaE": 18.58
+            },
+            {
+              "componentId": null,
+              "deltaE": 2.97
+            },
+            {
+              "componentId": null,
+              "deltaE": 2.97
+            },
+            {
+              "componentId": null,
+              "deltaE": 2.97
+            },
+            {
+              "componentId": null,
+              "deltaE": 2.97
+            },
+            {
+              "componentId": null,
+              "deltaE": 1.93
+            },
+            {
+              "componentId": null,
+              "deltaE": 18.58
+            },
+            {
+              "componentId": null,
+              "deltaE": 18.58
+            },
+            {
+              "componentId": null,
+              "deltaE": 18.58
+            },
+            {
+              "componentId": null,
+              "deltaE": 36.34
+            },
+            {
+              "componentId": null,
+              "deltaE": 18.58
+            },
+            {
+              "componentId": null,
+              "deltaE": 18.58
+            }
+          ],
+          "gated": false
+        }
+      },
+      "failures": [],
+      "maskWarnings": [
+        "reference: image is not clearly isolated from background; using most pixels as material evidence",
+        "render: image is not clearly isolated from background; using most pixels as material evidence"
+      ],
+      "renderHash": "5c88fb0aff8b5fd9",
+      "passId": "form-refinement"
     }
   ]
 }

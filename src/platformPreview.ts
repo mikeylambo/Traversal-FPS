@@ -37,17 +37,46 @@ scene.add(createTraversalMovingPlatformLookDevLights("reference"));
 
 const model = createTraversalMovingPlatformModel();
 if (!webglRenderer) {
-  model.traverse((object) => {
-    if (!(object instanceof THREE.Mesh)) return;
-    const component = object.userData.sculptComponent as { id?: string; material?: string } | undefined;
-    const color = component?.material === "shell-white"
+  const fallbackMaterial = (materialId?: string, componentId?: string): THREE.MeshBasicMaterial => {
+    const color = materialId === "shell-white"
       ? 0xe7ecef
-      : component?.material === "emitter-cyan"
+      : materialId === "emitter-cyan"
         ? 0x26d9f2
-        : component?.id === "central-cassette" || component?.material === "dark-detail"
+        : componentId === "central-cassette" || materialId === "dark-detail"
           ? 0x0a1117
           : 0x17232c;
-    object.material = new THREE.MeshBasicMaterial({ color });
+    return new THREE.MeshBasicMaterial({ color });
+  };
+
+  // SVGRenderer does not apply InstancedMesh instance matrices. Expand only
+  // in the fallback review scene so the production/WebGL model stays instanced.
+  const instancedMeshes: THREE.InstancedMesh[] = [];
+  model.traverse((object) => {
+    if (object instanceof THREE.InstancedMesh) instancedMeshes.push(object);
+  });
+  for (const instanced of instancedMeshes) {
+    const group = new THREE.Group();
+    group.name = `${instanced.name}__svg-fallback`;
+    group.position.copy(instanced.position);
+    group.quaternion.copy(instanced.quaternion);
+    group.scale.copy(instanced.scale);
+    const repetitionMaterial = instanced.userData.repetitionSystem?.material as string | undefined;
+    const material = fallbackMaterial(repetitionMaterial);
+    const matrix = new THREE.Matrix4();
+    for (let index = 0; index < instanced.count; index += 1) {
+      const child = new THREE.Mesh(instanced.geometry, material);
+      instanced.getMatrixAt(index, matrix);
+      matrix.decompose(child.position, child.quaternion, child.scale);
+      group.add(child);
+    }
+    instanced.parent?.add(group);
+    instanced.removeFromParent();
+  }
+
+  model.traverse((object) => {
+    if (!(object instanceof THREE.Mesh) || object instanceof THREE.InstancedMesh) return;
+    const component = object.userData.sculptComponent as { id?: string; material?: string } | undefined;
+    if (component) object.material = fallbackMaterial(component.material, component.id);
   });
 }
 model.rotation.y = THREE.MathUtils.degToRad(Number(new URLSearchParams(location.search).get("angle") ?? 24));
