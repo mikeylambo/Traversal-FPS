@@ -24,6 +24,12 @@
     overflow-y: auto !important;
     overscroll-behavior: contain;
     scrollbar-width: thin;
+    /* Large live blurs are expensive in iOS standalone/PWA while focus and
+       controls repaint. The dark panel is opaque enough not to need it here. */
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: 0 14px 38px rgba(0, 0, 0, .22) !important;
+    contain: layout paint;
   }
 
   #ui .slu-panel::before {
@@ -61,12 +67,13 @@
     padding: 7px 12px !important;
     border-radius: 0 !important;
     touch-action: manipulation;
+    transition: background .08s ease, border-color .08s ease !important;
   }
 
   #ui .slu-choice:hover,
   #ui .slu-choice[data-focused="true"],
   #ui .slu-choice:focus-visible {
-    transform: translateX(2px) !important;
+    transform: none !important;
   }
 
   #ui .slu-choice-label {
@@ -98,6 +105,16 @@
 
   #ui .slu-screen[data-screen-id="main-menu"] .slu-header h1 {
     font-size: clamp(28px, 5.2vw, 48px) !important;
+  }
+
+  /* Settings navigation needs the lowest repaint cost because sliders/toggles can
+     update continuously. Keep its chrome deliberately static on touch devices. */
+  #ui .slu-screen[data-screen-id="settings"] *,
+  #ui .slu-screen[data-screen-id="accessibility"] *,
+  #ui .slu-screen[data-screen-id="controls"] *,
+  #ui .slu-screen[data-screen-id="audio"] *,
+  #ui .slu-screen[data-screen-id="display"] * {
+    animation: none !important;
   }
 
   /* Long selection screens may still need internal scroll, but chrome stays fixed
