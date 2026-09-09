@@ -24,6 +24,9 @@ export class FPSInput {
   private gyroPermissionGranted = false;
   private readonly touchCapable = navigator.maxTouchPoints > 0 || matchMedia("(pointer: coarse)").matches;
   private readonly onPointerLock = () => this.updateCaptureHint();
+  private readonly onMobileSkip = () => {
+    if (this.enabled) this.tutorialSkipQueued = true;
+  };
 
   constructor(
     private readonly canvas: HTMLCanvasElement,
@@ -37,6 +40,7 @@ export class FPSInput {
     window.addEventListener("wheel", this.onWheel, { passive: false });
     window.addEventListener("keydown", this.onKeyDown);
     window.addEventListener("keyup", this.onKeyUp);
+    window.addEventListener("traversal:mobile-skip", this.onMobileSkip);
     document.addEventListener("pointerlockchange", this.onPointerLock);
 
     if (this.touchCapable) {
@@ -210,17 +214,18 @@ export class FPSInput {
     const crouchKeys = resolveTraversalAction("crouch").keyboardMouse.keys ?? [];
     const resetKeys = resolveTraversalAction("reset").keyboardMouse.keys ?? [];
     const fireKeys = resolveTraversalAction("fire").keyboardMouse.keys ?? [];
-    const warpKeys = resolveTraversalAction("warp").keyboardMouse.keys ?? [];
+    const warpKeys = resolveTraversalAction("warp").keyboardMouse.mouseButtons ?? [];
     const shorterKeys = resolveTraversalAction("landing-shorter").keyboardMouse.keys ?? [];
     const longerKeys = resolveTraversalAction("landing-longer").keyboardMouse.keys ?? [];
 
     if (crouchKeys.includes(event.code)) this.crouchHeld = true;
     if (!event.repeat && resetKeys.includes(event.code)) this.resetQueued = true;
     if (!event.repeat && fireKeys.includes(event.code)) this.fireQueued = true;
-    if (warpKeys.includes(event.code)) this.warpHeld = true;
+    if ((resolveTraversalAction("warp").keyboardMouse.keys ?? []).includes(event.code)) this.warpHeld = true;
     if (!event.repeat && this.warpHeld && shorterKeys.includes(event.code)) this.wheelDelta += 1;
     if (!event.repeat && this.warpHeld && longerKeys.includes(event.code)) this.wheelDelta -= 1;
     if (event.code === "KeyT") this.tutorialSkipQueued = true;
+    void warpKeys;
   };
 
   private readonly onKeyUp = (event: KeyboardEvent) => {
@@ -251,8 +256,6 @@ export class FPSInput {
     let yaw = rotation.gamma ?? 0;
     let pitch = rotation.beta ?? 0;
 
-    // DeviceMotion axes are device-relative. Remap for the two landscape
-    // orientations so turning the phone left/right always means camera yaw.
     if (angle === 90) {
       yaw = rotation.beta ?? 0;
       pitch = -(rotation.gamma ?? 0);
@@ -445,8 +448,6 @@ export class FPSInput {
     warp.addEventListener("pointermove", (event) => {
       if (event.pointerId !== warpPointer || !this.warpHeld) return;
       event.preventDefault();
-      // The button lives near the bottom edge, so dragging upward has the most
-      // physical travel. Pull upward to stop shorter; slide back down for longer.
       const deltaY = event.clientY - warpStartY;
       setTouchWarpFraction(warpStartFraction + deltaY / 180);
     });
