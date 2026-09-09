@@ -1,0 +1,222 @@
+/* Mobile Combat UI v2
+ * Touch-only overrides. Desktop/controller layouts remain untouched.
+ */
+@media (pointer: coarse) and (orientation: landscape) {
+  /* Results/training-complete screens must remain scrollable on short landscape viewports. */
+  #ui .slu-screen[data-screen-id="results"] .slu-panel {
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    overscroll-behavior: contain;
+  }
+
+  /* Reduce HUD competition with the world. */
+  body.touch-device.touch-gameplay #mission-panel {
+    max-width: 29vw;
+    padding: 6px 10px 7px;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: rgba(3, 12, 22, .38);
+  }
+  body.touch-device.touch-gameplay #room-label {
+    font-size: clamp(12px, 2vw, 15px);
+  }
+  body.touch-device.touch-gameplay #room-objective {
+    font-size: 7px;
+    opacity: .78;
+  }
+
+  body.touch-device.touch-gameplay #metric-panel {
+    right: max(112px, calc(env(safe-area-inset-right) + 102px));
+    padding: 5px 9px 6px;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: rgba(3, 12, 22, .28);
+    opacity: .78;
+  }
+
+  /* Training instruction is a short upper-left toast, not a center overlay. */
+  body.touch-device.touch-gameplay #tutorial-card {
+    top: max(46px, calc(env(safe-area-inset-top) + 38px));
+    left: max(34vw, 260px);
+    right: auto;
+    width: min(360px, 39vw);
+    padding: 6px 10px 7px 13px;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: rgba(3, 12, 23, .54);
+    box-shadow: none;
+  }
+  body.touch-device.touch-gameplay #tutorial-text {
+    font-size: clamp(8px, 1.35vw, 10px);
+    line-height: 1.18;
+  }
+
+  /* The vector readout becomes pure state feedback and stays out of the thumb arc. */
+  body.touch-device.touch-gameplay #vector-console {
+    right: max(110px, calc(env(safe-area-inset-right) + 100px));
+    bottom: max(16px, calc(env(safe-area-inset-bottom) + 10px));
+    width: 118px;
+    opacity: .7;
+    pointer-events: none;
+  }
+  body.touch-device.touch-gameplay #anchor-status {
+    max-width: 118px;
+    font-size: 6px;
+    padding: 4px 6px 5px;
+  }
+  body.touch-device.touch-gameplay #warp-gauge {
+    margin-top: 2px;
+  }
+  body.touch-device.touch-gameplay #warp-percent {
+    font-size: 9px;
+  }
+
+  /* Right half remains the uninterrupted look surface. */
+  body.touch-device.touch-gameplay #look-pad {
+    top: 9%;
+    width: 55%;
+  }
+
+  /* Primary right-thumb arc: FIRE high/outside, WARP directly below/inside,
+     CROUCH small and secondary. */
+  body.touch-device.touch-gameplay #mobile-controls .mobile-action.fire {
+    right: max(22px, calc(env(safe-area-inset-right) + 14px));
+    bottom: max(112px, calc(env(safe-area-inset-bottom) + 102px));
+    width: 74px;
+    height: 74px;
+  }
+  body.touch-device.touch-gameplay #mobile-controls .mobile-action.warp {
+    right: max(28px, calc(env(safe-area-inset-right) + 20px));
+    bottom: max(28px, calc(env(safe-area-inset-bottom) + 20px));
+    width: 80px;
+    height: 80px;
+  }
+  body.touch-device.touch-gameplay #mobile-controls .mobile-action.warp::after {
+    content: "DRAG ↑ SHORT";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 9px;
+    font-size: 5.5px;
+    line-height: 1;
+    letter-spacing: .11em;
+    color: rgba(210, 246, 255, .44);
+    pointer-events: none;
+  }
+  body.touch-device.touch-gameplay #mobile-controls .mobile-action.warp.dragging {
+    border-color: color-mix(in srgb, var(--hud-accent) 72%, transparent);
+    background: rgba(29, 101, 126, .34);
+  }
+  body.touch-device.touch-gameplay #mobile-controls .mobile-action.crouch {
+    right: max(118px, calc(env(safe-area-inset-right) + 110px));
+    bottom: max(34px, calc(env(safe-area-inset-bottom) + 26px));
+    width: 54px;
+    height: 54px;
+    opacity: .78;
+  }
+
+  /* Range is now controlled by dragging WARP itself; retain the actual input in
+     the DOM as the canonical value store, but remove it from the HUD. */
+  body.touch-device.touch-gameplay #mobile-range-wrap {
+    position: fixed !important;
+    width: 1px !important;
+    height: 1px !important;
+    overflow: hidden !important;
+    clip: rect(0 0 0 0) !important;
+    clip-path: inset(50%) !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+
+  /* Scope joins the thumb controls rather than consuming the top row. */
+  body.touch-device.touch-gameplay #mobile-scope {
+    position: fixed;
+    right: max(118px, calc(env(safe-area-inset-right) + 110px));
+    bottom: max(96px, calc(env(safe-area-inset-bottom) + 88px));
+    width: 54px;
+    height: 38px;
+    min-width: 0;
+    min-height: 0;
+    padding: 0 6px;
+    opacity: .72;
+    font-size: 7px;
+  }
+
+  /* Utility drawer: normal play shows one small TOOLS affordance only. */
+  body.touch-device.touch-gameplay #mobile-tools {
+    position: fixed;
+    top: max(8px, env(safe-area-inset-top));
+    right: max(10px, env(safe-area-inset-right));
+    z-index: 30;
+    pointer-events: auto;
+  }
+  body.touch-device.touch-gameplay #mobile-tools-toggle {
+    position: static;
+    min-width: 48px;
+    min-height: 30px;
+    padding: 0 8px;
+    opacity: .62;
+  }
+  body.touch-device.touch-gameplay #mobile-tools-panel {
+    position: absolute;
+    top: 36px;
+    right: 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(58px, auto));
+    gap: 4px;
+    padding: 5px;
+    min-width: 126px;
+    background: rgba(2, 9, 17, .82);
+    border: 1px solid rgba(126, 232, 255, .16);
+    opacity: 0;
+    transform: translateY(-4px);
+    pointer-events: none;
+    transition: opacity .08s ease, transform .08s ease;
+  }
+  body.touch-device.touch-gameplay.mobile-tools-open #mobile-tools-panel {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+  body.touch-device.touch-gameplay #mobile-tools-panel .mobile-small {
+    position: static !important;
+    min-width: 58px;
+    min-height: 30px;
+    padding: 0 7px;
+    opacity: .8;
+    font-size: 7px;
+  }
+
+  /* Generated scope button belongs visually with gameplay actions, even though
+     ScopeRuntime appends it after boot. */
+  body.touch-device.touch-gameplay #mobile-tools-panel #mobile-scope {
+    position: fixed !important;
+  }
+}
+
+@media (pointer: coarse) and (orientation: landscape) and (max-height: 430px) {
+  body.touch-device.touch-gameplay #tutorial-card {
+    top: 42px;
+    width: min(330px, 37vw);
+  }
+  body.touch-device.touch-gameplay #mobile-controls .mobile-action.fire {
+    bottom: max(98px, calc(env(safe-area-inset-bottom) + 90px));
+    width: 68px;
+    height: 68px;
+  }
+  body.touch-device.touch-gameplay #mobile-controls .mobile-action.warp {
+    width: 72px;
+    height: 72px;
+  }
+  body.touch-device.touch-gameplay #mobile-controls .mobile-action.crouch {
+    right: max(108px, calc(env(safe-area-inset-right) + 100px));
+    width: 50px;
+    height: 50px;
+  }
+  body.touch-device.touch-gameplay #mobile-scope {
+    right: max(108px, calc(env(safe-area-inset-right) + 100px));
+    bottom: max(88px, calc(env(safe-area-inset-bottom) + 80px));
+    width: 50px;
+  }
+}
