@@ -1,4 +1,5 @@
 import { installSettingsAdjustmentRuntime } from "./SettingsAdjustmentRuntime";
+import { installMobileSettingsRuntime } from "./MobileSettingsRuntime";
 import { installSettingsTabsRuntime } from "./SettingsTabsRuntime";
 import { activeTraversalSettingsStore } from "./TraversalSettings";
 
@@ -23,6 +24,13 @@ export function installSettingsFocusRetention(
 ): void {
   const settings = activeTraversalSettingsStore();
   if (!settings) return;
+
+  const touchFirst = matchMedia("(pointer: coarse)").matches;
+  if (touchFirst) {
+    installMobileSettingsRuntime(flow, ui, root, settings);
+    return;
+  }
+
   installSettingsTabsRuntime(flow, ui, root, settings);
   installSettingsAdjustmentRuntime(flow, root, settings);
 }
