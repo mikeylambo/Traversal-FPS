@@ -1,0 +1,118 @@
+/* Follow-up to Mobile Combat UI v2 after on-device iPhone PWA playtest. */
+@media (pointer: coarse) and (orientation: landscape) {
+  /* Preserve the room read, but keep it in a strict upper-left lane. */
+  body.touch-device.touch-gameplay #mission-panel {
+    max-width: 25vw !important;
+    padding: 5px 8px 6px !important;
+  }
+  body.touch-device.touch-gameplay #room-label {
+    font-size: clamp(11px, 1.8vw, 14px) !important;
+  }
+  body.touch-device.touch-gameplay #room-objective {
+    max-width: 23vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 6.5px !important;
+  }
+
+  /* Training does not need a second giant TRAINING block competing with the lesson. */
+  body.touch-device.touch-gameplay.mobile-training #metric-panel {
+    display: none !important;
+  }
+
+  /* In scored/timed modes retain only the primary metric as a quiet top-center read. */
+  body.touch-device.touch-gameplay:not(.mobile-training) #metric-panel {
+    top: max(7px, env(safe-area-inset-top)) !important;
+    left: 50% !important;
+    right: auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: 25vw !important;
+    padding: 3px 7px 4px !important;
+    transform: translateX(-50%) !important;
+    border-color: rgba(126, 232, 255, .10) !important;
+    background: rgba(3, 12, 22, .18) !important;
+    box-shadow: none !important;
+  }
+  body.touch-device.touch-gameplay:not(.mobile-training) #run-primary {
+    font-size: clamp(11px, 1.8vw, 15px) !important;
+  }
+
+  /* Lesson text gets its own upper-middle lane, clear of room read and tools. */
+  body.touch-device.touch-gameplay #tutorial-card {
+    top: max(7px, env(safe-area-inset-top)) !important;
+    left: 29vw !important;
+    right: auto !important;
+    width: min(360px, 38vw) !important;
+    max-height: 68px;
+    overflow: hidden;
+    padding: 5px 9px 6px 12px !important;
+  }
+  body.touch-device.touch-gameplay #tutorial-text {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+    font-size: clamp(7.5px, 1.2vw, 9px) !important;
+    line-height: 1.14 !important;
+  }
+
+  /* Vector feedback only appears when it actually has information to communicate. */
+  body.touch-device.touch-gameplay #vector-console {
+    display: none !important;
+  }
+  body.touch-device.touch-gameplay.anchor-ready #vector-console,
+  body.touch-device.touch-gameplay.warp-preview #vector-console {
+    display: block !important;
+    right: max(116px, calc(env(safe-area-inset-right) + 108px)) !important;
+    bottom: max(8px, calc(env(safe-area-inset-bottom) + 5px)) !important;
+    width: 104px !important;
+  }
+  body.touch-device.touch-gameplay #anchor-status {
+    max-width: 104px !important;
+    font-size: 5.5px !important;
+    padding: 3px 5px 4px !important;
+  }
+
+  /* Explicit stacking/touch ownership makes action buttons true multitouch peers
+     of the movement stick instead of children competing with the look surface. */
+  body.touch-device.touch-gameplay #move-stick,
+  body.touch-device.touch-gameplay #mobile-fire,
+  body.touch-device.touch-gameplay #mobile-warp,
+  body.touch-device.touch-gameplay #mobile-crouch,
+  body.touch-device.touch-gameplay #mobile-scope,
+  body.touch-device.touch-gameplay #mobile-tools {
+    z-index: 42 !important;
+    pointer-events: auto !important;
+    touch-action: none !important;
+  }
+  body.touch-device.touch-gameplay #look-pad {
+    z-index: 20 !important;
+  }
+  body.touch-device.touch-gameplay #mobile-tools-panel {
+    z-index: 50 !important;
+  }
+
+  /* Scope sits just inside the primary thumb arc and remains independently tappable
+     while the left movement pointer is captured. */
+  body.touch-device.touch-gameplay #mobile-scope {
+    right: max(112px, calc(env(safe-area-inset-right) + 104px)) !important;
+    bottom: max(101px, calc(env(safe-area-inset-bottom) + 93px)) !important;
+    width: 50px !important;
+    height: 36px !important;
+  }
+}
+
+@media (pointer: coarse) and (orientation: landscape) and (max-height: 430px) {
+  body.touch-device.touch-gameplay #tutorial-card {
+    left: 28vw !important;
+    width: min(315px, 36vw) !important;
+    max-height: 58px;
+  }
+  body.touch-device.touch-gameplay #mobile-scope {
+    right: max(102px, calc(env(safe-area-inset-right) + 94px)) !important;
+    bottom: max(91px, calc(env(safe-area-inset-bottom) + 83px)) !important;
+    width: 46px !important;
+    height: 34px !important;
+  }
+}
