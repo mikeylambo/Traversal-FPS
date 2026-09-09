@@ -131,9 +131,10 @@
 
   /* Scope joins the thumb controls rather than consuming the top row. */
   body.touch-device.touch-gameplay #mobile-scope {
-    position: fixed;
-    right: max(118px, calc(env(safe-area-inset-right) + 110px));
-    bottom: max(96px, calc(env(safe-area-inset-bottom) + 88px));
+    position: fixed !important;
+    top: auto !important;
+    right: max(118px, calc(env(safe-area-inset-right) + 110px)) !important;
+    bottom: max(96px, calc(env(safe-area-inset-bottom) + 88px)) !important;
     width: 54px;
     height: 38px;
     min-width: 0;
@@ -152,7 +153,9 @@
     pointer-events: auto;
   }
   body.touch-device.touch-gameplay #mobile-tools-toggle {
-    position: static;
+    position: static !important;
+    top: auto !important;
+    right: auto !important;
     min-width: 48px;
     min-height: 30px;
     padding: 0 8px;
@@ -181,17 +184,13 @@
   }
   body.touch-device.touch-gameplay #mobile-tools-panel .mobile-small {
     position: static !important;
+    top: auto !important;
+    right: auto !important;
     min-width: 58px;
     min-height: 30px;
     padding: 0 7px;
     opacity: .8;
     font-size: 7px;
-  }
-
-  /* Generated scope button belongs visually with gameplay actions, even though
-     ScopeRuntime appends it after boot. */
-  body.touch-device.touch-gameplay #mobile-tools-panel #mobile-scope {
-    position: fixed !important;
   }
 }
 
@@ -215,8 +214,8 @@
     height: 50px;
   }
   body.touch-device.touch-gameplay #mobile-scope {
-    right: max(108px, calc(env(safe-area-inset-right) + 100px));
-    bottom: max(88px, calc(env(safe-area-inset-bottom) + 80px));
+    right: max(108px, calc(env(safe-area-inset-right) + 100px)) !important;
+    bottom: max(88px, calc(env(safe-area-inset-bottom) + 80px)) !important;
     width: 50px;
   }
 }
