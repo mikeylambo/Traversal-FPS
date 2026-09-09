@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="/src/interface-minimal.css" />
   <link rel="stylesheet" href="/src/mobile-playtest.css" />
   <link rel="stylesheet" href="/src/mobile-menu.css" />
+  <link rel="stylesheet" href="/src/mobile-combat-v2.css" />
   <title>Traversal FPS</title>
 </head>
 <body>
@@ -96,9 +97,15 @@
     </aside>
 
     <div id="mobile-controls" aria-label="Touch controls">
-      <button id="mobile-pause" class="mobile-small mobile-pause" type="button">II</button>
-      <button id="mobile-skip" class="mobile-small mobile-skip" type="button">SKIP</button>
-      <button id="mobile-reset" class="mobile-small mobile-reset" type="button">RESET</button>
+      <div id="mobile-tools" class="mobile-tools">
+        <button id="mobile-tools-toggle" class="mobile-small mobile-tools-toggle" type="button" aria-expanded="false" aria-controls="mobile-tools-panel">TOOLS</button>
+        <div id="mobile-tools-panel" class="mobile-tools-panel" aria-hidden="true">
+          <button id="mobile-pause" class="mobile-small mobile-pause" type="button">PAUSE</button>
+          <button id="mobile-skip" class="mobile-small mobile-skip" type="button">SKIP</button>
+          <button id="mobile-reset" class="mobile-small mobile-reset" type="button">RESET</button>
+          <button id="mobile-gyro" class="mobile-small mobile-gyro" type="button">GYRO OFF</button>
+        </div>
+      </div>
 
       <div id="move-stick" class="touch-stick" aria-label="Move joystick">
         <span id="move-stick-knob"></span>
