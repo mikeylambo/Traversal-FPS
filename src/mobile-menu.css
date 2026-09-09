@@ -93,9 +93,8 @@
     font-size: 11px !important;
   }
 
-  /* Main menu should fit completely on iPhone landscape without scrolling. */
+  /* Menus that are intentionally compact enough to fit stay fixed. */
   #ui .slu-screen[data-screen-id="main-menu"] .slu-panel,
-  #ui .slu-screen[data-screen-id="settings"] .slu-panel,
   #ui .slu-screen[data-screen-id="credits"] .slu-panel,
   #ui .slu-screen[data-screen-id="difficulty-select"] .slu-panel,
   #ui .slu-screen[data-screen-id="pause"] .slu-panel,
@@ -117,12 +116,15 @@
     animation: none !important;
   }
 
-  /* Long selection screens may still need internal scroll, but chrome stays fixed
-     and compact rather than forcing the whole document to move. */
+  /* iOS standalone scrolling needs an explicit scroll container plus pan-y.
+     Settings can exceed the short landscape viewport even after compaction. */
+  #ui .slu-screen[data-screen-id="settings"] .slu-panel,
   #ui .slu-screen[data-screen-id="mode-select"] .slu-panel,
   #ui .slu-screen[data-screen-id="stage-select"] .slu-panel,
   #ui .slu-screen[data-screen-id="achievements"] .slu-panel {
     overflow-y: auto !important;
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
   }
 
   #ui .slu-screen input,
