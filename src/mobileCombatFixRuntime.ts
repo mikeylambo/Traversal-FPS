@@ -26,26 +26,17 @@ function installMobileCombatFixes(): void {
     toolsPanel?.setAttribute("aria-hidden", "true");
   };
 
-  /* Replace SKIP after FPSInput has booted so mobile gets a single deterministic
-     path: synthesize the same KeyT action the gameplay input already understands. */
   if (originalSkip) {
     const skip = originalSkip.cloneNode(true) as HTMLButtonElement;
     originalSkip.replaceWith(skip);
     skip.addEventListener("pointerdown", (event) => {
       event.preventDefault();
       event.stopPropagation();
-      window.dispatchEvent(new KeyboardEvent("keydown", {
-        code: "KeyT",
-        key: "t",
-        bubbles: true,
-        cancelable: true
-      }));
+      window.dispatchEvent(new CustomEvent("traversal:mobile-skip"));
       closeTools();
     });
   }
 
-  /* ScopeRuntime's click listener can be lost when another finger owns pointer
-     capture on iOS. Rebind scope to pointerdown and route through its public event. */
   const bindScope = () => {
     const oldScope = document.getElementById("mobile-scope") as HTMLButtonElement | null;
     if (!oldScope || oldScope.dataset.mobileMultitouchBound === "true") return;
@@ -127,14 +118,16 @@ function installMobileCombatFixes(): void {
       lastOrientation = current;
       return;
     }
+    const previous = lastOrientation;
     const angle = Number(screen.orientation?.angle ?? 0);
-    const dBeta = wrappedDelta(current.beta, lastOrientation.beta);
-    const dGamma = wrappedDelta(current.gamma, lastOrientation.gamma);
+    const dBeta = wrappedDelta(current.beta, previous.beta);
+    const dGamma = wrappedDelta(current.gamma, previous.gamma);
+    const dAlpha = wrappedDelta(current.alpha, previous.alpha);
     lastOrientation = current;
 
     if (angle === 90) injectLook(dBeta * 1.15, -dGamma * 1.15);
     else if (angle === 270 || angle === -90) injectLook(-dBeta * 1.15, dGamma * 1.15);
-    else injectLook(wrappedDelta(current.alpha, lastOrientation.alpha) * 1.1, dBeta * 1.1);
+    else injectLook(dAlpha * 1.1, dBeta * 1.1);
   };
 
   const requestGyroPermission = async (): Promise<boolean> => {
@@ -144,18 +137,12 @@ function installMobileCombatFixes(): void {
     const motionCtor = (window as unknown as { DeviceMotionEvent?: PermissionCtor }).DeviceMotionEvent;
     const requests: Promise<PermissionResult>[] = [];
 
-    /* Start both permission requests synchronously inside the same pointer gesture.
-       Awaiting one before calling the other can lose iOS' transient user activation. */
     try {
       if (orientationCtor?.requestPermission) requests.push(orientationCtor.requestPermission());
-    } catch {
-      // Continue: DeviceMotion may still be usable.
-    }
+    } catch {}
     try {
       if (motionCtor?.requestPermission) requests.push(motionCtor.requestPermission());
-    } catch {
-      // Continue: DeviceOrientation may still be usable.
-    }
+    } catch {}
 
     if (!requests.length) return "DeviceMotionEvent" in window || "DeviceOrientationEvent" in window;
     const results = await Promise.allSettled(requests);
@@ -170,7 +157,6 @@ function installMobileCombatFixes(): void {
   };
 
   if (originalGyro) {
-    /* Cloning removes the first-pass DeviceMotion-only permission handler. */
     const gyro = originalGyro.cloneNode(true) as HTMLButtonElement;
     originalGyro.replaceWith(gyro);
     setGyroLabel(gyro);
@@ -207,8 +193,6 @@ function installMobileCombatFixes(): void {
     });
   }
 
-  /* Detect Training from the existing primary metric instead of adding mode state
-     to gameplay. This only toggles a presentation class when the text actually changes. */
   const syncTrainingClass = () => {
     const text = runPrimary?.textContent?.trim().toUpperCase() ?? "";
     document.body.classList.toggle("mobile-training", text === "TRAINING");
