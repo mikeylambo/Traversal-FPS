@@ -1,17 +1,17 @@
 /* Follow-up to Mobile Combat UI v2 after on-device iPhone PWA playtest. */
 @media (pointer: coarse) and (orientation: landscape) {
-  /* Mobile HUD law: world/reticle owns the center. Persistent information stays
-     in compact edge lanes; contextual warp information sits above the weapon. */
+  /* Mobile HUD law: the puzzle/world owns the center. Persistent information lives
+     on the edges; instructions are terse; warp distance is a peripheral instrument. */
   body.touch-device.touch-gameplay #mission-panel {
     top: max(8px, env(safe-area-inset-top)) !important;
     left: max(10px, env(safe-area-inset-left)) !important;
-    width: 24vw !important;
-    max-width: 260px !important;
+    width: 22vw !important;
+    max-width: 230px !important;
     min-width: 0 !important;
     padding: 4px 8px 5px !important;
   }
   body.touch-device.touch-gameplay #room-label {
-    font-size: clamp(10px, 1.55vw, 13px) !important;
+    font-size: clamp(10px, 1.45vw, 12px) !important;
     line-height: 1 !important;
   }
   body.touch-device.touch-gameplay #room-objective {
@@ -24,7 +24,6 @@
     line-height: 1 !important;
   }
 
-  /* Training's large mode banner is redundant on a phone. */
   body.touch-device.touch-gameplay.mobile-training #metric-panel {
     display: none !important;
   }
@@ -45,16 +44,17 @@
     font-size: clamp(10px, 1.6vw, 14px) !important;
   }
 
-  /* Lesson occupies a dedicated strip to the right of the room card. It must never
-     overlap mission text, tools, or the center reticle. */
+  /* Instruction is deliberately on a second row. This avoids the room card even
+     when inherited transforms/clip geometry make the cards wider than expected. */
   body.touch-device.touch-gameplay #tutorial-card {
-    top: max(8px, env(safe-area-inset-top)) !important;
-    left: calc(max(10px, env(safe-area-inset-left)) + min(260px, 24vw) + 10px) !important;
+    top: max(54px, calc(env(safe-area-inset-top) + 48px)) !important;
+    left: max(10px, env(safe-area-inset-left)) !important;
     right: auto !important;
-    width: min(330px, 34vw) !important;
-    max-height: 50px !important;
+    width: min(360px, 40vw) !important;
+    max-height: 38px !important;
     overflow: hidden !important;
-    padding: 4px 8px 5px 10px !important;
+    padding: 3px 8px 4px 10px !important;
+    opacity: .9 !important;
   }
   body.touch-device.touch-gameplay #tutorial-room,
   body.touch-device.touch-gameplay .tutorial-skip {
@@ -65,45 +65,46 @@
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
     overflow: hidden;
-    font-size: clamp(7px, 1.05vw, 8.5px) !important;
-    line-height: 1.08 !important;
+    font-size: clamp(6.5px, .95vw, 8px) !important;
+    line-height: 1.05 !important;
   }
 
-  /* Contextual vector card is reduced from a center-screen modal to a compact
-     readout in the lower-middle lane. Desktop retains the full presentation. */
+  /* Kill the desktop-sized landing modal on touch. Distance is already manipulated
+     directly by dragging WARP, so mobile only needs a small peripheral percentage. */
   body.touch-device.touch-gameplay #vector-console {
     display: none !important;
   }
   body.touch-device.touch-gameplay.anchor-ready #vector-console,
   body.touch-device.touch-gameplay.warp-preview #vector-console {
     display: block !important;
-    left: 50% !important;
-    right: auto !important;
-    bottom: max(12px, calc(env(safe-area-inset-bottom) + 8px)) !important;
-    width: min(250px, 29vw) !important;
-    transform: translateX(-50%) !important;
+    left: auto !important;
+    right: max(116px, calc(env(safe-area-inset-right) + 108px)) !important;
+    bottom: max(8px, calc(env(safe-area-inset-bottom) + 4px)) !important;
+    width: 72px !important;
+    transform: none !important;
+    pointer-events: none !important;
   }
-  body.touch-device.touch-gameplay #anchor-status {
+  body.touch-device.touch-gameplay #anchor-status,
+  body.touch-device.touch-gameplay .warp-gauge-head,
+  body.touch-device.touch-gameplay #warp-hint,
+  body.touch-device.touch-gameplay .warp-gauge-track {
     display: none !important;
   }
   body.touch-device.touch-gameplay #warp-gauge {
-    width: 100% !important;
-    padding: 5px 8px 6px !important;
-  }
-  body.touch-device.touch-gameplay .warp-gauge-head {
-    margin-bottom: 3px !important;
-  }
-  body.touch-device.touch-gameplay .warp-gauge-head span {
-    font-size: 6px !important;
+    width: 72px !important;
+    min-width: 0 !important;
+    padding: 2px 5px 3px !important;
+    border: 0 !important;
+    background: rgba(2, 10, 18, .28) !important;
+    box-shadow: none !important;
   }
   body.touch-device.touch-gameplay #warp-percent {
-    font-size: clamp(15px, 2.5vw, 22px) !important;
-  }
-  body.touch-device.touch-gameplay #warp-hint {
-    display: none !important;
+    display: block !important;
+    font-size: 13px !important;
+    line-height: 1 !important;
+    text-align: center !important;
   }
 
-  /* Keep touch actions in one clean right-thumb rail. */
   body.touch-device.touch-gameplay #move-stick,
   body.touch-device.touch-gameplay #mobile-fire,
   body.touch-device.touch-gameplay #mobile-warp,
@@ -140,13 +141,11 @@
 }
 
 @media (pointer: coarse) and (orientation: landscape) and (max-height: 430px) {
-  body.touch-device.touch-gameplay #mission-panel {
-    width: 22vw !important;
-  }
+  body.touch-device.touch-gameplay #mission-panel { width: 20vw !important; }
   body.touch-device.touch-gameplay #tutorial-card {
-    left: calc(max(10px, env(safe-area-inset-left)) + min(240px, 22vw) + 8px) !important;
-    width: min(300px, 32vw) !important;
-    max-height: 44px !important;
+    top: max(48px, calc(env(safe-area-inset-top) + 42px)) !important;
+    width: min(330px, 37vw) !important;
+    max-height: 34px !important;
   }
   body.touch-device.touch-gameplay #mobile-scope {
     right: max(108px, calc(env(safe-area-inset-right) + 100px)) !important;
@@ -157,6 +156,6 @@
   }
   body.touch-device.touch-gameplay.anchor-ready #vector-console,
   body.touch-device.touch-gameplay.warp-preview #vector-console {
-    width: min(220px, 27vw) !important;
+    right: max(106px, calc(env(safe-area-inset-right) + 98px)) !important;
   }
 }
