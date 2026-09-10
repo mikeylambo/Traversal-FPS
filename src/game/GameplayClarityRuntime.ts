@@ -20,6 +20,8 @@ type RuntimeState = {
   updateHUD(): void;
 };
 
+const touchHUD = navigator.maxTouchPoints > 0 || matchMedia("(pointer: coarse)").matches;
+
 /**
  * Keeps the signature spatial information large and immediate. Campaign is
  * intentionally sparse: location + sphere progress are enough during play.
@@ -41,6 +43,22 @@ export function installGameplayClarity(game: object): void {
   `;
   hud.appendChild(stopShort);
 
+  if (touchHUD) {
+    /* Mobile gets its own readout so legacy vector-console/landing CSS cannot
+       rewrite or hide the exact information contract we want on phone. */
+    stopShort.style.setProperty("display", "none", "important");
+    document.getElementById("vector-console")?.style.setProperty("display", "none", "important");
+
+    const mobileLanding = document.createElement("section");
+    mobileLanding.id = "mobile-landing-readout";
+    mobileLanding.innerHTML = `
+      <span>LANDING</span>
+      <em id="mobile-landing-state">ENDPOINT</em>
+      <strong id="mobile-landing-percent">100%</strong>
+    `;
+    hud.appendChild(mobileLanding);
+  }
+
   const budget = document.createElement("section");
   budget.id = "shot-budget-readout";
   budget.innerHTML = `
@@ -54,6 +72,7 @@ export function installGameplayClarity(game: object): void {
   const originalHUD = state.updateHUD.bind(game);
   state.updateHUD = () => {
     originalHUD();
+    if (touchHUD) document.getElementById("vector-console")?.style.setProperty("display", "none", "important");
     normalizeSpatialLanguage();
     simplifyCampaignHUD(state);
     updateStopShort(state);
@@ -101,23 +120,37 @@ function simplifyCampaignHUD(state: RuntimeState): void {
 }
 
 function updateStopShort(state: RuntimeState): void {
+  const trainingStopShort = state.modeId === "training" && state.roomIndex === 1;
+  const hasAnchor = state.warp.hasAnchor();
+  const held = state.input.isWarpHeld();
+  const percent = hasAnchor ? state.warp.selectionPercent() : 100;
+  const visible = trainingStopShort || hasAnchor;
+  const landingState = percent < 100 ? "STOP SHORT" : "ENDPOINT";
+
+  if (touchHUD) {
+    const mobilePanel = document.getElementById("mobile-landing-readout");
+    const mobilePercent = document.getElementById("mobile-landing-percent");
+    const mobileState = document.getElementById("mobile-landing-state");
+    mobilePanel?.classList.toggle("visible", visible);
+    mobilePanel?.classList.toggle("placing", hasAnchor && held);
+    if (mobilePercent) mobilePercent.textContent = `${percent}%`;
+    if (mobileState) mobileState.textContent = landingState;
+    return;
+  }
+
   const panel = document.getElementById("stop-short-readout");
   const percentEl = document.getElementById("stop-short-percent");
   const stateEl = document.getElementById("stop-short-state");
   const hintEl = document.getElementById("stop-short-hint");
   if (!panel || !percentEl || !stateEl || !hintEl) return;
 
-  const trainingStopShort = state.modeId === "training" && state.roomIndex === 1;
-  const hasAnchor = state.warp.hasAnchor();
-  const held = state.input.isWarpHeld();
-  const percent = hasAnchor ? state.warp.selectionPercent() : 100;
-  panel.classList.toggle("visible", trainingStopShort || hasAnchor);
+  panel.classList.toggle("visible", visible);
   panel.classList.toggle("placing", hasAnchor && held);
   panel.classList.toggle("short", hasAnchor && percent < 100);
   panel.style.setProperty("--landing-width", `${percent}%`);
 
   percentEl.textContent = `${percent}%`;
-  stateEl.textContent = percent < 100 ? "STOP SHORT" : "ENDPOINT";
+  stateEl.textContent = landingState;
 
   const pad = document.body.classList.contains("gamepad-active");
   hintEl.textContent = !hasAnchor
