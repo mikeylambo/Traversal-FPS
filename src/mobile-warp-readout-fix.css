@@ -1,0 +1,79 @@
+/* Live mobile warp readout override.
+ * mobile-combat-fixes.css uses a more-specific anchor-ready/warp-preview selector,
+ * so this file intentionally loads last and matches that specificity.
+ */
+@media (pointer: coarse) and (orientation: landscape) {
+  /* Keep the existing compact warp box, but make it data-first: percentage only.
+     No VECTOR label/copy, no duplicate track or hint. */
+  body.touch-device.touch-gameplay.anchor-ready #vector-console,
+  body.touch-device.touch-gameplay.warp-preview #vector-console {
+    display: block !important;
+    left: auto !important;
+    right: max(116px, calc(env(safe-area-inset-right) + 108px)) !important;
+    bottom: max(8px, calc(env(safe-area-inset-bottom) + 4px)) !important;
+    width: 72px !important;
+    transform: none !important;
+    pointer-events: none !important;
+  }
+
+  body.touch-device.touch-gameplay.anchor-ready #vector-console #anchor-status,
+  body.touch-device.touch-gameplay.warp-preview #vector-console #anchor-status,
+  body.touch-device.touch-gameplay.anchor-ready #vector-console .warp-gauge-head > span,
+  body.touch-device.touch-gameplay.warp-preview #vector-console .warp-gauge-head > span,
+  body.touch-device.touch-gameplay.anchor-ready #vector-console .warp-gauge-track,
+  body.touch-device.touch-gameplay.warp-preview #vector-console .warp-gauge-track,
+  body.touch-device.touch-gameplay.anchor-ready #vector-console #warp-hint,
+  body.touch-device.touch-gameplay.warp-preview #vector-console #warp-hint {
+    display: none !important;
+  }
+
+  body.touch-device.touch-gameplay.anchor-ready #vector-console #warp-gauge,
+  body.touch-device.touch-gameplay.warp-preview #vector-console #warp-gauge {
+    display: block !important;
+    width: 72px !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 3px 5px 4px !important;
+    opacity: 1 !important;
+    transform: none !important;
+    border: 0 !important;
+    background: rgba(2, 10, 18, .34) !important;
+    box-shadow: none !important;
+  }
+
+  body.touch-device.touch-gameplay.anchor-ready #vector-console .warp-gauge-head,
+  body.touch-device.touch-gameplay.warp-preview #vector-console .warp-gauge-head {
+    display: flex !important;
+    justify-content: center !important;
+    margin: 0 !important;
+  }
+
+  body.touch-device.touch-gameplay.anchor-ready #vector-console #warp-percent,
+  body.touch-device.touch-gameplay.warp-preview #vector-console #warp-percent {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    margin: 0 !important;
+    color: #efffff !important;
+    font-size: 14px !important;
+    line-height: 1 !important;
+    text-align: center !important;
+    font-variant-numeric: tabular-nums !important;
+  }
+
+  /* The separate stop-short panel duplicates the same information on touch.
+     Keep one mobile landing instrument rather than two competing readouts. */
+  body.touch-device.touch-gameplay #stop-short-readout,
+  body.touch-device.touch-gameplay #stop-short-readout.visible,
+  body.touch-device.touch-gameplay #stop-short-readout.placing,
+  body.touch-device.touch-gameplay #stop-short-readout.short {
+    display: none !important;
+  }
+}
+
+@media (pointer: coarse) and (orientation: landscape) and (max-height: 430px) {
+  body.touch-device.touch-gameplay.anchor-ready #vector-console,
+  body.touch-device.touch-gameplay.warp-preview #vector-console {
+    right: max(106px, calc(env(safe-area-inset-right) + 98px)) !important;
+  }
+}
