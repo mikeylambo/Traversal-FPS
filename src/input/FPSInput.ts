@@ -1,5 +1,7 @@
 import { resolveTraversalAction } from "./TraversalBindings";
 
+type GyroMode = "off" | "always" | "fire";
+
 export class FPSInput {
   private keys = new Set<string>();
   private lookX = 0;
@@ -7,6 +9,7 @@ export class FPSInput {
   private fireQueued = false;
   private crouchHeld = false;
   private touchCrouchLatched = false;
+  private touchFireHeld = false;
   private warpHeld = false;
   private warpReleased = false;
   private wheelDelta = 0;
@@ -17,8 +20,13 @@ export class FPSInput {
   private enabled = false;
   private touchMoveX = 0;
   private touchMoveZ = 0;
+  private gyroMode: GyroMode = "off";
+  private gyroPermissionGranted = false;
   private readonly touchCapable = navigator.maxTouchPoints > 0 || matchMedia("(pointer: coarse)").matches;
   private readonly onPointerLock = () => this.updateCaptureHint();
+  private readonly onMobileSkip = () => {
+    if (this.enabled) this.tutorialSkipQueued = true;
+  };
 
   constructor(
     private readonly canvas: HTMLCanvasElement,
@@ -32,10 +40,12 @@ export class FPSInput {
     window.addEventListener("wheel", this.onWheel, { passive: false });
     window.addEventListener("keydown", this.onKeyDown);
     window.addEventListener("keyup", this.onKeyUp);
+    window.addEventListener("traversal:mobile-skip", this.onMobileSkip);
     document.addEventListener("pointerlockchange", this.onPointerLock);
 
     if (this.touchCapable) {
       document.body.classList.add("touch-device");
+      window.addEventListener("devicemotion", this.onDeviceMotion);
       this.bindTouchControls();
     }
 
@@ -50,8 +60,10 @@ export class FPSInput {
       this.warpHeld = false;
       this.crouchHeld = false;
       this.touchCrouchLatched = false;
+      this.touchFireHeld = false;
       this.touchMoveX = 0;
       this.touchMoveZ = 0;
+      document.body.classList.remove("mobile-tools-open");
       this.resetStickVisual();
       this.syncTouchCrouchVisual();
       this.releasePointerLock();
@@ -202,17 +214,18 @@ export class FPSInput {
     const crouchKeys = resolveTraversalAction("crouch").keyboardMouse.keys ?? [];
     const resetKeys = resolveTraversalAction("reset").keyboardMouse.keys ?? [];
     const fireKeys = resolveTraversalAction("fire").keyboardMouse.keys ?? [];
-    const warpKeys = resolveTraversalAction("warp").keyboardMouse.keys ?? [];
+    const warpKeys = resolveTraversalAction("warp").keyboardMouse.mouseButtons ?? [];
     const shorterKeys = resolveTraversalAction("landing-shorter").keyboardMouse.keys ?? [];
     const longerKeys = resolveTraversalAction("landing-longer").keyboardMouse.keys ?? [];
 
     if (crouchKeys.includes(event.code)) this.crouchHeld = true;
     if (!event.repeat && resetKeys.includes(event.code)) this.resetQueued = true;
     if (!event.repeat && fireKeys.includes(event.code)) this.fireQueued = true;
-    if (warpKeys.includes(event.code)) this.warpHeld = true;
+    if ((resolveTraversalAction("warp").keyboardMouse.keys ?? []).includes(event.code)) this.warpHeld = true;
     if (!event.repeat && this.warpHeld && shorterKeys.includes(event.code)) this.wheelDelta += 1;
     if (!event.repeat && this.warpHeld && longerKeys.includes(event.code)) this.wheelDelta -= 1;
     if (event.code === "KeyT") this.tutorialSkipQueued = true;
+    void warpKeys;
   };
 
   private readonly onKeyUp = (event: KeyboardEvent) => {
@@ -233,6 +246,64 @@ export class FPSInput {
     }
   };
 
+  private readonly onDeviceMotion = (event: DeviceMotionEvent) => {
+    if (!this.enabled || !this.gyroPermissionGranted || this.gyroMode === "off") return;
+    if (this.gyroMode === "fire" && !this.touchFireHeld) return;
+    const rotation = event.rotationRate;
+    if (!rotation) return;
+
+    const angle = Number(screen.orientation?.angle ?? 0);
+    let yaw = rotation.gamma ?? 0;
+    let pitch = rotation.beta ?? 0;
+
+    if (angle === 90) {
+      yaw = rotation.beta ?? 0;
+      pitch = -(rotation.gamma ?? 0);
+    } else if (angle === 270 || angle === -90) {
+      yaw = -(rotation.beta ?? 0);
+      pitch = rotation.gamma ?? 0;
+    }
+
+    const intervalScale = Math.max(0.5, Math.min(2, (event.interval || 16.67) / 16.67));
+    const sensitivity = 0.15 * intervalScale;
+    this.lookX += yaw * sensitivity;
+    this.lookY += pitch * sensitivity;
+  };
+
+  private async cycleGyroMode(): Promise<void> {
+    if (this.gyroMode === "off") {
+      const motionCtor = DeviceMotionEvent as typeof DeviceMotionEvent & {
+        requestPermission?: () => Promise<"granted" | "denied">;
+      };
+      try {
+        const result = motionCtor.requestPermission ? await motionCtor.requestPermission() : "granted";
+        this.gyroPermissionGranted = result === "granted";
+      } catch {
+        this.gyroPermissionGranted = false;
+      }
+      if (!this.gyroPermissionGranted) {
+        this.syncGyroButton("GYRO BLOCKED");
+        return;
+      }
+      this.gyroMode = "always";
+    } else if (this.gyroMode === "always") {
+      this.gyroMode = "fire";
+    } else {
+      this.gyroMode = "off";
+    }
+    this.syncGyroButton();
+  }
+
+  private syncGyroButton(forcedLabel?: string): void {
+    const button = document.getElementById("mobile-gyro");
+    if (!button) return;
+    button.textContent = forcedLabel ?? (
+      this.gyroMode === "always" ? "GYRO ON" :
+      this.gyroMode === "fire" ? "GYRO FIRE" : "GYRO OFF"
+    );
+    button.dataset.mode = this.gyroMode;
+  }
+
   private bindTouchControls(): void {
     const stick = document.getElementById("move-stick");
     const knob = document.getElementById("move-stick-knob");
@@ -244,6 +315,9 @@ export class FPSInput {
     const skip = document.getElementById("mobile-skip");
     const pause = document.getElementById("mobile-pause");
     const range = document.getElementById("mobile-range") as HTMLInputElement | null;
+    const toolsToggle = document.getElementById("mobile-tools-toggle");
+    const toolsPanel = document.getElementById("mobile-tools-panel");
+    const gyro = document.getElementById("mobile-gyro");
     if (!stick || !knob || !look || !fire || !warp || !crouch || !reset || !skip || !pause || !range) return;
 
     let stickPointer: number | null = null;
@@ -293,8 +367,6 @@ export class FPSInput {
       if (!this.enabled) return;
       event.preventDefault();
       if (lookPointer !== null && event.pointerId !== lookPointer) {
-        // A second right-thumb/finger tap while aiming is a shot. This keeps the
-        // primary look pointer alive, so mobile can aim and fire simultaneously.
         this.fireQueued = true;
         return;
       }
@@ -318,9 +390,6 @@ export class FPSInput {
     look.addEventListener("pointerup", releaseLook);
     look.addEventListener("pointercancel", releaseLook);
 
-    // The FIRE control is also a mini look surface. Pressing fires immediately;
-    // keeping the thumb down and dragging continues to steer the camera. This
-    // avoids the common mobile-FPS "stop aiming to press fire" problem.
     let firePointer: number | null = null;
     let lastFireX = 0;
     let lastFireY = 0;
@@ -328,6 +397,7 @@ export class FPSInput {
       if (!this.enabled) return;
       event.preventDefault();
       this.fireQueued = true;
+      this.touchFireHeld = true;
       firePointer = event.pointerId;
       lastFireX = event.clientX;
       lastFireY = event.clientY;
@@ -343,7 +413,9 @@ export class FPSInput {
       applyTouchLook(dx, dy);
     });
     const releaseFire = (event: PointerEvent) => {
-      if (event.pointerId === firePointer) firePointer = null;
+      if (event.pointerId !== firePointer) return;
+      firePointer = null;
+      this.touchFireHeld = false;
     };
     fire.addEventListener("pointerup", releaseFire);
     fire.addEventListener("pointercancel", releaseFire);
@@ -355,15 +427,35 @@ export class FPSInput {
       this.syncTouchCrouchVisual();
     });
 
+    let warpPointer: number | null = null;
+    let warpStartY = 0;
+    let warpStartFraction = 1;
+    const setTouchWarpFraction = (fraction: number) => {
+      const clamped = Math.max(0.12, Math.min(1, fraction));
+      range.value = String(Math.round(clamped * 100));
+      this.warpFraction = clamped;
+    };
     const startWarp = (event: PointerEvent) => {
       if (!this.enabled) return;
       event.preventDefault();
       this.warpHeld = true;
+      warpPointer = event.pointerId;
+      warpStartY = event.clientY;
+      warpStartFraction = Math.max(0.12, Math.min(1, Number(range.value) / 100));
       warp.setPointerCapture(event.pointerId);
+      warp.classList.add("dragging");
     };
-    const endWarp = (event: PointerEvent) => {
-      if (!this.warpHeld) return;
+    warp.addEventListener("pointermove", (event) => {
+      if (event.pointerId !== warpPointer || !this.warpHeld) return;
       event.preventDefault();
+      const deltaY = event.clientY - warpStartY;
+      setTouchWarpFraction(warpStartFraction + deltaY / 180);
+    });
+    const endWarp = (event: PointerEvent) => {
+      if (event.pointerId !== warpPointer || !this.warpHeld) return;
+      event.preventDefault();
+      warpPointer = null;
+      warp.classList.remove("dragging");
       this.warpHeld = false;
       this.warpReleased = true;
     };
@@ -386,8 +478,26 @@ export class FPSInput {
     });
     pause.addEventListener("pointerdown", (event) => {
       event.preventDefault();
+      document.body.classList.remove("mobile-tools-open");
+      toolsToggle?.setAttribute("aria-expanded", "false");
+      toolsPanel?.setAttribute("aria-hidden", "true");
       if (this.enabled) this.pauseQueued = true;
     });
+
+    toolsToggle?.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+      const open = !document.body.classList.contains("mobile-tools-open");
+      document.body.classList.toggle("mobile-tools-open", open);
+      toolsToggle.setAttribute("aria-expanded", String(open));
+      toolsPanel?.setAttribute("aria-hidden", String(!open));
+    });
+
+    gyro?.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      void this.cycleGyroMode();
+    });
+    this.syncGyroButton();
   }
 
   private syncTouchCrouchVisual(): void {

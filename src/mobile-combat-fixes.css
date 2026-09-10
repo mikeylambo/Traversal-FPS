@@ -1,0 +1,161 @@
+/* Follow-up to Mobile Combat UI v2 after on-device iPhone PWA playtest. */
+@media (pointer: coarse) and (orientation: landscape) {
+  /* Mobile HUD law: the puzzle/world owns the center. Persistent information lives
+     on the edges; instructions are terse; warp distance is a peripheral instrument. */
+  body.touch-device.touch-gameplay #mission-panel {
+    top: max(8px, env(safe-area-inset-top)) !important;
+    left: max(10px, env(safe-area-inset-left)) !important;
+    width: 22vw !important;
+    max-width: 230px !important;
+    min-width: 0 !important;
+    padding: 4px 8px 5px !important;
+  }
+  body.touch-device.touch-gameplay #room-label {
+    font-size: clamp(10px, 1.45vw, 12px) !important;
+    line-height: 1 !important;
+  }
+  body.touch-device.touch-gameplay #room-objective {
+    display: block !important;
+    max-width: 100% !important;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 6px !important;
+    line-height: 1 !important;
+  }
+
+  body.touch-device.touch-gameplay.mobile-training #metric-panel {
+    display: none !important;
+  }
+  body.touch-device.touch-gameplay:not(.mobile-training) #metric-panel {
+    top: max(7px, env(safe-area-inset-top)) !important;
+    left: 50% !important;
+    right: auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: 22vw !important;
+    padding: 3px 7px 4px !important;
+    transform: translateX(-50%) !important;
+    border-color: rgba(126, 232, 255, .10) !important;
+    background: rgba(3, 12, 22, .18) !important;
+    box-shadow: none !important;
+  }
+  body.touch-device.touch-gameplay:not(.mobile-training) #run-primary {
+    font-size: clamp(10px, 1.6vw, 14px) !important;
+  }
+
+  /* Instruction is deliberately on a second row. This avoids the room card even
+     when inherited transforms/clip geometry make the cards wider than expected. */
+  body.touch-device.touch-gameplay #tutorial-card {
+    top: max(54px, calc(env(safe-area-inset-top) + 48px)) !important;
+    left: max(10px, env(safe-area-inset-left)) !important;
+    right: auto !important;
+    width: min(360px, 40vw) !important;
+    max-height: 38px !important;
+    overflow: hidden !important;
+    padding: 3px 8px 4px 10px !important;
+    opacity: .9 !important;
+  }
+  body.touch-device.touch-gameplay #tutorial-room,
+  body.touch-device.touch-gameplay .tutorial-skip {
+    display: none !important;
+  }
+  body.touch-device.touch-gameplay #tutorial-text {
+    display: -webkit-box !important;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    font-size: clamp(6.5px, .95vw, 8px) !important;
+    line-height: 1.05 !important;
+  }
+
+  /* Kill the desktop-sized landing modal on touch. Distance is already manipulated
+     directly by dragging WARP, so mobile only needs a small peripheral percentage. */
+  body.touch-device.touch-gameplay #vector-console {
+    display: none !important;
+  }
+  body.touch-device.touch-gameplay.anchor-ready #vector-console,
+  body.touch-device.touch-gameplay.warp-preview #vector-console {
+    display: block !important;
+    left: auto !important;
+    right: max(116px, calc(env(safe-area-inset-right) + 108px)) !important;
+    bottom: max(8px, calc(env(safe-area-inset-bottom) + 4px)) !important;
+    width: 72px !important;
+    transform: none !important;
+    pointer-events: none !important;
+  }
+  body.touch-device.touch-gameplay #anchor-status,
+  body.touch-device.touch-gameplay .warp-gauge-head,
+  body.touch-device.touch-gameplay #warp-hint,
+  body.touch-device.touch-gameplay .warp-gauge-track {
+    display: none !important;
+  }
+  body.touch-device.touch-gameplay #warp-gauge {
+    width: 72px !important;
+    min-width: 0 !important;
+    padding: 2px 5px 3px !important;
+    border: 0 !important;
+    background: rgba(2, 10, 18, .28) !important;
+    box-shadow: none !important;
+  }
+  body.touch-device.touch-gameplay #warp-percent {
+    display: block !important;
+    font-size: 13px !important;
+    line-height: 1 !important;
+    text-align: center !important;
+  }
+
+  body.touch-device.touch-gameplay #move-stick,
+  body.touch-device.touch-gameplay #mobile-fire,
+  body.touch-device.touch-gameplay #mobile-warp,
+  body.touch-device.touch-gameplay #mobile-crouch,
+  body.touch-device.touch-gameplay #mobile-scope,
+  body.touch-device.touch-gameplay #mobile-tools {
+    z-index: 42 !important;
+    pointer-events: auto !important;
+    touch-action: none !important;
+  }
+  body.touch-device.touch-gameplay #look-pad { z-index: 20 !important; }
+  body.touch-device.touch-gameplay #mobile-tools-panel { z-index: 50 !important; }
+
+  body.touch-device.touch-gameplay #mobile-fire {
+    right: max(20px, calc(env(safe-area-inset-right) + 12px)) !important;
+    bottom: max(116px, calc(env(safe-area-inset-bottom) + 106px)) !important;
+  }
+  body.touch-device.touch-gameplay #mobile-warp {
+    right: max(20px, calc(env(safe-area-inset-right) + 12px)) !important;
+    bottom: max(18px, calc(env(safe-area-inset-bottom) + 10px)) !important;
+  }
+  body.touch-device.touch-gameplay #mobile-crouch {
+    right: max(116px, calc(env(safe-area-inset-right) + 108px)) !important;
+    bottom: max(24px, calc(env(safe-area-inset-bottom) + 16px)) !important;
+    width: 58px !important;
+    height: 48px !important;
+  }
+  body.touch-device.touch-gameplay #mobile-scope {
+    right: max(116px, calc(env(safe-area-inset-right) + 108px)) !important;
+    bottom: max(82px, calc(env(safe-area-inset-bottom) + 74px)) !important;
+    width: 58px !important;
+    height: 42px !important;
+  }
+}
+
+@media (pointer: coarse) and (orientation: landscape) and (max-height: 430px) {
+  body.touch-device.touch-gameplay #mission-panel { width: 20vw !important; }
+  body.touch-device.touch-gameplay #tutorial-card {
+    top: max(48px, calc(env(safe-area-inset-top) + 42px)) !important;
+    width: min(330px, 37vw) !important;
+    max-height: 34px !important;
+  }
+  body.touch-device.touch-gameplay #mobile-scope {
+    right: max(108px, calc(env(safe-area-inset-right) + 100px)) !important;
+    bottom: max(78px, calc(env(safe-area-inset-bottom) + 70px)) !important;
+  }
+  body.touch-device.touch-gameplay #mobile-crouch {
+    right: max(108px, calc(env(safe-area-inset-right) + 100px)) !important;
+  }
+  body.touch-device.touch-gameplay.anchor-ready #vector-console,
+  body.touch-device.touch-gameplay.warp-preview #vector-console {
+    right: max(106px, calc(env(safe-area-inset-right) + 98px)) !important;
+  }
+}

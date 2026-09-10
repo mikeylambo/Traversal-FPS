@@ -1,0 +1,126 @@
+/* Mobile UI polish: keep gameplay readable and menus bright enough to scan. */
+@media (pointer: coarse) and (orientation: landscape) {
+  /* Restore landing feedback as a compact bottom-center instrument instead of
+     deleting it or letting the desktop modal cover the puzzle sightline. */
+  body.touch-device.touch-gameplay #stop-short-readout,
+  body.touch-device.touch-gameplay #stop-short-readout.visible,
+  body.touch-device.touch-gameplay #stop-short-readout.placing,
+  body.touch-device.touch-gameplay #stop-short-readout.short {
+    left: 50% !important;
+    right: auto !important;
+    bottom: max(10px, calc(env(safe-area-inset-bottom) + 6px)) !important;
+    width: 190px !important;
+    max-width: 24vw !important;
+    min-width: 150px !important;
+    padding: 5px 9px 6px !important;
+    transform: translateX(-50%) !important;
+    display: grid !important;
+    grid-template-columns: 1fr auto !important;
+    align-items: center !important;
+    gap: 2px 8px !important;
+    border: 1px solid color-mix(in srgb, var(--hud-accent, #69e7ff) 34%, transparent) !important;
+    background: rgba(3, 14, 24, .68) !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,.18) !important;
+    clip-path: polygon(7px 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%, 0 7px) !important;
+    opacity: 1 !important;
+  }
+  body.touch-device.touch-gameplay #stop-short-readout::after {
+    display: block !important;
+    height: 2px !important;
+  }
+  body.touch-device.touch-gameplay #stop-short-readout > span {
+    display: block !important;
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    font-size: 6px !important;
+    letter-spacing: .14em !important;
+    opacity: .6 !important;
+  }
+  body.touch-device.touch-gameplay #stop-short-readout strong {
+    display: block !important;
+    grid-column: 2 !important;
+    grid-row: 1 / 3 !important;
+    font-size: 22px !important;
+    line-height: .9 !important;
+    text-align: right !important;
+  }
+  body.touch-device.touch-gameplay #stop-short-readout em {
+    display: block !important;
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+    font-size: 10px !important;
+    line-height: 1 !important;
+  }
+  body.touch-device.touch-gameplay #stop-short-readout small {
+    display: none !important;
+  }
+
+  /* Achievement unlocks should never sit on top of the combat controls. */
+  #achievement-toast-host {
+    top: max(70px, calc(env(safe-area-inset-top) + 62px)) !important;
+    right: max(18px, calc(env(safe-area-inset-right) + 12px)) !important;
+    bottom: auto !important;
+    width: min(250px, 28vw) !important;
+    gap: 6px !important;
+  }
+  .achievement-toast {
+    padding: 8px 10px 9px !important;
+    clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 8px 100%, 0 calc(100% - 8px)) !important;
+    box-shadow: 0 10px 28px rgba(0,0,0,.24) !important;
+  }
+  .achievement-toast span {
+    font-size: 7px !important;
+    letter-spacing: .16em !important;
+  }
+  .achievement-toast strong {
+    margin-top: 2px !important;
+    font-size: 15px !important;
+    line-height: 1 !important;
+  }
+  .achievement-toast small {
+    margin-top: 2px !important;
+    font-size: 8px !important;
+    line-height: 1.18 !important;
+  }
+
+  /* Results and achievement rows are informational, not unavailable. The shell's
+     disabled-row treatment was making the whole screen look incorrectly dimmed. */
+  #ui .slu-screen[data-screen-id="results"] .slu-choice,
+  #ui .slu-screen[data-screen-id="results"] .slu-choice[disabled],
+  #ui .slu-screen[data-screen-id="achievements"] .slu-choice,
+  #ui .slu-screen[data-screen-id="achievements"] .slu-choice[disabled] {
+    opacity: 1 !important;
+    filter: none !important;
+    color: rgba(235, 248, 252, .94) !important;
+  }
+  #ui .slu-screen[data-screen-id="results"] .slu-choice-desc,
+  #ui .slu-screen[data-screen-id="achievements"] .slu-choice-desc {
+    opacity: .78 !important;
+    color: rgba(205, 226, 235, .82) !important;
+  }
+
+  /* Mobile menu background: no platform prop, no murky wash. Keep the same
+     Traversal language with negative space plus concentrated spectral structure. */
+  #ui .slu-screen {
+    background:
+      radial-gradient(circle at 78% 24%, rgba(77, 220, 255, .12), transparent 0 18%),
+      radial-gradient(circle at 18% 82%, rgba(255, 95, 203, .07), transparent 0 22%),
+      linear-gradient(120deg, rgba(8, 23, 34, .98), rgba(3, 9, 16, .98) 55%, rgba(4, 15, 23, .98)) !important;
+  }
+  #ui .slu-screen::after {
+    inset: 0 !important;
+    opacity: .6 !important;
+    mask-image: linear-gradient(90deg, transparent 0 28%, #000 48% 100%) !important;
+    background:
+      radial-gradient(circle at 78% 34%, rgba(226, 250, 255, .32) 0 1px, transparent 1.6px),
+      radial-gradient(circle at 66% 68%, rgba(91, 225, 255, .26) 0 1px, transparent 1.5px),
+      linear-gradient(118deg, transparent 0 62%, rgba(105, 231, 255, .12) 62.15%, transparent 62.35%),
+      repeating-linear-gradient(90deg, transparent 0 79px, rgba(126, 214, 236, .035) 80px 81px),
+      repeating-linear-gradient(0deg, transparent 0 79px, rgba(126, 214, 236, .028) 80px 81px) !important;
+    animation: none !important;
+  }
+  #ui .slu-panel {
+    background: rgba(3, 10, 17, .76) !important;
+    box-shadow: 0 18px 48px rgba(0, 0, 0, .28) !important;
+  }
+}
