@@ -1,5 +1,12 @@
 /* Mobile UI polish: keep gameplay readable and menus bright enough to scan. */
 @media (pointer: coarse) and (orientation: landscape) {
+  /* Explicit touch ownership: the touch-control layer owns the mobile gameplay
+     surface. Empty gaps are inert rather than falling through to the canvas. */
+  body.touch-device.touch-gameplay #mobile-controls {
+    pointer-events: auto !important;
+    touch-action: none !important;
+  }
+
   /* Restore landing feedback as a compact bottom-center instrument instead of
      deleting it or letting the desktop modal cover the puzzle sightline. */
   body.touch-device.touch-gameplay #stop-short-readout,
@@ -38,11 +45,16 @@
   }
   body.touch-device.touch-gameplay #stop-short-readout strong {
     display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
     grid-column: 2 !important;
     grid-row: 1 / 3 !important;
+    margin: 0 !important;
+    color: #efffff !important;
     font-size: 22px !important;
     line-height: .9 !important;
     text-align: right !important;
+    font-variant-numeric: tabular-nums !important;
   }
   body.touch-device.touch-gameplay #stop-short-readout em {
     display: block !important;
