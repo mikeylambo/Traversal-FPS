@@ -1,79 +1,103 @@
-/* Live mobile warp readout override.
- * mobile-combat-fixes.css uses a more-specific anchor-ready/warp-preview selector,
- * so this file intentionally loads last and matches that specificity.
+/* Mobile warp readout contract.
+ * Keep one compact landing instrument on touch:
+ * LANDING + ENDPOINT/STOP SHORT + live percentage.
+ * The legacy vector console is hidden entirely.
  */
 @media (pointer: coarse) and (orientation: landscape) {
-  /* Keep the existing compact warp box, but make it data-first: percentage only.
-     No VECTOR label/copy, no duplicate track or hint. */
+  body.touch-device.touch-gameplay #vector-console,
   body.touch-device.touch-gameplay.anchor-ready #vector-console,
   body.touch-device.touch-gameplay.warp-preview #vector-console {
-    display: block !important;
-    left: auto !important;
-    right: max(116px, calc(env(safe-area-inset-right) + 108px)) !important;
-    bottom: max(8px, calc(env(safe-area-inset-bottom) + 4px)) !important;
-    width: 72px !important;
-    transform: none !important;
-    pointer-events: none !important;
-  }
-
-  body.touch-device.touch-gameplay.anchor-ready #vector-console #anchor-status,
-  body.touch-device.touch-gameplay.warp-preview #vector-console #anchor-status,
-  body.touch-device.touch-gameplay.anchor-ready #vector-console .warp-gauge-head > span,
-  body.touch-device.touch-gameplay.warp-preview #vector-console .warp-gauge-head > span,
-  body.touch-device.touch-gameplay.anchor-ready #vector-console .warp-gauge-track,
-  body.touch-device.touch-gameplay.warp-preview #vector-console .warp-gauge-track,
-  body.touch-device.touch-gameplay.anchor-ready #vector-console #warp-hint,
-  body.touch-device.touch-gameplay.warp-preview #vector-console #warp-hint {
     display: none !important;
   }
 
-  body.touch-device.touch-gameplay.anchor-ready #vector-console #warp-gauge,
-  body.touch-device.touch-gameplay.warp-preview #vector-console #warp-gauge {
-    display: block !important;
-    width: 72px !important;
-    min-width: 0 !important;
-    margin: 0 !important;
-    padding: 3px 5px 4px !important;
-    opacity: 1 !important;
-    transform: none !important;
-    border: 0 !important;
-    background: rgba(2, 10, 18, .34) !important;
-    box-shadow: none !important;
-  }
-
-  body.touch-device.touch-gameplay.anchor-ready #vector-console .warp-gauge-head,
-  body.touch-device.touch-gameplay.warp-preview #vector-console .warp-gauge-head {
-    display: flex !important;
-    justify-content: center !important;
-    margin: 0 !important;
-  }
-
-  body.touch-device.touch-gameplay.anchor-ready #vector-console #warp-percent,
-  body.touch-device.touch-gameplay.warp-preview #vector-console #warp-percent {
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    margin: 0 !important;
-    color: #efffff !important;
-    font-size: 14px !important;
-    line-height: 1 !important;
-    text-align: center !important;
-    font-variant-numeric: tabular-nums !important;
-  }
-
-  /* The separate stop-short panel duplicates the same information on touch.
-     Keep one mobile landing instrument rather than two competing readouts. */
   body.touch-device.touch-gameplay #stop-short-readout,
   body.touch-device.touch-gameplay #stop-short-readout.visible,
   body.touch-device.touch-gameplay #stop-short-readout.placing,
   body.touch-device.touch-gameplay #stop-short-readout.short {
+    position: fixed !important;
+    display: grid !important;
+    left: 50% !important;
+    right: auto !important;
+    bottom: max(10px, calc(env(safe-area-inset-bottom) + 6px)) !important;
+    width: 190px !important;
+    min-width: 150px !important;
+    max-width: 24vw !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 5px 9px 6px !important;
+    transform: translateX(-50%) !important;
+    grid-template-columns: 1fr auto !important;
+    grid-template-rows: auto auto !important;
+    align-items: center !important;
+    gap: 2px 8px !important;
+    overflow: hidden !important;
+    opacity: 1 !important;
+    pointer-events: none !important;
+    border: 1px solid color-mix(in srgb, var(--hud-accent, #69e7ff) 34%, transparent) !important;
+    background: rgba(3, 14, 24, .68) !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .18) !important;
+    clip-path: polygon(7px 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%, 0 7px) !important;
+  }
+
+  body.touch-device.touch-gameplay #stop-short-readout::after {
+    display: block !important;
+    height: 2px !important;
+  }
+
+  body.touch-device.touch-gameplay #stop-short-readout > span {
+    display: block !important;
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    margin: 0 !important;
+    font-size: 6px !important;
+    line-height: 1 !important;
+    letter-spacing: .14em !important;
+    opacity: .62 !important;
+  }
+
+  body.touch-device.touch-gameplay #stop-short-readout > strong,
+  body.touch-device.touch-gameplay #stop-short-percent {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    grid-column: 2 !important;
+    grid-row: 1 / 3 !important;
+    margin: 0 !important;
+    color: #efffff !important;
+    font-size: 22px !important;
+    line-height: .9 !important;
+    letter-spacing: 0 !important;
+    text-align: right !important;
+    font-variant-numeric: tabular-nums !important;
+    text-shadow: none !important;
+  }
+
+  body.touch-device.touch-gameplay #stop-short-readout > em,
+  body.touch-device.touch-gameplay #stop-short-state {
+    display: block !important;
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+    margin: 0 !important;
+    font-size: 10px !important;
+    line-height: 1 !important;
+    font-style: normal !important;
+    letter-spacing: .08em !important;
+  }
+
+  /* The mobile readout does not need instructional copy. */
+  body.touch-device.touch-gameplay #stop-short-readout > small,
+  body.touch-device.touch-gameplay #stop-short-hint {
     display: none !important;
   }
 }
 
 @media (pointer: coarse) and (orientation: landscape) and (max-height: 430px) {
-  body.touch-device.touch-gameplay.anchor-ready #vector-console,
-  body.touch-device.touch-gameplay.warp-preview #vector-console {
-    right: max(106px, calc(env(safe-area-inset-right) + 98px)) !important;
+  body.touch-device.touch-gameplay #stop-short-readout,
+  body.touch-device.touch-gameplay #stop-short-readout.visible,
+  body.touch-device.touch-gameplay #stop-short-readout.placing,
+  body.touch-device.touch-gameplay #stop-short-readout.short {
+    width: 176px !important;
+    min-width: 142px !important;
+    max-width: 23vw !important;
   }
 }
