@@ -69,8 +69,6 @@ export function installLandingReadabilityRuntime(game: object): void {
   groundRing.visible = false;
   state.scene.add(line, groundRing);
 
-  // Placing a landing is a continuous, silent adjustment on the gauge. A short tick
-  // per step gives the same information without asking the player to watch a number.
   let lastPercent = -1;
   const originalUpdate = state.update.bind(game);
   state.update = (dt: number) => {
@@ -83,9 +81,6 @@ export function installLandingReadabilityRuntime(game: object): void {
     lastPercent = percent;
   };
 
-  // Installed here because Landing Readability is already the presentation seam
-  // immediately after GameplayClarity. This keeps the redesign isolated from the
-  // shell's difficulty data contract while the new tiers are being playtested.
   installDifficultyInformationRuntime(game);
 }
 
@@ -99,6 +94,7 @@ function syncLandingCue(
     line.visible = false;
     groundRing.visible = false;
     document.body.classList.remove("landing-supported");
+    setGroundReadout(false);
     return;
   }
 
@@ -113,7 +109,12 @@ function syncLandingCue(
       ? distance <= EXPERT_CONTACT_RANGE
       : true;
   const cueVisible = Boolean(support) && inRange;
-  document.body.classList.toggle("landing-supported", cueVisible);
+
+  // Ground/not-ground is basic spatial truth and should not disappear because the
+  // player scopes, changes FOV, or plays on a different input surface. Difficulty
+  // still controls how much predictive world-space geometry is drawn below.
+  document.body.classList.toggle("landing-supported", Boolean(support));
+  setGroundReadout(Boolean(support));
 
   if (!support || !inRange) {
     line.visible = false;
@@ -129,16 +130,21 @@ function syncLandingCue(
     ]);
     line.visible = true;
   } else {
-    // Expert still gets a close-range contact truth to compensate for first-person
-    // depth/proprioception limits, but no long-range prediction line.
     line.visible = false;
   }
 
   groundRing.position.set(selected.x, support.surfaceY + 0.045, selected.z);
-  groundRing.visible = true;
+  groundRing.visible = cueVisible;
+}
 
-  const stateLabel = document.getElementById("stop-short-state");
-  if (stateLabel && tier !== "hard" && tier !== "expert") stateLabel.textContent = "GROUND";
+function setGroundReadout(supported: boolean): void {
+  const ids = ["stop-short-surface", "mobile-landing-surface"];
+  for (const id of ids) {
+    const label = document.getElementById(id);
+    if (!label) continue;
+    label.textContent = supported ? "GROUND" : "";
+    label.classList.toggle("visible", supported);
+  }
 }
 
 function normalizeDifficulty(value: string): "assist" | "standard" | "hard" | "expert" {
@@ -150,8 +156,6 @@ function findGroundSupport(selected: THREE.Vector3, platforms: readonly Platform
   let best: GroundSupport | null = null;
 
   for (const platform of platforms) {
-    // Thin floors/decks are landing surfaces. This filters the tall/thin wall
-    // slabs that share PlatformSpec for collision/occlusion.
     if (platform.size[0] < 1.5 || platform.size[2] < 1.5 || platform.size[1] > 2.5) continue;
 
     const halfX = Math.max(0.05, platform.size[0] * 0.5 - EDGE_INSET);
@@ -161,8 +165,6 @@ function findGroundSupport(selected: THREE.Vector3, platforms: readonly Platform
 
     const surfaceY = platform.center[1] + platform.size[1] * 0.5;
     const standingY = surfaceY + EYE_HEIGHT;
-    // If the selected camera point is materially below the standing height, the
-    // platform is above the player, not ground beneath them.
     if (selected.y < standingY - VERTICAL_CUSHION) continue;
     if (!best || surfaceY > best.surfaceY) best = { surfaceY, standingY };
   }
