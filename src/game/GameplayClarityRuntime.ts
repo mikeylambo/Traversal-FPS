@@ -121,7 +121,7 @@ function updateStopShort(state: RuntimeState): void {
 
   const pad = document.body.classList.contains("gamepad-active");
   hintEl.textContent = !hasAnchor
-    ? "SPHERE WRITES VECTOR"
+    ? "SPHERE SETS LANDING"
     : held
       ? pad
         ? "RB SHORTER · LB LONGER · RELEASE LT"
