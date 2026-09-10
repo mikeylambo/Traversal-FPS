@@ -39,15 +39,19 @@ export function installGameplayClarity(game: object): void {
     <span>LANDING</span>
     <strong id="stop-short-percent">100%</strong>
     <em id="stop-short-state">ENDPOINT</em>
+    <i id="stop-short-surface" aria-live="polite"></i>
     <small id="stop-short-hint">HOLD WARP</small>
   `;
   hud.appendChild(stopShort);
 
+  /* The legacy vector console duplicates the landing instrument and uses older
+     terminology. Keep one authoritative readout on every platform. */
+  document.getElementById("vector-console")?.style.setProperty("display", "none", "important");
+
   if (touchHUD) {
-    /* Mobile gets its own readout so legacy vector-console/landing CSS cannot
-       rewrite or hide the exact information contract we want on phone. */
+    /* Mobile keeps its own compact presentation so desktop sizing never leaks into
+       the phone HUD, but the semantics are identical to desktop. */
     stopShort.style.setProperty("display", "none", "important");
-    document.getElementById("vector-console")?.style.setProperty("display", "none", "important");
 
     const mobileLanding = document.createElement("section");
     mobileLanding.id = "mobile-landing-readout";
@@ -55,6 +59,7 @@ export function installGameplayClarity(game: object): void {
       <span>LANDING</span>
       <em id="mobile-landing-state">ENDPOINT</em>
       <strong id="mobile-landing-percent">100%</strong>
+      <i id="mobile-landing-surface" aria-live="polite"></i>
     `;
     hud.appendChild(mobileLanding);
   }
@@ -72,7 +77,7 @@ export function installGameplayClarity(game: object): void {
   const originalHUD = state.updateHUD.bind(game);
   state.updateHUD = () => {
     originalHUD();
-    if (touchHUD) document.getElementById("vector-console")?.style.setProperty("display", "none", "important");
+    document.getElementById("vector-console")?.style.setProperty("display", "none", "important");
     normalizeSpatialLanguage();
     simplifyCampaignHUD(state);
     updateStopShort(state);
@@ -162,17 +167,6 @@ function updateStopShort(state: RuntimeState): void {
       : pad
         ? "HOLD LT"
         : "HOLD RMB";
-
-  const warpHint = document.getElementById("warp-hint");
-  if (warpHint && hasAnchor) {
-    warpHint.textContent = held
-      ? pad
-        ? "RB SHORTER · LB LONGER"
-        : "WHEEL TO PLACE LANDING"
-      : pad
-        ? "HOLD LT TO PLACE"
-        : "HOLD RMB TO PLACE";
-  }
 }
 
 function updateShotBudget(state: RuntimeState): void {
