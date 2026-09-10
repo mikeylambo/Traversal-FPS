@@ -11,8 +11,6 @@ type RuntimeState = {
   warp: {
     hasAnchor(): boolean;
     selectionPercent(): number;
-    // Runtime-accessed private method on WarpSystem. Kept here rather than
-    // changing WarpSystem's movement contract for a presentation-only feature.
     selectedPoint(): THREE.Vector3;
   };
   input: { isWarpHeld(): boolean };
@@ -30,18 +28,10 @@ const VERTICAL_CUSHION = 0.72;
 const HARD_CUE_RANGE = 18;
 const EXPERT_CONTACT_RANGE = 6.5;
 
-/**
- * Positive-only landing information: when the selected vector coordinate has a
- * real walkable surface underneath it, draw a thin drop line and ground ring.
- * Absence of the cue does not forbid the warp; airborne routes remain possible.
- *
- * Difficulty scales prediction rather than basic spatial truth:
- * - Assist/Standard: full current cue.
- * - Hard: cue only at near/mid range.
- * - Expert: close contact ring only; no predictive drop line.
- */
 export function installLandingReadabilityRuntime(game: object): void {
   const state = game as unknown as RuntimeState;
+  installReadoutParityStyles();
+
   const material = new THREE.LineBasicMaterial({
     color: 0x7dffb2,
     transparent: true,
@@ -108,11 +98,10 @@ function syncLandingCue(
     : tier === "expert"
       ? distance <= EXPERT_CONTACT_RANGE
       : true;
-  const cueVisible = Boolean(support) && inRange;
 
-  // Ground/not-ground is basic spatial truth and should not disappear because the
-  // player scopes, changes FOV, or plays on a different input surface. Difficulty
-  // still controls how much predictive world-space geometry is drawn below.
+  /* Ground/not-ground is basic spatial truth. It must survive scope/FOV changes and
+     be identical on touch, mouse, and controller. Difficulty only reduces the
+     predictive world-space line/ring, never the textual truth. */
   document.body.classList.toggle("landing-supported", Boolean(support));
   setGroundReadout(Boolean(support));
 
@@ -134,17 +123,59 @@ function syncLandingCue(
   }
 
   groundRing.position.set(selected.x, support.surfaceY + 0.045, selected.z);
-  groundRing.visible = cueVisible;
+  groundRing.visible = true;
 }
 
 function setGroundReadout(supported: boolean): void {
-  const ids = ["stop-short-surface", "mobile-landing-surface"];
-  for (const id of ids) {
+  for (const id of ["stop-short-surface", "mobile-landing-surface"]) {
     const label = document.getElementById(id);
     if (!label) continue;
     label.textContent = supported ? "GROUND" : "";
     label.classList.toggle("visible", supported);
   }
+}
+
+function installReadoutParityStyles(): void {
+  if (document.getElementById("landing-readout-parity-styles")) return;
+  const style = document.createElement("style");
+  style.id = "landing-readout-parity-styles";
+  style.textContent = `
+    #stop-short-surface,
+    #mobile-landing-surface {
+      display: none;
+      margin: 0;
+      font-family: "Sora", sans-serif;
+      font-style: normal;
+      font-size: 8px;
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: .14em;
+      color: #a9ffd0;
+      text-shadow: 0 0 10px rgba(125, 255, 178, .32);
+    }
+    #stop-short-surface.visible,
+    #mobile-landing-surface.visible { display: block; }
+
+    #stop-short-surface {
+      grid-column: 1;
+      margin-top: 4px;
+    }
+
+    @media (pointer: coarse) and (orientation: landscape) {
+      #mobile-landing-readout {
+        grid-template-rows: auto auto auto !important;
+      }
+      #mobile-landing-state { grid-row: 2 !important; }
+      #mobile-landing-percent { grid-row: 1 / 4 !important; }
+      #mobile-landing-surface {
+        grid-column: 1;
+        grid-row: 3;
+        margin-top: 2px;
+        font-size: 6px;
+      }
+    }
+  `;
+  document.head.appendChild(style);
 }
 
 function normalizeDifficulty(value: string): "assist" | "standard" | "hard" | "expert" {
