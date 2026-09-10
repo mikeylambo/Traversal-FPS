@@ -1,3 +1,5 @@
+export {};
+
 const coarsePointer = matchMedia("(pointer: coarse)");
 
 if (coarsePointer.matches) {
