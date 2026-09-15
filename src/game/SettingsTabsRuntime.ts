@@ -1,6 +1,6 @@
 import { traversalAudioEngine } from "../audio/TraversalAudioEngine";
 import type { TraversalSettingsStore } from "./TraversalSettings";
-import { HIDDEN_SHELL_DUPLICATES, NIGHT_AUDIO_CHOICE, PLAIN_FONT_CHOICE, SETTINGS_SETTINGS_TABS, resolveSettingsTab, type SettingsTabId } from "./SettingsSchema";
+import { HIDDEN_SHELL_DUPLICATES, NIGHT_AUDIO_CHOICE, PLAIN_FONT_CHOICE, SETTINGS_TABS, resolveSettingsTab, type SettingsTabId } from "./SettingsSchema";
 
 type FlowLike = {
   onActivate(screenId: string, choiceId: string): void;
@@ -10,6 +10,15 @@ type FlowLike = {
 type UILike = {
   move(delta: number): void;
 };
+
+type SupplementalSettings = {
+  nightAudio: boolean;
+  plainFont: boolean;
+  firstRunAccessibilitySeen: boolean;
+};
+
+const SUPPLEMENTAL_KEY = "traversal-fps:supplemental-accessibility:v1";
+const FIRST_RUN_CHOICE = "traversal-first-accessibility";
 
 
 const lastChoiceByTab: Record<SettingsTabId, string> = {
@@ -336,7 +345,7 @@ function rememberFocusedChoice(root: HTMLElement): void {
     '[data-screen-id="settings"] [data-choice-id][data-focused="true"]:not(:disabled)'
   );
   const id = focused?.dataset.choiceId;
-  const tab = id ? resolveSettingsTab(id, choice.textContent ?? "") : undefined;
+  const tab = id ? resolveSettingsTab(id, focused?.textContent ?? "") : undefined;
   if (id && tab === activeTab) lastChoiceByTab[activeTab] = id;
 }
 

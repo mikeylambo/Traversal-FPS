@@ -1,5 +1,5 @@
 import type { TraversalSettingsStore } from "./TraversalSettings";
-import { HIDDEN_SHELL_DUPLICATES, SETTINGS_SETTINGS_TABS, resolveSettingsTab, type SettingsTabId } from "./SettingsSchema";
+import { HIDDEN_SHELL_DUPLICATES, SETTINGS_TABS, resolveSettingsTab, type SettingsTabId } from "./SettingsSchema";
 
 type FlowLike = {
   onActivate(screenId: string, choiceId: string): void;
