@@ -1,5 +1,6 @@
 import { traversalAudioEngine } from "../audio/TraversalAudioEngine";
 import type { TraversalSettingsStore } from "./TraversalSettings";
+import { HIDDEN_SHELL_DUPLICATES, NIGHT_AUDIO_CHOICE, PLAIN_FONT_CHOICE, SETTINGS_SETTINGS_TABS, resolveSettingsTab, type SettingsTabId } from "./SettingsSchema";
 
 type FlowLike = {
   onActivate(screenId: string, choiceId: string): void;
@@ -10,84 +11,6 @@ type UILike = {
   move(delta: number): void;
 };
 
-type SettingsTabId = "controls" | "audio" | "display" | "accessibility";
-
-type SupplementalSettings = {
-  nightAudio: boolean;
-  plainFont: boolean;
-  firstRunAccessibilitySeen: boolean;
-};
-
-const SUPPLEMENTAL_KEY = "traversal-fps:supplemental-accessibility:v1";
-const FIRST_RUN_CHOICE = "traversal-first-accessibility";
-const NIGHT_AUDIO_CHOICE = "traversal-night-audio";
-const PLAIN_FONT_CHOICE = "traversal-plain-font";
-
-const TABS: ReadonlyArray<{ id: SettingsTabId; label: string; choices: readonly string[] }> = [
-  {
-    id: "controls",
-    label: "Controls",
-    choices: [
-      "traversal-controls",
-      "traversal-sensitivity",
-      "traversal-controller-x",
-      "traversal-controller-y",
-      "traversal-controller-accel",
-      "traversal-controller-scope",
-      "traversal-controller-move-deadzone",
-      "traversal-controller-deadzone",
-      "traversal-invert-x",
-      "traversal-invert-y",
-      "traversal-crouch-mode",
-      "traversal-aim-smoothing",
-      "traversal-aim-assist",
-      "traversal-controller-vibration"
-    ]
-  },
-  {
-    id: "audio",
-    label: "Audio",
-    choices: [
-      "master-down",
-      "master-up",
-      "traversal-mono-audio",
-      NIGHT_AUDIO_CHOICE
-    ]
-  },
-  {
-    id: "display",
-    label: "Display",
-    choices: [
-      "traversal-fov",
-      "traversal-reticle-scale",
-      "screen-shake",
-      "fullscreen",
-      "traversal-visual-lab"
-    ]
-  },
-  {
-    id: "accessibility",
-    label: "Accessibility",
-    choices: [
-      "traversal-reduce-flash",
-      "traversal-reduce-motion",
-      "traversal-color-profile",
-      "traversal-hud-contrast",
-      "traversal-ui-scale",
-      "traversal-text-timing",
-      "traversal-cvd-preview",
-      PLAIN_FONT_CHOICE
-    ]
-  }
-];
-
-const TAB_FOR_CHOICE = new Map<string, SettingsTabId>(
-  TABS.flatMap((tab) => tab.choices.map((choice) => [choice, tab.id] as const))
-);
-
-// Traversal owns richer versions of these two Shell rows. Hide the duplicates
-// rather than asking players to understand why two similarly named switches exist.
-const HIDDEN_SHELL_DUPLICATES = new Set(["reduced-motion", "vibration"]);
 
 const lastChoiceByTab: Record<SettingsTabId, string> = {
   controls: "traversal-controls",
@@ -129,7 +52,7 @@ export function installSettingsTabsRuntime(
     }
 
     if (screenId === "settings") {
-      const tab = TAB_FOR_CHOICE.get(choiceId);
+      const tab = resolveSettingsTab(choiceId);
       if (tab) lastChoiceByTab[tab] = choiceId;
 
       if (choiceId === NIGHT_AUDIO_CHOICE) {
@@ -162,7 +85,7 @@ export function installSettingsTabsRuntime(
     const choice = target?.closest<HTMLButtonElement>('[data-choice-id]');
     if (!choice?.closest('[data-screen-id="settings"]')) return;
     const id = choice.dataset.choiceId;
-    const tab = id ? TAB_FOR_CHOICE.get(id) : undefined;
+    const tab = id ? resolveSettingsTab(id, choice.textContent ?? "") : undefined;
     if (id && tab === activeTab) lastChoiceByTab[activeTab] = id;
   });
 
@@ -291,9 +214,9 @@ function decorateSettingsScreen(root: HTMLElement, flow: FlowLike, ui: UILike): 
   for (const button of Array.from(choices.querySelectorAll<HTMLButtonElement>("[data-choice-id]"))) {
     const id = button.dataset.choiceId ?? "";
     const duplicate = HIDDEN_SHELL_DUPLICATES.has(id);
-    const tab = TAB_FOR_CHOICE.get(id) ?? "display";
-    const visible = !duplicate && tab === activeTab;
-    button.dataset.settingsTab = tab;
+    const tab = resolveSettingsTab(id, button.textContent ?? "");
+    const visible = !duplicate && (tab === null || tab === activeTab);
+    button.dataset.settingsTab = tab ?? "unmapped";
     button.hidden = !visible;
     button.disabled = !visible;
     button.setAttribute("aria-hidden", String(!visible));
@@ -350,7 +273,7 @@ function ensureTabBar(
     tabs.setAttribute("role", "tablist");
     tabs.setAttribute("aria-label", "Settings categories");
 
-    for (const tab of TABS) {
+    for (const tab of SETTINGS_TABS) {
       const button = document.createElement("button");
       button.type = "button";
       button.className = "settings-tab";
@@ -375,8 +298,8 @@ function ensureTabBar(
 }
 
 function switchTab(delta: -1 | 1, root: HTMLElement, flow: FlowLike, ui: UILike): void {
-  const index = TABS.findIndex((tab) => tab.id === activeTab);
-  const next = TABS[(index + delta + TABS.length) % TABS.length]!;
+  const index = SETTINGS_TABS.findIndex((tab) => tab.id === activeTab);
+  const next = SETTINGS_TABS[(index + delta + SETTINGS_TABS.length) % SETTINGS_TABS.length]!;
   setTab(next.id, root, flow, ui);
 }
 
@@ -413,7 +336,7 @@ function rememberFocusedChoice(root: HTMLElement): void {
     '[data-screen-id="settings"] [data-choice-id][data-focused="true"]:not(:disabled)'
   );
   const id = focused?.dataset.choiceId;
-  const tab = id ? TAB_FOR_CHOICE.get(id) : undefined;
+  const tab = id ? resolveSettingsTab(id, choice.textContent ?? "") : undefined;
   if (id && tab === activeTab) lastChoiceByTab[activeTab] = id;
 }
 

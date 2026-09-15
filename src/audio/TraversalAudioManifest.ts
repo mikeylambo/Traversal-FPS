@@ -22,8 +22,12 @@ export interface AudioAssetSpec {
   readonly id: string;
   /** Output filename under `public/audio/`. */
   readonly file: string;
-  /** Path inside the authored `Traversal FPS SFX` drop. */
-  readonly source: string;
+  /** Path inside the authored `Traversal FPS SFX` drop. Omitted for checked-in generated media. */
+  readonly source?: string;
+  /** Checked-in generated media: audio:build verifies it instead of rebuilding it. */
+  readonly prebuilt?: boolean;
+  /** The supplied buffer was generated/edited to loop cleanly end-to-start. */
+  readonly seamless?: boolean;
   /** 1 = mono, required for PannerNode spatialisation. 2 = stereo, head-locked. */
   readonly channels: 1 | 2;
   /** Hard cap after silence-trim, in seconds. Tails beyond this are faded out. */
@@ -98,6 +102,18 @@ export type TraversalAudioEvent =
   | "rewind.begin"
   | "rewind.arrive"
   | "landing.adjust"
+  | "movement.footstep"
+  | "movement.crouch-step"
+  | "movement.land-light"
+  | "movement.land-heavy"
+  | "movement.crouch-down"
+  | "movement.crouch-up"
+  | "scope.engage"
+  | "scope.disengage"
+  | "platform.travel"
+  | "platform.lock"
+  | "ambience.construct"
+  | "ambience.construct-low"
   | "sphere.resolve"
   | "shield.reject"
   | "actor.cube"
@@ -182,6 +198,25 @@ export const AUDIO_ASSETS: readonly AudioAssetSpec[] = [
   { id: "diamond-resolve", file: "diamond-resolve.m4a", source: `${S}/Spatial Actor/diamond_activate/“Futuristic_motion_s_#4-1788297426660.wav`, channels: 2, maxSeconds: 1.6 },
   { id: "prism-resolve", file: "prism-resolve.m4a", source: `${S}/Spatial Actor/“Futuristic_motion_s_#1-1788297575664.wav`, channels: 2, maxSeconds: 1.6 },
   { id: "landing-adjust", file: "landing-adjust.m4a", source: `${S}/landing_adjust/“Extremely_subtle_fu_#4-1788296423992.wav`, channels: 2, maxSeconds: 0.7 },
+
+  // ---- Player body / traversal foley (ElevenLabs approved) --------------------
+  { id: "footstep-run-a", file: "footstep-run-a.mp3", channels: 2, maxSeconds: 0.8, prebuilt: true },
+  { id: "footstep-run-b", file: "footstep-run-b.mp3", channels: 2, maxSeconds: 0.8, prebuilt: true },
+  { id: "footstep-crouch-a", file: "footstep-crouch-a.mp3", channels: 2, maxSeconds: 0.8, prebuilt: true },
+  { id: "footstep-crouch-b", file: "footstep-crouch-b.mp3", channels: 2, maxSeconds: 0.8, prebuilt: true },
+  { id: "landing-light-a", file: "landing-light-a.mp3", channels: 2, maxSeconds: 1.0, prebuilt: true },
+  { id: "landing-light-b", file: "landing-light-b.mp3", channels: 2, maxSeconds: 1.0, prebuilt: true },
+  { id: "landing-heavy", file: "landing-heavy.mp3", channels: 2, maxSeconds: 1.2, prebuilt: true },
+  { id: "crouch-down", file: "crouch-down.mp3", channels: 2, maxSeconds: 0.7, prebuilt: true },
+  { id: "crouch-up", file: "crouch-up.mp3", channels: 2, maxSeconds: 0.6, prebuilt: true },
+  { id: "scope-engage", file: "scope-engage.mp3", channels: 2, maxSeconds: 0.5, prebuilt: true },
+  { id: "scope-disengage", file: "scope-disengage.mp3", channels: 2, maxSeconds: 0.5, prebuilt: true },
+
+  // ---- Generated world beds ---------------------------------------------------
+  { id: "platform-travel", file: "platform-travel.wav", channels: 1, maxSeconds: 8.0, sampleRate: 24000, prebuilt: true, seamless: true },
+  { id: "platform-lock", file: "platform-lock.wav", channels: 1, maxSeconds: 1.4, sampleRate: 24000, prebuilt: true },
+  { id: "construct-ambience-primary", file: "construct-ambience-primary.wav", channels: 2, maxSeconds: 20.0, sampleRate: 24000, prebuilt: true, seamless: true },
+  { id: "construct-ambience-low", file: "construct-ambience-low.wav", channels: 2, maxSeconds: 20.0, sampleRate: 24000, prebuilt: true, seamless: true },
 
   // ---- Hazards (mono: spatialised) -------------------------------------------
   { id: "hazard-hit", file: "hazard-hit.m4a", source: `${S}/hazard_hit/“Player_intersects_a_#1-1788296223411.wav`, channels: 2, maxSeconds: 1.2 },
@@ -342,6 +377,48 @@ export const AUDIO_CUES: Readonly<Record<TraversalAudioEvent, AudioCueSpec>> = {
     visualPair: "Warp gauge percentage + stop-short readout + landing ring."
   },
 
+  // --- Player body ---------------------------------------------------------------
+  "movement.footstep": {
+    bus: "sfx", tier: "deferred", gain: 0.55, pitchJitter: 0.035, cooldownMs: 90, maxVoices: 2,
+    slots: [{ assets: ["footstep-run-a", "footstep-run-b"], pick: "cycle" }],
+    visualPair: "Player is visibly moving across a platform. presentation-only."
+  },
+  "movement.crouch-step": {
+    bus: "sfx", tier: "deferred", gain: 0.40, pitchJitter: 0.025, cooldownMs: 120, maxVoices: 2,
+    slots: [{ assets: ["footstep-crouch-a", "footstep-crouch-b"], pick: "cycle" }],
+    visualPair: "Player is visibly crouch-moving across a platform. presentation-only."
+  },
+  "movement.land-light": {
+    bus: "sfx", tier: "deferred", gain: 0.62, pitchJitter: 0.02, cooldownMs: 120,
+    slots: [{ assets: ["landing-light-a", "landing-light-b"], pick: "cycle" }],
+    visualPair: "Camera/player motion visibly settles onto the platform. presentation-only."
+  },
+  "movement.land-heavy": {
+    bus: "sfx", tier: "deferred", gain: 0.76, cooldownMs: 160,
+    slots: [{ assets: ["landing-heavy"] }],
+    visualPair: "A high-speed fall visibly ends on the platform. presentation-only."
+  },
+  "movement.crouch-down": {
+    bus: "sfx", tier: "deferred", gain: 0.34, cooldownMs: 120,
+    slots: [{ assets: ["crouch-down"] }],
+    visualPair: "Camera height visibly lowers into crouch. presentation-only."
+  },
+  "movement.crouch-up": {
+    bus: "sfx", tier: "deferred", gain: 0.32, cooldownMs: 120,
+    slots: [{ assets: ["crouch-up"] }],
+    visualPair: "Camera height visibly rises out of crouch. presentation-only."
+  },
+  "scope.engage": {
+    bus: "sfx", tier: "deferred", gain: 0.44, cooldownMs: 80,
+    slots: [{ assets: ["scope-engage"] }],
+    visualPair: "Scope overlay and reduced FOV visibly engage. presentation-only."
+  },
+  "scope.disengage": {
+    bus: "sfx", tier: "deferred", gain: 0.40, cooldownMs: 80,
+    slots: [{ assets: ["scope-disengage"] }],
+    visualPair: "Scope overlay and FOV visibly return to normal. presentation-only."
+  },
+
   // --- Utility actors: fairness-critical --------------------------------------
   "actor.cube": {
     bus: "sfx",
@@ -462,6 +539,18 @@ export const AUDIO_CUES: Readonly<Record<TraversalAudioEvent, AudioCueSpec>> = {
     visualPair: "The platform starting to travel + `DIAMOND RESOLVED // MOTION ONLINE`."
   },
 
+  "platform.travel": {
+    bus: "world", tier: "deferred", gain: 0.28, positional: true, loop: true,
+    slots: [{ assets: ["platform-travel"] }],
+    visualPair: "The platform is visibly travelling through the room.",
+    note: "Quiet magnetic glide follows the actual moving platform; it is not an activation substitute."
+  },
+  "platform.lock": {
+    bus: "world", tier: "deferred", gain: 0.54, positional: true, cooldownMs: 140, maxVoices: 4,
+    slots: [{ assets: ["platform-lock"] }],
+    visualPair: "The moving platform visibly settles at an endpoint. presentation-only."
+  },
+
   // --- Sector exit -------------------------------------------------------------
   "exit.online": {
     bus: "world",
@@ -492,6 +581,20 @@ export const AUDIO_CUES: Readonly<Record<TraversalAudioEvent, AudioCueSpec>> = {
     slots: [{ assets: ["gravity-ring-loop"] }],
     visualPair: "The lit gravity ring itself, plus the HUD objective line.",
     note: "Positional bed that only runs while the exit is actually open. It tells you where the exit is without looking — the same job the ground cue does for landings."
+  },
+
+  // --- Construct ambience --------------------------------------------------------
+  "ambience.construct": {
+    bus: "music", tier: "deferred", gain: 0.20, loop: true,
+    slots: [{ assets: ["construct-ambience-primary"] }],
+    visualPair: "presentation-only.",
+    note: "Primary low-passed Construct bed; intentionally sparse so traversal cues retain priority."
+  },
+  "ambience.construct-low": {
+    bus: "music", tier: "deferred", gain: 0.07, loop: true,
+    slots: [{ assets: ["construct-ambience-low"] }],
+    visualPair: "presentation-only.",
+    note: "Second approved 20-second bed, deliberately kept very low in the mix."
   },
 
   // --- Progression -------------------------------------------------------------

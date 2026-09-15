@@ -18,7 +18,8 @@ import {
 } from "@slu/web-shell";
 import {
   configureTraversalAudio,
-  preloadCoreTraversalAudio
+  preloadCoreTraversalAudio,
+  preloadTraversalAudioEvents
 } from "./audio/TraversalAudio";
 import { TraversalGame } from "./game/TraversalGame";
 import { TraversalSettingsStore } from "./game/TraversalSettings";
@@ -29,6 +30,9 @@ import { installHazardRuntime } from "./game/HazardRuntime";
 import { installGamepadGameplay } from "./game/GamepadGameplayRuntime";
 import { installCombatFeel } from "./game/CombatFeelRuntime";
 import { installScopeRuntime } from "./game/ScopeRuntime";
+import { installMovementAudioRuntime } from "./game/MovementAudioRuntime";
+import { installPlatformMotionAudioRuntime } from "./game/PlatformMotionAudioRuntime";
+import { installConstructAmbienceRuntime } from "./game/ConstructAmbienceRuntime";
 import { installGameplayClarity } from "./game/GameplayClarityRuntime";
 import { installExitGateRuntime } from "./game/ExitGateRuntime";
 import { installLandingReadabilityRuntime } from "./game/LandingReadabilityRuntime";
@@ -179,6 +183,19 @@ configureTraversalAudio(() => {
 // Deliberately not awaited: the core SFX set warms in the background while the
 // player is still in the menus, so first Campaign entry never waits on audio.
 void preloadCoreTraversalAudio();
+// Body foley is intentionally outside the certified boot bundle. Warm it while
+// the player is still in menus so first use is authored audio without bloating
+// the <=700 KB core SFX budget.
+void preloadTraversalAudioEvents([
+  "movement.footstep",
+  "movement.crouch-step",
+  "movement.land-light",
+  "movement.land-heavy",
+  "movement.crouch-down",
+  "movement.crouch-up",
+  "scope.engage",
+  "scope.disengage"
+]);
 installAccessibilityRuntime();
 
 const progression = new TraversalProgression(app.storage);
@@ -406,6 +423,9 @@ installLandingReadabilityRuntime(game);
 installRewindWarpRuntime(game);
 installSectorTransitions(game, contentRuntime);
 installOnboardingRuntime(game, contentRuntime);
+installMovementAudioRuntime(game);
+installPlatformMotionAudioRuntime(game);
+installConstructAmbienceRuntime(game);
 installEditorShortcut();
 game.start();
 
@@ -443,7 +463,7 @@ console.info("Traversal FPS ready", {
   })),
   achievements: ACHIEVEMENTS.length,
   hazards: ["lethal-field", "sweep", "sightline-gate", "aperture-wall"],
-  audio: "authored SFX through shared master/music/sfx buses // positional hazard + exit cues // procedural fallback retained",
+  audio: "authored + approved generated SFX through shared buses // movement foley // moving-platform bed // Construct ambience // positional hazards",
   accessibility: "reduce flash // reduce motion // colour profile + shape/rate cues // HUD contrast // UI text scale // CVD preview",
   spatialActors: "sphere movement // cube state // diamond motion // prism energy // gravity ring progression",
   postgame: "THE REVERSE // 8-chamber authored labyrinth // unlocked by Sector 32 clear",

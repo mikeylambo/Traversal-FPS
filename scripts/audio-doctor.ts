@@ -88,8 +88,8 @@ for (const event of AUDIO_EVENT_IDS) {
   if (cue.loop) {
     for (const assetId of cueAssetIds(cue)) {
       const asset = audioAsset(assetId);
-      if (asset && !asset.loopCrossfadeSeconds) {
-        fail(`"${event}" loops but "${assetId}" was not built with a seamless crossfade.`);
+      if (asset && !asset.loopCrossfadeSeconds && !asset.seamless) {
+        fail(`"${event}" loops but "${assetId}" is not marked seamless.`);
       }
     }
   }

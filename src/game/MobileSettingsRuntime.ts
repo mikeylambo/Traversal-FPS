@@ -1,4 +1,5 @@
 import type { TraversalSettingsStore } from "./TraversalSettings";
+import { HIDDEN_SHELL_DUPLICATES, SETTINGS_SETTINGS_TABS, resolveSettingsTab, type SettingsTabId } from "./SettingsSchema";
 
 type FlowLike = {
   onActivate(screenId: string, choiceId: string): void;
@@ -9,64 +10,6 @@ type UILike = {
   move(delta: number): void;
 };
 
-type SettingsTabId = "controls" | "audio" | "display" | "accessibility";
-
-const TABS: ReadonlyArray<{ id: SettingsTabId; label: string; choices: readonly string[] }> = [
-  {
-    id: "controls",
-    label: "Controls",
-    choices: [
-      "traversal-controls",
-      "traversal-sensitivity",
-      "traversal-controller-x",
-      "traversal-controller-y",
-      "traversal-controller-accel",
-      "traversal-controller-scope",
-      "traversal-controller-move-deadzone",
-      "traversal-controller-deadzone",
-      "traversal-invert-x",
-      "traversal-invert-y",
-      "traversal-crouch-mode",
-      "traversal-aim-smoothing",
-      "traversal-aim-assist",
-      "traversal-controller-vibration"
-    ]
-  },
-  {
-    id: "audio",
-    label: "Audio",
-    choices: ["master-down", "master-up", "traversal-mono-audio"]
-  },
-  {
-    id: "display",
-    label: "Display",
-    choices: [
-      "traversal-fov",
-      "traversal-reticle-scale",
-      "screen-shake",
-      "fullscreen",
-      "traversal-visual-lab"
-    ]
-  },
-  {
-    id: "accessibility",
-    label: "Accessibility",
-    choices: [
-      "traversal-reduce-flash",
-      "traversal-reduce-motion",
-      "traversal-color-profile",
-      "traversal-hud-contrast",
-      "traversal-ui-scale",
-      "traversal-text-timing",
-      "traversal-cvd-preview"
-    ]
-  }
-];
-
-const TAB_FOR_CHOICE = new Map<string, SettingsTabId>(
-  TABS.flatMap((tab) => tab.choices.map((choice) => [choice, tab.id] as const))
-);
-const HIDDEN_SHELL_DUPLICATES = new Set(["reduced-motion", "vibration"]);
 let activeTab: SettingsTabId = "controls";
 
 /**
@@ -121,7 +64,7 @@ function decorate(root: HTMLElement, flow: FlowLike): void {
     tabs = document.createElement("nav");
     tabs.className = "settings-tabs mobile-settings-tabs";
     tabs.setAttribute("aria-label", "Settings categories");
-    for (const tab of TABS) {
+    for (const tab of SETTINGS_TABS) {
       const button = document.createElement("button");
       button.type = "button";
       button.className = "settings-tab";
@@ -142,8 +85,9 @@ function decorate(root: HTMLElement, flow: FlowLike): void {
   for (const button of Array.from(choices.querySelectorAll<HTMLButtonElement>("[data-choice-id]"))) {
     const id = button.dataset.choiceId ?? "";
     const duplicate = HIDDEN_SHELL_DUPLICATES.has(id);
-    const tab = TAB_FOR_CHOICE.get(id) ?? "display";
-    const visible = !duplicate && tab === activeTab;
+    const tab = resolveSettingsTab(id, button.textContent ?? "");
+    const visible = !duplicate && (tab === null || tab === activeTab);
+    button.dataset.settingsTab = tab ?? "unmapped";
     button.hidden = !visible;
     button.disabled = !visible;
     button.setAttribute("aria-hidden", String(!visible));

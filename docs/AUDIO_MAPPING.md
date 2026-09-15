@@ -18,6 +18,14 @@ their takes together; cues marked **alternating** rotate between takes.
 | `sphere.resolve` | sfx | core | `sphere-resolve-a`<br>`sphere-resolve-b`<br>`sphere-resolve-shimmer` | layered, alternating | Kill FX burst + sphere count in HUD + vector written. |
 | `shield.reject` | sfx | core | `shield-reject-a`<br>`shield-reject-b` | alternating | `TARGET REJECT // CHANGE YOUR FIRING ORIGIN` flash + orange impact FX + `body.target-blocked` reticle. |
 | `landing.adjust` | sfx | core | `landing-adjust` | single | Warp gauge percentage + stop-short readout + landing ring. |
+| `movement.footstep` | sfx | deferred | `footstep-run-a`<br>`footstep-run-b` | alternating | Player is visibly moving across a platform. presentation-only. |
+| `movement.crouch-step` | sfx | deferred | `footstep-crouch-a`<br>`footstep-crouch-b` | alternating | Player is visibly crouch-moving across a platform. presentation-only. |
+| `movement.land-light` | sfx | deferred | `landing-light-a`<br>`landing-light-b` | alternating | Camera/player motion visibly settles onto the platform. presentation-only. |
+| `movement.land-heavy` | sfx | deferred | `landing-heavy` | single | A high-speed fall visibly ends on the platform. presentation-only. |
+| `movement.crouch-down` | sfx | deferred | `crouch-down` | single | Camera height visibly lowers into crouch. presentation-only. |
+| `movement.crouch-up` | sfx | deferred | `crouch-up` | single | Camera height visibly rises out of crouch. presentation-only. |
+| `scope.engage` | sfx | deferred | `scope-engage` | single | Scope overlay and reduced FOV visibly engage. presentation-only. |
+| `scope.disengage` | sfx | deferred | `scope-disengage` | single | Scope overlay and FOV visibly return to normal. presentation-only. |
 | `actor.cube` | sfx | core | `cube-resolve-body`<br>`cube-resolve-detail` | layered | `CUBE RESOLVED // BARRIER STATE CHANGED` flash + impact FX + the hazard visibly disappearing. |
 | `actor.diamond` | sfx | core | `diamond-resolve` | single | `DIAMOND RESOLVED // MOTION ONLINE` flash + impact FX + the platform visibly starting to move. |
 | `actor.prism` | sfx | core | `prism-resolve` | single | `PRISM RESOLVED // ENERGY REROUTED` flash + impact FX + the aperture visibly shifting. |
@@ -30,9 +38,13 @@ their takes together; cues marked **alternating** rotate between takes.
 | `hazard.aperture-shift` | world | deferred | `aperture-shift-body`<br>`aperture-shift-air` | layered, positional | The aperture void frame visibly moving + the Prism resolve message. |
 | `hazard.cycle` *(deprecated)* | world | deferred | `gate-close-a` | positional | Whatever the specific hazard's cycle does on screen. |
 | `platform.activate` | world | deferred | `platform-activate` | positional | The platform starting to travel + `DIAMOND RESOLVED // MOTION ONLINE`. |
+| `platform.travel` | world | deferred | `platform-travel` | positional, loop | The platform is visibly travelling through the room. |
+| `platform.lock` | world | deferred | `platform-lock` | positional | The moving platform visibly settles at an endpoint. presentation-only. |
 | `exit.online` | world | deferred | `gravity-ring-online-body`<br>`gravity-ring-online-swell` | layered, positional | `GRAVITY RING ONLINE // ENTER TO ADVANCE` flash + the ring lighting from locked grey to ready green. |
 | `exit.enter` | world | deferred | `gravity-ring-enter` | positional | Sector clear transition. |
 | `exit.loop` | world | deferred | `gravity-ring-loop` | positional, loop | The lit gravity ring itself, plus the HUD objective line. |
+| `ambience.construct` | music | deferred | `construct-ambience-primary` | loop | presentation-only. |
+| `ambience.construct-low` | music | deferred | `construct-ambience-low` | loop | presentation-only. |
 | `sector.enter` | music | core | `sector-enter-campaign`<br>`sector-enter-course` | alternating | Sector transition card with kicker + title. |
 | `sector.clear` | music | core | `sector-clear` | single | Sector clear overlay + run stats. |
 | `achievement.unlock` | music | deferred | `achievement-body`<br>`achievement-air` | layered | Achievement toast. |
@@ -54,8 +66,11 @@ their takes together; cues marked **alternating** rotate between takes.
 - **`hazard.sweep`** — Fires at each end of the sweep's drift cycle, panned to the blade's world position. A player can hear the rhythm and rough bearing without looking.
 - **`hazard.aperture-shift`** — Layered: two takes of the same move, one bodied and one airy.
 - **`hazard.cycle`** — Superseded by the specific hazard.gate-* / hazard.field-* cues. Retained so any call site still using the generic name plays something.
+- **`platform.travel`** — Quiet magnetic glide follows the actual moving platform; it is not an activation substitute.
 - **`exit.online`** — Layered: the activation transient plus the dormant-mass swell underneath it.
 - **`exit.loop`** — Positional bed that only runs while the exit is actually open. It tells you where the exit is without looking — the same job the ground cue does for landings.
+- **`ambience.construct`** — Primary low-passed Construct bed; intentionally sparse so traversal cues retain priority.
+- **`ambience.construct-low`** — Second approved 20-second bed, deliberately kept very low in the mix.
 - **`sector.enter`** — Not a round-robin: Campaign picks the fuller take, timed/challenge modes the leaner one. Selected by `detail.campaign`.
 - **`achievement.unlock`** — Layered: a warm take and a bright take. Rare enough that richness wins.
 - **`ui.select`** — Keyboard and controller only. Moving a mouse across a list is passive — it sweeps several rows in one gesture and the focus styling already shows where you are — so pointer hover is deliberately silent.

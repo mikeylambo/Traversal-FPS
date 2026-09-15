@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { emitTraversalAudio } from "../audio/TraversalAudio";
 import { resolveTraversalAction } from "../input/TraversalBindings";
 import type { TraversalSettingsStore } from "./TraversalSettings";
 
@@ -24,10 +25,12 @@ export function installScopeRuntime(game: object, settings: TraversalSettingsSto
   let scoped = false;
   let blend = 0;
 
-  const setScoped = (next: boolean) => {
+  const setScoped = (next: boolean, audible = true) => {
+    if (next === scoped) return;
     scoped = next;
     document.body.classList.toggle("scope-active", scoped);
     window.dispatchEvent(new CustomEvent("traversal:scope-change", { detail: { active: scoped } }));
+    if (audible) emitTraversalAudio(scoped ? "scope.engage" : "scope.disengage");
   };
 
   const overlay = document.createElement("div");
@@ -82,7 +85,7 @@ export function installScopeRuntime(game: object, settings: TraversalSettingsSto
 
   const originalUpdate = state.update.bind(game);
   state.update = (dt: number) => {
-    if (!document.body.classList.contains("playing") && scoped) setScoped(false);
+    if (!document.body.classList.contains("playing") && scoped) setScoped(false, false);
 
     originalUpdate(dt);
 
