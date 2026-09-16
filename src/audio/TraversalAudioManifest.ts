@@ -82,6 +82,14 @@ export interface AudioCueSpec {
   readonly positional?: boolean;
   readonly loop?: boolean;
   /**
+   * Wet-send amount (0–1) into the shared "space" reverb, added on top of the dry
+   * signal to soften a cue's ending. Reserved for rare arrival/resolve beats — never
+   * fast, gameplay-critical cues, which stay bone-dry so the mix keeps its snap. The
+   * wet return re-enters this cue's own bus, so it rides the same Master/Music/SFX
+   * slider as the dry signal. Omitted or 0 = fully dry (the default for everything).
+   */
+  readonly reverbSend?: number;
+  /**
    * Part 2 / Priority 4 — audio-only information audit.
    * Every gameplay-relevant cue names the visual signal that carries the same
    * information. `"presentation-only"` means losing the sound loses nothing.
@@ -325,9 +333,10 @@ export const AUDIO_CUES: Readonly<Record<TraversalAudioEvent, AudioCueSpec>> = {
     tier: "core",
     gain: 0.9,
     pitchJitter: 0.015,
+    reverbSend: 0.12,
     slots: [{ assets: ["warp-arrive-a", "warp-arrive-b"], pick: "cycle" }],
     visualPair: "Arrival burst FX + `body.warp-arrival` flash.",
-    note: "Peer takes at similar level and brightness, so they alternate instead of layering."
+    note: "Peer takes at similar level and brightness, so they alternate instead of layering. A light reverb send blooms the arrival tail into the destination space."
   },
   "rewind.begin": {
     bus: "sfx",
@@ -345,6 +354,7 @@ export const AUDIO_CUES: Readonly<Record<TraversalAudioEvent, AudioCueSpec>> = {
     bus: "sfx",
     tier: "deferred",
     gain: 0.85,
+    reverbSend: 0.12,
     slots: [{ assets: ["rewind-arrive"] }],
     visualPair: "Arrival burst FX + hint clears."
   },
@@ -538,12 +548,13 @@ export const AUDIO_CUES: Readonly<Record<TraversalAudioEvent, AudioCueSpec>> = {
     tier: "deferred",
     gain: 1,
     positional: true,
+    reverbSend: 0.25,
     slots: [
       { assets: ["gravity-ring-online-body"] },
       { assets: ["gravity-ring-online-swell"], gain: 0.75, delaySeconds: 0.04 }
     ],
     visualPair: "`GRAVITY RING ONLINE // ENTER TO ADVANCE` flash + the ring lighting from locked grey to ready green.",
-    note: "Layered: the activation transient plus the dormant-mass swell underneath it."
+    note: "Layered: the activation transient plus the dormant-mass swell underneath it. The reverb send softens the spawn's hard ending into the space around the ring — the strongest wet in the set."
   },
   "exit.enter": {
     bus: "world",
@@ -591,6 +602,7 @@ export const AUDIO_CUES: Readonly<Record<TraversalAudioEvent, AudioCueSpec>> = {
     bus: "music",
     tier: "core",
     gain: 0.9,
+    reverbSend: 0.12,
     slots: [{ assets: ["sector-clear"] }],
     visualPair: "Sector clear overlay + run stats."
   },
@@ -598,12 +610,13 @@ export const AUDIO_CUES: Readonly<Record<TraversalAudioEvent, AudioCueSpec>> = {
     bus: "music",
     tier: "deferred",
     gain: 0.85,
+    reverbSend: 0.1,
     slots: [
       { assets: ["achievement-body"] },
       { assets: ["achievement-air"], gain: 0.7, delaySeconds: 0.05 }
     ],
     visualPair: "Achievement toast.",
-    note: "Layered: a warm take and a bright take. Rare enough that richness wins."
+    note: "Layered: a warm take and a bright take. Rare enough that richness wins; a faint reverb send gives the toast a little air."
   },
 
   // --- UI ----------------------------------------------------------------------

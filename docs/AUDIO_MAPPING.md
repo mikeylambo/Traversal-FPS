@@ -54,7 +54,7 @@ their takes together; cues marked **alternating** rotate between takes.
 - **`rifle.fire`** — Layered, not alternated. The three authored takes are not peers: one has a 10.7ms transient and 65% of its energy below 200Hz, one is bright and airy with a weak low end, one is a 231ms swell. Round-robin across them read as three different weapons. The first two are complementary, so they layer into a single consistent report — body plus air — and the swell is held back.
 - **`vector.write`** — Layered: take #2 is the body, take #3 is a near-silent bright shimmer. Complementary, so both play.
 - **`warp.commit`** — Layered: commit transient + both short-transit takes staggered. Transits are usually under 200ms, so transit reads as the tail of the commit rather than a separate cue.
-- **`warp.arrive`** — Peer takes at similar level and brightness, so they alternate instead of layering.
+- **`warp.arrive`** — Peer takes at similar level and brightness, so they alternate instead of layering. A light reverb send blooms the arrival tail into the destination space.
 - **`rewind.begin`** — Layered: one loud body, one mid, one very quiet bright tail. Rewind is rare and dramatic, so richness beats variety.
 - **`sphere.resolve`** — Both: two peer takes alternate, and the third — a bright shimmer take — layers on every hit as a constant top end.
 - **`actor.cube`** — Layered: a low body take plus a bright geometric detail take.
@@ -63,12 +63,12 @@ their takes together; cues marked **alternating** rotate between takes.
 - **`hazard.aperture-shift`** — Layered: two takes of the same move, one bodied and one airy.
 - **`hazard.cycle`** — Superseded by the specific hazard.gate-* / hazard.field-* cues. Retained so any call site still using the generic name plays something.
 - **`platform.travel`** — Quiet magnetic glide follows the actual moving platform; it is not an activation substitute.
-- **`exit.online`** — Layered: the activation transient plus the dormant-mass swell underneath it.
+- **`exit.online`** — Layered: the activation transient plus the dormant-mass swell underneath it. The reverb send softens the spawn's hard ending into the space around the ring — the strongest wet in the set.
 - **`exit.loop`** — Positional bed that only runs while the exit is actually open. It tells you where the exit is without looking — the same job the ground cue does for landings.
 - **`ambience.construct`** — Primary low-passed Construct bed; intentionally sparse so traversal cues retain priority.
 - **`ambience.construct-low`** — Second approved 20-second bed, deliberately kept very low in the mix.
 - **`sector.enter`** — Not a round-robin: Campaign picks the fuller take, timed/challenge modes the leaner one. Selected by `detail.campaign`.
-- **`achievement.unlock`** — Layered: a warm take and a bright take. Rare enough that richness wins.
+- **`achievement.unlock`** — Layered: a warm take and a bright take. Rare enough that richness wins; a faint reverb send gives the toast a little air.
 - **`ui.select`** — Keyboard and controller only. Moving a mouse across a list is passive — it sweeps several rows in one gesture and the focus styling already shows where you are — so pointer hover is deliberately silent.
 - **`route.fail`** — The authored ui_error take earns its keep on the one denial a player actually meets: a Challenge clean-route failure. The Shell skips disabled menu rows, so a menu error state is unreachable and wiring it there would have been dead audio.
 

@@ -43,6 +43,11 @@ class TraversalAudioEngine {
   private monoOutput: GainNode | null = null;
   private compressor: DynamicsCompressorNode | null = null;
   private nightMakeup: GainNode | null = null;
+  // Shared "space" reverb: one synthesized impulse, and one send-input GainNode per
+  // bus that any reverb-send cue routes into. Built lazily on first send so a run
+  // that never triggers a wet cue pays nothing.
+  private reverbIR: AudioBuffer | null = null;
+  private readonly reverbInputs = new Map<AudioBus, GainNode>();
   private readonly buffers = new Map<string, AudioBuffer>();
   private readonly pending = new Map<string, Promise<AudioBuffer | null>>();
   private readonly failed = new Set<string>();
@@ -353,6 +358,15 @@ class TraversalAudioEngine {
       ? this.createPanner(context, options.position, bus)
       : bus;
 
+    // Optional wet tail. One send node feeds every slot's dry gain into this bus's
+    // shared reverb return; the dry path is untouched, so the send only ever adds.
+    const reverbInput = cue.reverbSend ? this.reverbInputFor(context, cue.bus) : null;
+    const send = reverbInput ? context.createGain() : null;
+    if (send && reverbInput) {
+      send.gain.value = cue.reverbSend ?? 0;
+      send.connect(reverbInput);
+    }
+
     let played = false;
     let longest = 0;
 
@@ -372,6 +386,7 @@ class TraversalAudioEngine {
       const gain = context.createGain();
       gain.gain.value = (cue.gain ?? 1) * (slot.gain ?? 1) * (options.gain ?? 1);
       source.connect(gain).connect(destination);
+      if (send) gain.connect(send);
       source.start(context.currentTime + (slot.delaySeconds ?? 0));
       played = true;
       longest = Math.max(longest, (slot.delaySeconds ?? 0) + buffer.duration / rate);
@@ -384,6 +399,7 @@ class TraversalAudioEngine {
 
     if (!played) {
       if (destination !== bus) (destination as PannerNode).disconnect();
+      send?.disconnect();
       return false;
     }
 
@@ -391,6 +407,8 @@ class TraversalAudioEngine {
     window.setTimeout(() => {
       this.voices.set(event, Math.max(0, (this.voices.get(event) ?? 1) - 1));
       if (destination !== bus) (destination as PannerNode).disconnect();
+      // Hold the send past the dry tail so the reverb can ring out, then release it.
+      if (send) window.setTimeout(() => send.disconnect(), 1000);
     }, (longest + 0.1) * 1000);
 
     return true;
@@ -497,6 +515,62 @@ class TraversalAudioEngine {
     };
     legacy.setPosition?.(position.x, position.y, position.z);
     legacy.setOrientation?.(forward.x, forward.y, forward.z, up.x, up.y, up.z);
+  }
+
+  /**
+   * A short, gentle impulse response synthesized from decaying stereo noise —
+   * cheaper and more predictable than shipping an IR asset, and plenty for a
+   * "soften the ending" bloom rather than a modelled room. Independent noise per
+   * channel gives a little stereo width; a one-pole lowpass keeps the tail dark so
+   * it never adds fizz on top of the dry signal.
+   */
+  private buildReverbIR(context: AudioContext): AudioBuffer {
+    const seconds = 0.85;
+    const length = Math.max(1, Math.floor(context.sampleRate * seconds));
+    const ir = context.createBuffer(2, length, context.sampleRate);
+    const decay = 6.9 / seconds; // ~ -60 dB by the tail end
+    for (let ch = 0; ch < 2; ch++) {
+      const data = ir.getChannelData(ch);
+      let lp = 0;
+      for (let i = 0; i < length; i++) {
+        const t = i / context.sampleRate;
+        const env = Math.exp(-t * decay);
+        // 4ms fade-in avoids a click at the very front of the impulse.
+        const attack = Math.min(1, t / 0.004);
+        const white = Math.random() * 2 - 1;
+        lp += 0.28 * (white - lp); // one-pole lowpass, ~gentle
+        data[i] = lp * env * attack;
+      }
+    }
+    return ir;
+  }
+
+  /**
+   * The send-input node for a bus's reverb return. Lazily wires
+   * input -> predelay -> convolver -> return -> bus, so the wet signal re-enters the
+   * cue's own bus and inherits its Master/Music/SFX slider. Returns null if audio is
+   * unavailable, in which case the caller simply stays dry.
+   */
+  private reverbInputFor(context: AudioContext, bus: AudioBus): GainNode | null {
+    const existing = this.reverbInputs.get(bus);
+    if (existing) return existing;
+    const busNode = this.buses?.[bus];
+    if (!busNode) return null;
+
+    if (!this.reverbIR) this.reverbIR = this.buildReverbIR(context);
+
+    const input = context.createGain();
+    const predelay = context.createDelay(0.1);
+    predelay.delayTime.value = 0.022; // a touch of space before the tail blooms
+    const convolver = context.createConvolver();
+    convolver.normalize = true;
+    convolver.buffer = this.reverbIR;
+    const ret = context.createGain();
+    ret.gain.value = 1;
+
+    input.connect(predelay).connect(convolver).connect(ret).connect(busNode);
+    this.reverbInputs.set(bus, input);
+    return input;
   }
 
   private createPanner(
