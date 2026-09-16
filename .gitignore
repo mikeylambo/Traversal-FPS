@@ -2,3 +2,9 @@ node_modules/
 dist/
 .img2threejs/
 *.local
+
+# Blender transient files
+*.blend1
+*.blend2
+*.blend@
+*.blend@*
