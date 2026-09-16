@@ -4,6 +4,7 @@ import { emitTraversalAudio } from "../audio/TraversalAudio";
 type RuntimeState = {
   camera: THREE.PerspectiveCamera;
   velocityY: number;
+  warpWasTransiting?: boolean;
   input: { movement(): { x: number; z: number } };
   warp?: { isTransiting?(): boolean };
   updateMovement(dt: number, now: number): void;
@@ -23,13 +24,19 @@ export function installMovementAudioRuntime(game: object): void {
     const before = state.camera.position.clone();
     const beforeVelocityY = state.velocityY;
     const intent = state.input.movement();
+    const wasWarpTransiting = Boolean(state.warpWasTransiting);
     originalMove(dt, now);
 
     const body = document.body;
     const airborne = body.classList.contains("airborne");
     const crouching = body.classList.contains("crouching");
     const transit = Boolean(state.warp?.isTransiting?.());
-    const warpPresentation = transit || body.classList.contains("warp-committed") || body.classList.contains("rewinding") || body.classList.contains("warp-arrival");
+    // TraversalGame calls updateMovement on the first frame immediately after warp
+    // transit ends, before it clears warpWasTransiting or applies the arrival body
+    // class. Treat that one frame as warp presentation too so physical landing foley
+    // can never double the authored Warp Arrival cue.
+    const justWarpArrived = wasWarpTransiting && !transit;
+    const warpPresentation = justWarpArrived || transit || body.classList.contains("warp-committed") || body.classList.contains("rewinding") || body.classList.contains("warp-arrival");
 
     if (!initialized) {
       initialized = true;
