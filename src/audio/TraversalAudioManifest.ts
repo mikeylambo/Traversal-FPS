@@ -22,8 +22,17 @@ export interface AudioAssetSpec {
   readonly id: string;
   /** Output filename under `public/audio/`. */
   readonly file: string;
-  /** Path inside the authored `Traversal FPS SFX` drop. */
-  readonly source: string;
+  /** Path inside the authored `Traversal FPS SFX` drop. Omitted for checked-in generated media. */
+  readonly source?: string;
+  /** Checked-in generated media: audio:build verifies it instead of rebuilding it. */
+  readonly prebuilt?: boolean;
+  /**
+   * Provenance for a checked-in loop asset: the tool that rendered it as a native,
+   * gapless loop. A loop cue's prebuilt asset must declare this (in place of a
+   * build-time `loopCrossfadeSeconds`) — and audio-doctor still verifies the actual
+   * end-to-start seam, so a non-looping WAV cannot certify just by carrying the flag.
+   */
+  readonly nativeLoop?: "elevenlabs";
   /** 1 = mono, required for PannerNode spatialisation. 2 = stereo, head-locked. */
   readonly channels: 1 | 2;
   /** Hard cap after silence-trim, in seconds. Tails beyond this are faded out. */
@@ -73,6 +82,14 @@ export interface AudioCueSpec {
   readonly positional?: boolean;
   readonly loop?: boolean;
   /**
+   * Wet-send amount (0–1) into the shared "space" reverb, added on top of the dry
+   * signal to soften a cue's ending. Reserved for rare arrival/resolve beats — never
+   * fast, gameplay-critical cues, which stay bone-dry so the mix keeps its snap. The
+   * wet return re-enters this cue's own bus, so it rides the same Master/Music/SFX
+   * slider as the dry signal. Omitted or 0 = fully dry (the default for everything).
+   */
+  readonly reverbSend?: number;
+  /**
    * Part 2 / Priority 4 — audio-only information audit.
    * Every gameplay-relevant cue names the visual signal that carries the same
    * information. `"presentation-only"` means losing the sound loses nothing.
@@ -98,6 +115,14 @@ export type TraversalAudioEvent =
   | "rewind.begin"
   | "rewind.arrive"
   | "landing.adjust"
+  | "movement.land-light"
+  | "movement.land-heavy"
+  | "scope.engage"
+  | "scope.disengage"
+  | "platform.travel"
+  | "platform.lock"
+  | "ambience.construct"
+  | "ambience.construct-low"
   | "sphere.resolve"
   | "shield.reject"
   | "actor.cube"
@@ -182,6 +207,23 @@ export const AUDIO_ASSETS: readonly AudioAssetSpec[] = [
   { id: "diamond-resolve", file: "diamond-resolve.m4a", source: `${S}/Spatial Actor/diamond_activate/“Futuristic_motion_s_#4-1788297426660.wav`, channels: 2, maxSeconds: 1.6 },
   { id: "prism-resolve", file: "prism-resolve.m4a", source: `${S}/Spatial Actor/“Futuristic_motion_s_#1-1788297575664.wav`, channels: 2, maxSeconds: 1.6 },
   { id: "landing-adjust", file: "landing-adjust.m4a", source: `${S}/landing_adjust/“Extremely_subtle_fu_#4-1788296423992.wav`, channels: 2, maxSeconds: 0.7 },
+
+  // ---- Player body / traversal foley (ElevenLabs approved) --------------------
+  // Footsteps, crouch steps and crouch-stance foley were cut: Traversal is a
+  // warp-first game with a deliberately sparse mix, and on-foot body foley added
+  // clutter for the movement mode players use least. Landings stay — they sell a
+  // real fall — as does scope.
+  { id: "landing-light-a", file: "landing-light-a.mp3", channels: 2, maxSeconds: 1.0, prebuilt: true },
+  { id: "landing-light-b", file: "landing-light-b.mp3", channels: 2, maxSeconds: 1.0, prebuilt: true },
+  { id: "landing-heavy", file: "landing-heavy.mp3", channels: 2, maxSeconds: 1.2, prebuilt: true },
+  { id: "scope-engage", file: "scope-engage.mp3", channels: 2, maxSeconds: 0.5, prebuilt: true },
+  { id: "scope-disengage", file: "scope-disengage.mp3", channels: 2, maxSeconds: 0.5, prebuilt: true },
+
+  // ---- Generated world beds ---------------------------------------------------
+  { id: "platform-travel", file: "platform-travel.wav", channels: 1, maxSeconds: 8.0, sampleRate: 24000, prebuilt: true, nativeLoop: "elevenlabs" },
+  { id: "platform-lock", file: "platform-lock.wav", channels: 1, maxSeconds: 1.4, sampleRate: 24000, prebuilt: true },
+  { id: "construct-ambience-primary", file: "construct-ambience-primary.wav", channels: 2, maxSeconds: 20.0, sampleRate: 24000, prebuilt: true, nativeLoop: "elevenlabs" },
+  { id: "construct-ambience-low", file: "construct-ambience-low.wav", channels: 2, maxSeconds: 20.0, sampleRate: 24000, prebuilt: true, nativeLoop: "elevenlabs" },
 
   // ---- Hazards (mono: spatialised) -------------------------------------------
   { id: "hazard-hit", file: "hazard-hit.m4a", source: `${S}/hazard_hit/“Player_intersects_a_#1-1788296223411.wav`, channels: 2, maxSeconds: 1.2 },
@@ -291,9 +333,10 @@ export const AUDIO_CUES: Readonly<Record<TraversalAudioEvent, AudioCueSpec>> = {
     tier: "core",
     gain: 0.9,
     pitchJitter: 0.015,
+    reverbSend: 0.12,
     slots: [{ assets: ["warp-arrive-a", "warp-arrive-b"], pick: "cycle" }],
     visualPair: "Arrival burst FX + `body.warp-arrival` flash.",
-    note: "Peer takes at similar level and brightness, so they alternate instead of layering."
+    note: "Peer takes at similar level and brightness, so they alternate instead of layering. A light reverb send blooms the arrival tail into the destination space."
   },
   "rewind.begin": {
     bus: "sfx",
@@ -311,6 +354,7 @@ export const AUDIO_CUES: Readonly<Record<TraversalAudioEvent, AudioCueSpec>> = {
     bus: "sfx",
     tier: "deferred",
     gain: 0.85,
+    reverbSend: 0.12,
     slots: [{ assets: ["rewind-arrive"] }],
     visualPair: "Arrival burst FX + hint clears."
   },
@@ -340,6 +384,30 @@ export const AUDIO_CUES: Readonly<Record<TraversalAudioEvent, AudioCueSpec>> = {
     cooldownMs: 90,
     slots: [{ assets: ["landing-adjust"] }],
     visualPair: "Warp gauge percentage + stop-short readout + landing ring."
+  },
+
+  // --- Player body ---------------------------------------------------------------
+  // Only landings survive from the body-foley pass. Footsteps, crouch steps and
+  // crouch-stance foley were cut as clutter for a warp-first, sparsely-mixed game.
+  "movement.land-light": {
+    bus: "sfx", tier: "deferred", gain: 0.62, pitchJitter: 0.02, cooldownMs: 120,
+    slots: [{ assets: ["landing-light-a", "landing-light-b"], pick: "cycle" }],
+    visualPair: "Camera/player motion visibly settles onto the platform. presentation-only."
+  },
+  "movement.land-heavy": {
+    bus: "sfx", tier: "deferred", gain: 0.76, cooldownMs: 160,
+    slots: [{ assets: ["landing-heavy"] }],
+    visualPair: "A high-speed fall visibly ends on the platform. presentation-only."
+  },
+  "scope.engage": {
+    bus: "sfx", tier: "deferred", gain: 0.44, cooldownMs: 80,
+    slots: [{ assets: ["scope-engage"] }],
+    visualPair: "Scope overlay and reduced FOV visibly engage. presentation-only."
+  },
+  "scope.disengage": {
+    bus: "sfx", tier: "deferred", gain: 0.40, cooldownMs: 80,
+    slots: [{ assets: ["scope-disengage"] }],
+    visualPair: "Scope overlay and FOV visibly return to normal. presentation-only."
   },
 
   // --- Utility actors: fairness-critical --------------------------------------
@@ -462,18 +530,31 @@ export const AUDIO_CUES: Readonly<Record<TraversalAudioEvent, AudioCueSpec>> = {
     visualPair: "The platform starting to travel + `DIAMOND RESOLVED // MOTION ONLINE`."
   },
 
+  "platform.travel": {
+    bus: "world", tier: "deferred", gain: 0.28, positional: true, loop: true,
+    slots: [{ assets: ["platform-travel"] }],
+    visualPair: "The platform is visibly travelling through the room.",
+    note: "Quiet magnetic glide follows the actual moving platform; it is not an activation substitute."
+  },
+  "platform.lock": {
+    bus: "world", tier: "deferred", gain: 0.54, positional: true, cooldownMs: 140, maxVoices: 4,
+    slots: [{ assets: ["platform-lock"] }],
+    visualPair: "The moving platform visibly settles at an endpoint. presentation-only."
+  },
+
   // --- Sector exit -------------------------------------------------------------
   "exit.online": {
     bus: "world",
     tier: "deferred",
     gain: 1,
     positional: true,
+    reverbSend: 0.25,
     slots: [
       { assets: ["gravity-ring-online-body"] },
       { assets: ["gravity-ring-online-swell"], gain: 0.75, delaySeconds: 0.04 }
     ],
     visualPair: "`GRAVITY RING ONLINE // ENTER TO ADVANCE` flash + the ring lighting from locked grey to ready green.",
-    note: "Layered: the activation transient plus the dormant-mass swell underneath it."
+    note: "Layered: the activation transient plus the dormant-mass swell underneath it. The reverb send softens the spawn's hard ending into the space around the ring — the strongest wet in the set."
   },
   "exit.enter": {
     bus: "world",
@@ -494,6 +575,20 @@ export const AUDIO_CUES: Readonly<Record<TraversalAudioEvent, AudioCueSpec>> = {
     note: "Positional bed that only runs while the exit is actually open. It tells you where the exit is without looking — the same job the ground cue does for landings."
   },
 
+  // --- Construct ambience --------------------------------------------------------
+  "ambience.construct": {
+    bus: "music", tier: "deferred", gain: 0.20, loop: true,
+    slots: [{ assets: ["construct-ambience-primary"] }],
+    visualPair: "presentation-only.",
+    note: "Primary low-passed Construct bed; intentionally sparse so traversal cues retain priority."
+  },
+  "ambience.construct-low": {
+    bus: "music", tier: "deferred", gain: 0.07, loop: true,
+    slots: [{ assets: ["construct-ambience-low"] }],
+    visualPair: "presentation-only.",
+    note: "Second approved 20-second bed, deliberately kept very low in the mix."
+  },
+
   // --- Progression -------------------------------------------------------------
   "sector.enter": {
     bus: "music",
@@ -507,6 +602,7 @@ export const AUDIO_CUES: Readonly<Record<TraversalAudioEvent, AudioCueSpec>> = {
     bus: "music",
     tier: "core",
     gain: 0.9,
+    reverbSend: 0.12,
     slots: [{ assets: ["sector-clear"] }],
     visualPair: "Sector clear overlay + run stats."
   },
@@ -514,12 +610,13 @@ export const AUDIO_CUES: Readonly<Record<TraversalAudioEvent, AudioCueSpec>> = {
     bus: "music",
     tier: "deferred",
     gain: 0.85,
+    reverbSend: 0.1,
     slots: [
       { assets: ["achievement-body"] },
       { assets: ["achievement-air"], gain: 0.7, delaySeconds: 0.05 }
     ],
     visualPair: "Achievement toast.",
-    note: "Layered: a warm take and a bright take. Rare enough that richness wins."
+    note: "Layered: a warm take and a bright take. Rare enough that richness wins; a faint reverb send gives the toast a little air."
   },
 
   // --- UI ----------------------------------------------------------------------

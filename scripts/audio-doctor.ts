@@ -16,6 +16,7 @@ import {
   cueAssetIds,
   type TraversalAudioEvent
 } from "../src/audio/TraversalAudioManifest";
+import { checkLoopSeam } from "./lib/loopSeam";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(here, "..");
@@ -84,13 +85,29 @@ for (const event of AUDIO_EVENT_IDS) {
     }
   }
 
-  // 3. Loop cues need a seamless asset.
+  // 3. Loop cues need a seam-verified asset. Two legitimate provenances:
+  //    a build-time crossfade (`loopCrossfadeSeconds`, stitched by audio:build), or
+  //    a native gapless render (`nativeLoop`, e.g. ElevenLabs Loop mode). The latter
+  //    is checked-in media we did not stitch ourselves, so a bare "trust me" flag is
+  //    not enough: we decode the WAV and verify the end-to-start seam is real, so a
+  //    non-looping asset cannot certify just by carrying the provenance tag.
   if (cue.loop) {
     for (const assetId of cueAssetIds(cue)) {
       const asset = audioAsset(assetId);
-      if (asset && !asset.loopCrossfadeSeconds) {
-        fail(`"${event}" loops but "${assetId}" was not built with a seamless crossfade.`);
+      if (!asset) continue;
+      if (asset.loopCrossfadeSeconds) continue;
+      if (!asset.nativeLoop) {
+        fail(`"${event}" loops but "${assetId}" declares no loop provenance (needs loopCrossfadeSeconds or nativeLoop).`);
+        continue;
       }
+      const file = join(audioDir, asset.file);
+      if (!existsSync(file)) continue; // already reported as missing above
+      if (!asset.file.toLowerCase().endsWith(".wav")) {
+        fail(`"${assetId}" is marked nativeLoop but is not a WAV; the seam cannot be verified. Ship native loops as WAV.`);
+        continue;
+      }
+      const seam = checkLoopSeam(file, asset.channels);
+      if (seam) fail(`"${event}" -> "${assetId}": ${seam}`);
     }
   }
 

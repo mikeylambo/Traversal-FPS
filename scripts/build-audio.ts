@@ -240,6 +240,14 @@ function encode(ffmpeg: string, wavPath: string, target: string, channels: numbe
 }
 
 function buildAsset(ffmpeg: string, sourceRoot: string, spec: AudioAssetSpec, scratch: string): number {
+  if (spec.prebuilt) {
+    const target = join(outputDir, spec.file);
+    if (!existsSync(target)) throw new Error(`Missing checked-in prebuilt asset for "${spec.id}": ${target}`);
+    const bytes = statSync(target).size;
+    console.log(`  ${spec.id.padEnd(28)} prebuilt  ${(bytes / 1024).toFixed(1)} KB`);
+    return bytes;
+  }
+  if (!spec.source) throw new Error(`Missing authored source path for "${spec.id}".`);
   const sourcePath = join(sourceRoot, spec.source);
   if (!existsSync(sourcePath)) throw new Error(`Missing source for "${spec.id}": ${sourcePath}`);
 
