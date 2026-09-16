@@ -15,6 +15,7 @@
     "certify:controller": "npm run verify && slu-certify controller",
     "certify:release": "npm run verify && slu-certify release",
     "setup:img2threejs": "powershell -ExecutionPolicy Bypass -File tools/setup-img2threejs.ps1",
+    "blender:export": "tsx scripts/blender-export.ts",
     "audio:build": "tsx scripts/build-audio.ts",
     "audio:doctor": "tsx scripts/audio-doctor.ts"
   },
