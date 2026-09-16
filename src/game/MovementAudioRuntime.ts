@@ -5,31 +5,31 @@ type RuntimeState = {
   camera: THREE.PerspectiveCamera;
   velocityY: number;
   warpWasTransiting?: boolean;
-  input: { movement(): { x: number; z: number } };
   warp?: { isTransiting?(): boolean };
   updateMovement(dt: number, now: number): void;
   loadRoom(index: number): void;
 };
 
+/**
+ * Landing foley only. Footsteps, crouch steps and crouch-stance foley were cut:
+ * Traversal is warp-first with a deliberately sparse mix, so continuous on-foot
+ * body sound added clutter for the movement mode players use least. A landing,
+ * by contrast, is a discrete event that sells a real fall.
+ */
 export function installMovementAudioRuntime(game: object): void {
   const state = game as unknown as RuntimeState;
   const originalMove = state.updateMovement.bind(game);
   let initialized = false;
   let wasAirborne = false;
-  let wasCrouching = false;
-  let stepDistance = 0;
   let peakFallSpeed = 0;
 
   state.updateMovement = (dt: number, now: number) => {
-    const before = state.camera.position.clone();
     const beforeVelocityY = state.velocityY;
-    const intent = state.input.movement();
     const wasWarpTransiting = Boolean(state.warpWasTransiting);
     originalMove(dt, now);
 
     const body = document.body;
     const airborne = body.classList.contains("airborne");
-    const crouching = body.classList.contains("crouching");
     const transit = Boolean(state.warp?.isTransiting?.());
     // TraversalGame calls updateMovement on the first frame immediately after warp
     // transit ends, before it clears warpWasTransiting or applies the arrival body
@@ -41,7 +41,6 @@ export function installMovementAudioRuntime(game: object): void {
     if (!initialized) {
       initialized = true;
       wasAirborne = airborne;
-      wasCrouching = crouching;
       return;
     }
 
@@ -52,37 +51,15 @@ export function installMovementAudioRuntime(game: object): void {
         emitTraversalAudio(peakFallSpeed >= 7.25 ? "movement.land-heavy" : "movement.land-light");
       }
       peakFallSpeed = 0;
-      stepDistance = 0;
-    }
-
-    if (wasCrouching !== crouching && !airborne && !warpPresentation) {
-      emitTraversalAudio(crouching ? "movement.crouch-down" : "movement.crouch-up");
-    }
-
-    const dx = state.camera.position.x - before.x;
-    const dz = state.camera.position.z - before.z;
-    const travelled = Math.hypot(dx, dz);
-    const hasIntent = Math.hypot(intent.x, intent.z) > 0.14;
-    if (!airborne && !warpPresentation && hasIntent && travelled < 1.5) {
-      stepDistance += travelled;
-      const stride = crouching ? 1.05 : 1.58;
-      if (stepDistance >= stride) {
-        stepDistance %= stride;
-        emitTraversalAudio(crouching ? "movement.crouch-step" : "movement.footstep");
-      }
-    } else if (airborne || warpPresentation || travelled >= 1.5) {
-      stepDistance = 0;
     }
 
     wasAirborne = airborne;
-    wasCrouching = crouching;
   };
 
   const originalLoadRoom = state.loadRoom.bind(game);
   state.loadRoom = (index: number) => {
     originalLoadRoom(index);
     initialized = false;
-    stepDistance = 0;
     peakFallSpeed = 0;
   };
 }

@@ -26,8 +26,13 @@ export interface AudioAssetSpec {
   readonly source?: string;
   /** Checked-in generated media: audio:build verifies it instead of rebuilding it. */
   readonly prebuilt?: boolean;
-  /** The supplied buffer was generated/edited to loop cleanly end-to-start. */
-  readonly seamless?: boolean;
+  /**
+   * Provenance for a checked-in loop asset: the tool that rendered it as a native,
+   * gapless loop. A loop cue's prebuilt asset must declare this (in place of a
+   * build-time `loopCrossfadeSeconds`) — and audio-doctor still verifies the actual
+   * end-to-start seam, so a non-looping WAV cannot certify just by carrying the flag.
+   */
+  readonly nativeLoop?: "elevenlabs";
   /** 1 = mono, required for PannerNode spatialisation. 2 = stereo, head-locked. */
   readonly channels: 1 | 2;
   /** Hard cap after silence-trim, in seconds. Tails beyond this are faded out. */
@@ -102,12 +107,8 @@ export type TraversalAudioEvent =
   | "rewind.begin"
   | "rewind.arrive"
   | "landing.adjust"
-  | "movement.footstep"
-  | "movement.crouch-step"
   | "movement.land-light"
   | "movement.land-heavy"
-  | "movement.crouch-down"
-  | "movement.crouch-up"
   | "scope.engage"
   | "scope.disengage"
   | "platform.travel"
@@ -200,23 +201,21 @@ export const AUDIO_ASSETS: readonly AudioAssetSpec[] = [
   { id: "landing-adjust", file: "landing-adjust.m4a", source: `${S}/landing_adjust/“Extremely_subtle_fu_#4-1788296423992.wav`, channels: 2, maxSeconds: 0.7 },
 
   // ---- Player body / traversal foley (ElevenLabs approved) --------------------
-  { id: "footstep-run-a", file: "footstep-run-a.mp3", channels: 2, maxSeconds: 0.8, prebuilt: true },
-  { id: "footstep-run-b", file: "footstep-run-b.mp3", channels: 2, maxSeconds: 0.8, prebuilt: true },
-  { id: "footstep-crouch-a", file: "footstep-crouch-a.mp3", channels: 2, maxSeconds: 0.8, prebuilt: true },
-  { id: "footstep-crouch-b", file: "footstep-crouch-b.mp3", channels: 2, maxSeconds: 0.8, prebuilt: true },
+  // Footsteps, crouch steps and crouch-stance foley were cut: Traversal is a
+  // warp-first game with a deliberately sparse mix, and on-foot body foley added
+  // clutter for the movement mode players use least. Landings stay — they sell a
+  // real fall — as does scope.
   { id: "landing-light-a", file: "landing-light-a.mp3", channels: 2, maxSeconds: 1.0, prebuilt: true },
   { id: "landing-light-b", file: "landing-light-b.mp3", channels: 2, maxSeconds: 1.0, prebuilt: true },
   { id: "landing-heavy", file: "landing-heavy.mp3", channels: 2, maxSeconds: 1.2, prebuilt: true },
-  { id: "crouch-down", file: "crouch-down.mp3", channels: 2, maxSeconds: 0.7, prebuilt: true },
-  { id: "crouch-up", file: "crouch-up.mp3", channels: 2, maxSeconds: 0.6, prebuilt: true },
   { id: "scope-engage", file: "scope-engage.mp3", channels: 2, maxSeconds: 0.5, prebuilt: true },
   { id: "scope-disengage", file: "scope-disengage.mp3", channels: 2, maxSeconds: 0.5, prebuilt: true },
 
   // ---- Generated world beds ---------------------------------------------------
-  { id: "platform-travel", file: "platform-travel.wav", channels: 1, maxSeconds: 8.0, sampleRate: 24000, prebuilt: true, seamless: true },
+  { id: "platform-travel", file: "platform-travel.wav", channels: 1, maxSeconds: 8.0, sampleRate: 24000, prebuilt: true, nativeLoop: "elevenlabs" },
   { id: "platform-lock", file: "platform-lock.wav", channels: 1, maxSeconds: 1.4, sampleRate: 24000, prebuilt: true },
-  { id: "construct-ambience-primary", file: "construct-ambience-primary.wav", channels: 2, maxSeconds: 20.0, sampleRate: 24000, prebuilt: true, seamless: true },
-  { id: "construct-ambience-low", file: "construct-ambience-low.wav", channels: 2, maxSeconds: 20.0, sampleRate: 24000, prebuilt: true, seamless: true },
+  { id: "construct-ambience-primary", file: "construct-ambience-primary.wav", channels: 2, maxSeconds: 20.0, sampleRate: 24000, prebuilt: true, nativeLoop: "elevenlabs" },
+  { id: "construct-ambience-low", file: "construct-ambience-low.wav", channels: 2, maxSeconds: 20.0, sampleRate: 24000, prebuilt: true, nativeLoop: "elevenlabs" },
 
   // ---- Hazards (mono: spatialised) -------------------------------------------
   { id: "hazard-hit", file: "hazard-hit.m4a", source: `${S}/hazard_hit/“Player_intersects_a_#1-1788296223411.wav`, channels: 2, maxSeconds: 1.2 },
@@ -378,16 +377,8 @@ export const AUDIO_CUES: Readonly<Record<TraversalAudioEvent, AudioCueSpec>> = {
   },
 
   // --- Player body ---------------------------------------------------------------
-  "movement.footstep": {
-    bus: "sfx", tier: "deferred", gain: 0.55, pitchJitter: 0.035, cooldownMs: 90, maxVoices: 2,
-    slots: [{ assets: ["footstep-run-a", "footstep-run-b"], pick: "cycle" }],
-    visualPair: "Player is visibly moving across a platform. presentation-only."
-  },
-  "movement.crouch-step": {
-    bus: "sfx", tier: "deferred", gain: 0.40, pitchJitter: 0.025, cooldownMs: 120, maxVoices: 2,
-    slots: [{ assets: ["footstep-crouch-a", "footstep-crouch-b"], pick: "cycle" }],
-    visualPair: "Player is visibly crouch-moving across a platform. presentation-only."
-  },
+  // Only landings survive from the body-foley pass. Footsteps, crouch steps and
+  // crouch-stance foley were cut as clutter for a warp-first, sparsely-mixed game.
   "movement.land-light": {
     bus: "sfx", tier: "deferred", gain: 0.62, pitchJitter: 0.02, cooldownMs: 120,
     slots: [{ assets: ["landing-light-a", "landing-light-b"], pick: "cycle" }],
@@ -397,16 +388,6 @@ export const AUDIO_CUES: Readonly<Record<TraversalAudioEvent, AudioCueSpec>> = {
     bus: "sfx", tier: "deferred", gain: 0.76, cooldownMs: 160,
     slots: [{ assets: ["landing-heavy"] }],
     visualPair: "A high-speed fall visibly ends on the platform. presentation-only."
-  },
-  "movement.crouch-down": {
-    bus: "sfx", tier: "deferred", gain: 0.34, cooldownMs: 120,
-    slots: [{ assets: ["crouch-down"] }],
-    visualPair: "Camera height visibly lowers into crouch. presentation-only."
-  },
-  "movement.crouch-up": {
-    bus: "sfx", tier: "deferred", gain: 0.32, cooldownMs: 120,
-    slots: [{ assets: ["crouch-up"] }],
-    visualPair: "Camera height visibly rises out of crouch. presentation-only."
   },
   "scope.engage": {
     bus: "sfx", tier: "deferred", gain: 0.44, cooldownMs: 80,

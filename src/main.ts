@@ -187,12 +187,8 @@ void preloadCoreTraversalAudio();
 // the player is still in menus so first use is authored audio without bloating
 // the <=700 KB core SFX budget.
 void preloadTraversalAudioEvents([
-  "movement.footstep",
-  "movement.crouch-step",
   "movement.land-light",
   "movement.land-heavy",
-  "movement.crouch-down",
-  "movement.crouch-up",
   "scope.engage",
   "scope.disengage"
 ]);

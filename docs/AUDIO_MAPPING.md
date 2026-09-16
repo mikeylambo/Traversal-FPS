@@ -18,12 +18,8 @@ their takes together; cues marked **alternating** rotate between takes.
 | `sphere.resolve` | sfx | core | `sphere-resolve-a`<br>`sphere-resolve-b`<br>`sphere-resolve-shimmer` | layered, alternating | Kill FX burst + sphere count in HUD + vector written. |
 | `shield.reject` | sfx | core | `shield-reject-a`<br>`shield-reject-b` | alternating | `TARGET REJECT // CHANGE YOUR FIRING ORIGIN` flash + orange impact FX + `body.target-blocked` reticle. |
 | `landing.adjust` | sfx | core | `landing-adjust` | single | Warp gauge percentage + stop-short readout + landing ring. |
-| `movement.footstep` | sfx | deferred | `footstep-run-a`<br>`footstep-run-b` | alternating | Player is visibly moving across a platform. presentation-only. |
-| `movement.crouch-step` | sfx | deferred | `footstep-crouch-a`<br>`footstep-crouch-b` | alternating | Player is visibly crouch-moving across a platform. presentation-only. |
 | `movement.land-light` | sfx | deferred | `landing-light-a`<br>`landing-light-b` | alternating | Camera/player motion visibly settles onto the platform. presentation-only. |
 | `movement.land-heavy` | sfx | deferred | `landing-heavy` | single | A high-speed fall visibly ends on the platform. presentation-only. |
-| `movement.crouch-down` | sfx | deferred | `crouch-down` | single | Camera height visibly lowers into crouch. presentation-only. |
-| `movement.crouch-up` | sfx | deferred | `crouch-up` | single | Camera height visibly rises out of crouch. presentation-only. |
 | `scope.engage` | sfx | deferred | `scope-engage` | single | Scope overlay and reduced FOV visibly engage. presentation-only. |
 | `scope.disengage` | sfx | deferred | `scope-disengage` | single | Scope overlay and FOV visibly return to normal. presentation-only. |
 | `actor.cube` | sfx | core | `cube-resolve-body`<br>`cube-resolve-detail` | layered | `CUBE RESOLVED // BARRIER STATE CHANGED` flash + impact FX + the hazard visibly disappearing. |
