@@ -2,6 +2,8 @@
 
 This pipeline adds authored Blender assets alongside the existing procedural art system. It does **not** replace procedural geometry globally; assets can migrate one-by-one.
 
+Important: approved hard-surface reference-image reconstruction still follows the repository's `img2threejs` workflow and semantic visual registry. Blender is for native modeling, cleanup, UV/material work, authored modular environment pieces, LODs, pivots/sockets, and assets that are intentionally being shipped as GLB.
+
 ## Folder contract
 
 - `art/blender/source/` — editable `.blend` source files.
@@ -31,19 +33,19 @@ Use these standards for every game asset:
 From the repository root:
 
 ```bash
-npm run blender:export -- art/blender/source/gravity-platform.blend
+npm run blender:export -- art/blender/source/gravity-ring.blend
 ```
 
 This produces:
 
 ```text
-public/assets/models/gravity-platform.glb
+public/assets/models/gravity-ring.glb
 ```
 
 To choose an output path:
 
 ```bash
-npm run blender:export -- art/blender/source/gravity-platform.blend public/assets/models/environment/gravity-platform.glb
+npm run blender:export -- art/blender/source/gravity-ring.blend public/assets/models/environment/gravity-ring.glb
 ```
 
 ### Blender executable
@@ -66,14 +68,14 @@ export BLENDER_BIN='/Applications/Blender.app/Contents/MacOS/Blender'
 
 ## Runtime strategy
 
-For Traversal FPS, migrate visuals in this order:
+Use Blender first where authored geometry adds value without undermining the semantic registry or gameplay ownership:
 
-1. Moving/gated traversal platforms.
-2. Gravity rings.
-3. Sphere gates.
-4. Diamond/prism assistance actors.
-5. Environmental architectural modules.
-6. Weapon/world props.
+1. Gravity rings and non-reference-driven environment landmarks.
+2. Modular architecture and trim-sheet-ready environment kits.
+3. Secondary props, sockets, authored pivots, and LOD variants.
+4. Cleanup/optimization of approved assets that are explicitly intended to ship as GLB.
+
+For approved hard-surface reference images such as the Warp Rifle or other reference-led hero assets, use `img2threejs` first as required by `AGENTS.md`; do not bypass that pipeline with a hand-modeled approximation.
 
 Gameplay collision should stay code-owned unless a specific authored collision shape materially improves the mechanic. Visual meshes should not silently redefine gameplay dimensions.
 
@@ -95,4 +97,4 @@ Browser/mobile remain first-class:
 
 ## First production asset
 
-The recommended first authored asset is the current signature moving platform. It is visually important, repeated often, and lets us validate scale, pivots, materials, emissive treatment, instancing, collision alignment, and mobile cost before converting the rest of the world.
+The recommended first Blender-authored production asset is the Gravity Ring. It is visually important, isolated from weapon/reference reconstruction, and gives us a clean validation target for scale, pivots, emissive treatment, material sharing, animation hooks, instancing, collision alignment, and mobile cost.
