@@ -17,9 +17,7 @@ type GameplayInput = {
 
 type RuntimeState = {
   input: GameplayInput;
-  shell: {
-    events: { on(event: string, handler: () => void): void };
-  };
+  shell: { events: { on(event: string, handler: () => void): void } };
   tutorialUntil: number;
   update(dt: number): void;
   loadRoom(index: number): void;
@@ -42,12 +40,9 @@ type PadFrame = {
 
 const BASE_LOOK_X = 15.5;
 const BASE_LOOK_Y = 13.5;
+const WARP_ENGAGE = 0.42;
+const WARP_RELEASE_HOLD = 0.18;
 
-/**
- * The Shell owns menu-pad navigation. Traversal owns gameplay-pad input.
- * Bindings resolve from the persistent semantic action store every frame, so a
- * future remap UI can apply changes immediately without rebuilding gameplay.
- */
 export function installGamepadGameplay(game: object, settings: TraversalSettingsStore): void {
   const state = game as unknown as RuntimeState;
   const input = state.input;
@@ -109,21 +104,12 @@ export function installGamepadGameplay(game: object, settings: TraversalSettings
   installAudioPauseLifecycle(state);
 }
 
-/**
- * Input/accessibility options that need the fully-combined keyboard, touch and
- * gamepad stream live here so they do not duplicate binding logic in each device
- * implementation. Touch crouch is already latched by FPSInput and stays that way.
- */
 function installComfortAccessLayer(state: RuntimeState, settings: TraversalSettingsStore): void {
   const input = state.input;
-
   const originalLook = input.consumeLook.bind(input);
   input.consumeLook = () => {
     const value = originalLook();
-    return {
-      x: settings.value.invertX ? -value.x : value.x,
-      y: value.y
-    };
+    return { x: settings.value.invertX ? -value.x : value.x, y: value.y };
   };
 
   const originalCrouch = input.isCrouchHeld.bind(input);
@@ -131,19 +117,15 @@ function installComfortAccessLayer(state: RuntimeState, settings: TraversalSetti
   let crouchLatched = false;
   input.isCrouchHeld = () => {
     const held = originalCrouch();
-
-    // Touch already uses tap-to-toggle, independent of the sustained-input option.
     if (document.body.classList.contains("touch-device")) {
       wasHeld = held;
       return held;
     }
-
     if (!settings.value.crouchToggle) {
       crouchLatched = false;
       wasHeld = held;
       return held;
     }
-
     if (held && !wasHeld) crouchLatched = !crouchLatched;
     wasHeld = held;
     return crouchLatched;
@@ -186,15 +168,17 @@ function pollGamepad(
   const [moveXIndex, moveYIndex] = axisPair("move", [0, 1]);
   const [lookXIndex, lookYIndex] = axisPair("look", [2, 3]);
   const aim = settings.value;
+  const noise = controllerNoiseFloor(pad);
+
   const left = curveMoveVector(
     pad.axes[moveXIndex] ?? 0,
     pad.axes[moveYIndex] ?? 0,
-    aim.controllerMoveDeadzone
+    Math.max(aim.controllerMoveDeadzone, noise.move)
   );
   const right = curveLookVector(
     pad.axes[lookXIndex] ?? 0,
     pad.axes[lookYIndex] ?? 0,
-    aim.controllerRightDeadzone,
+    Math.max(aim.controllerRightDeadzone, noise.look),
     aim.controllerLookAcceleration
   );
 
@@ -208,7 +192,8 @@ function pollGamepad(
 
   const fireHeld = maxButtonValue(pad, fireIndices) > 0.45;
   const previousFire = anyPrevious(previousButtons, fireIndices);
-  const warpHeld = maxButtonValue(pad, warpIndices) > 0.32;
+  const warpValue = maxButtonValue(pad, warpIndices);
+  const warpHeld = previousWarp ? warpValue > WARP_RELEASE_HOLD : warpValue > WARP_ENGAGE;
 
   const shorten = anyPressed(buttons, shorterIndices);
   const extend = anyPressed(buttons, longerIndices);
@@ -238,6 +223,12 @@ function pollGamepad(
     resetPressed: anyPressed(buttons, resetIndices) && !anyPrevious(previousButtons, resetIndices),
     scopePressed: anyPressed(buttons, scopeIndices) && !anyPrevious(previousButtons, scopeIndices)
   };
+}
+
+function controllerNoiseFloor(pad: Gamepad): { move: number; look: number } {
+  const id = pad.id.toLowerCase();
+  const xbox = id.includes("xbox") || id.includes("xinput") || id.includes("045e");
+  return xbox ? { move: 0.14, look: 0.09 } : { move: 0.08, look: 0.04 };
 }
 
 function axisPair(id: TraversalActionId, fallback: [number, number]): [number, number] {
@@ -273,23 +264,16 @@ function curveMoveVector(x: number, y: number, deadzone: number): { x: number; y
   const dz = Math.max(0.08, Math.min(0.35, deadzone));
   const magnitude = Math.min(1, Math.hypot(x, y));
   if (magnitude <= dz || magnitude <= 0.0001) return { x: 0, y: 0 };
-
   const normalized = Math.min(1, (magnitude - dz) / (1 - dz));
   const eased = normalized * normalized * (3 - 2 * normalized);
   const scale = eased / magnitude;
   return { x: x * scale, y: y * scale };
 }
 
-function curveLookVector(
-  x: number,
-  y: number,
-  deadzone: number,
-  acceleration: number
-): { x: number; y: number } {
+function curveLookVector(x: number, y: number, deadzone: number, acceleration: number): { x: number; y: number } {
   const dz = Math.max(0.02, Math.min(0.28, deadzone));
   const magnitude = Math.min(1, Math.hypot(x, y));
   if (magnitude <= dz || magnitude <= 0.0001) return { x: 0, y: 0 };
-
   const normalized = Math.min(1, (magnitude - dz) / (1 - dz));
   const precision = Math.pow(normalized, 1.08);
   const outer = Math.max(0, Math.min(1, (normalized - 0.72) / 0.28));
@@ -297,15 +281,12 @@ function curveLookVector(
   const accelBoost = 1 + Math.max(0, Math.min(5, acceleration)) * 0.1 * outerEase;
   const curvedMagnitude = Math.min(1.5, precision * accelBoost);
   const scale = curvedMagnitude / magnitude;
-
   return { x: x * scale, y: y * scale };
 }
 
 function activeGamepad(): Gamepad | null {
   const pads = navigator.getGamepads?.() ?? [];
-  for (const pad of pads) {
-    if (pad?.connected && pad.mapping === "standard") return pad;
-  }
+  for (const pad of pads) if (pad?.connected && pad.mapping === "standard") return pad;
   for (const pad of pads) if (pad?.connected) return pad;
   return null;
 }
@@ -327,9 +308,7 @@ function buttonValue(pad: Gamepad, index: number): number {
 function rumbleLandingAdjustment(): void {
   try {
     const pad = activeGamepad() as (Gamepad & {
-      vibrationActuator?: {
-        playEffect?: (type: string, params: Record<string, number>) => Promise<unknown>;
-      };
+      vibrationActuator?: { playEffect?: (type: string, params: Record<string, number>) => Promise<unknown> };
     }) | null;
     void pad?.vibrationActuator?.playEffect?.("dual-rumble", {
       duration: 24,
@@ -344,16 +323,8 @@ function rumbleLandingAdjustment(): void {
 
 function emptyFrame(): PadFrame {
   return {
-    moveX: 0,
-    moveZ: 0,
-    lookX: 0,
-    lookY: 0,
-    firePressed: false,
-    crouchHeld: false,
-    warpHeld: false,
-    warpReleased: false,
-    wheelDelta: 0,
-    resetPressed: false,
-    scopePressed: false
+    moveX: 0, moveZ: 0, lookX: 0, lookY: 0,
+    firePressed: false, crouchHeld: false, warpHeld: false, warpReleased: false,
+    wheelDelta: 0, resetPressed: false, scopePressed: false
   };
 }
