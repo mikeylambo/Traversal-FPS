@@ -8,7 +8,6 @@ import "./transition-minimal.css";
 import "./onboarding.css";
 import "./scope.css";
 import "./editor/editor.css";
-// Last, so its caps and contrast fixes win over the styles they moderate.
 import "./accessibility.css";
 import {
   createArcadeAssembly,
@@ -74,7 +73,7 @@ const rendererAdapter = createThreeStarterAdapter(canvas);
 const app = await createGameApp({
   gameId: "traversal-fps",
   gameName: "Traversal FPS",
-  version: "0.14.0-alpha-reversal",
+  version: "0.15.0-alpha-content",
   renderer: rendererAdapter,
   root: uiRoot,
   assemblies: [
@@ -111,7 +110,7 @@ const traversalModes = [
   {
     id: "time-trial",
     label: "Time Trial",
-    description: "16-course optimization suite. Find the fastest route.",
+    description: "18 bespoke race courses. Find the fastest route.",
     leaderboardKey: "time",
     rules: {
       grading: false,
@@ -123,8 +122,8 @@ const traversalModes = [
   },
   {
     id: "challenge",
-    label: "Challenge // Clean Route",
-    description: "24 chambers across precision, logic, flow and synthesis.",
+    label: "Challenge",
+    description: "24 bespoke chambers across precision, logic, flow and synthesis.",
     leaderboardKey: "score",
     rules: { grading: true, exactKills: true, shotAllowance: 1, airGraceScale: 0.8 }
   },
@@ -140,28 +139,28 @@ const traversalDifficulties = [
   {
     id: "assist",
     label: "Assist",
-    description: "Slower targets, lighter gravity, wider exits.",
+    description: "Slower targets, lighter gravity, wider exits. Local records only.",
     multipliers: { enemySpeed: 0.78 },
     rules: { gravityScalar: 0.85, goalRadius: 2.8 }
   },
   {
     id: "standard",
     label: "Standard",
-    description: "The intended traversal timing.",
+    description: "Canonical traversal timing and medal baseline.",
     multipliers: { enemySpeed: 1 },
     rules: { gravityScalar: 1, goalRadius: 2.3 }
   },
   {
     id: "hard",
     label: "Hard",
-    description: "Faster targets, stronger gravity, tighter exits.",
+    description: "Faster targets, stronger gravity, tighter exits. Local records only.",
     multipliers: { enemySpeed: 1.18 },
     rules: { gravityScalar: 1.08, goalRadius: 2.05 }
   },
   {
     id: "expert",
     label: "Expert",
-    description: "Strict timing and placement.",
+    description: "Strict timing and placement. Local records only.",
     multipliers: { enemySpeed: 1.35 },
     rules: { gravityScalar: 1.18, goalRadius: 1.8 }
   }
@@ -170,8 +169,6 @@ const traversalDifficulties = [
 app.shell.modes.replace(traversalModes);
 app.shell.difficulty.register(traversalDifficulties);
 
-// Every sound in the game — authored, procedural, positional — runs through the
-// bus graph these three sliders drive, so the Settings screen stays accurate.
 configureTraversalAudio(() => {
   const shellSettings = app.shell.settings.snapshot();
   return {
@@ -180,12 +177,7 @@ configureTraversalAudio(() => {
     sfx: Number(shellSettings.sfxVolume ?? 1)
   };
 });
-// Deliberately not awaited: the core SFX set warms in the background while the
-// player is still in the menus, so first Campaign entry never waits on audio.
 void preloadCoreTraversalAudio();
-// Body foley is intentionally outside the certified boot bundle. Warm it while
-// the player is still in menus so first use is authored audio without bloating
-// the <=700 KB core SFX budget.
 void preloadTraversalAudioEvents([
   "movement.land-light",
   "movement.land-heavy",
@@ -198,9 +190,13 @@ const progression = new TraversalProgression(app.storage);
 await progression.load();
 const contentRuntime = installContentRuntime(app.shell);
 
+const completed = (id: string) => progression.snapshot().completedMaps.includes(id);
+const mapSelectUnlocked = () => completed("map-08");
+const timeTrialUnlocked = () => completed("map-18");
+const challengeUnlocked = () => completed("map-30");
 const reversalUnlocked = () => {
   const snapshot = progression.snapshot();
-  return snapshot.campaign.completed || snapshot.completedMaps.includes("map-32");
+  return snapshot.campaign.completed || snapshot.completedMaps.includes("map-42");
 };
 
 app.ui.register([
@@ -222,17 +218,28 @@ const refreshAchievements = () => {
 progression.onUnlock(() => refreshAchievements());
 
 const refreshModeSelect = () => {
+  const ttOpen = timeTrialUnlocked();
+  const challengeOpen = challengeUnlocked();
   const postgameOpen = reversalUnlocked();
   app.ui.updateScreen("mode-select", {
     title: postgameOpen ? "Select Mode // Construct Reversed" : "Select Mode",
-    choices: traversalModes.map((mode) => ({
-      id: mode.id,
-      label: mode.label,
-      description: mode.id === "reversal" && !postgameOpen
-        ? "LOCKED // Clear Sector 32 to expose the hidden side of the Construct."
-        : mode.description,
-      disabled: mode.id === "reversal" && !postgameOpen
-    }))
+    choices: traversalModes.map((mode) => {
+      const locked = mode.id === "time-trial" ? !ttOpen
+        : mode.id === "challenge" ? !challengeOpen
+          : mode.id === "reversal" ? !postgameOpen
+            : false;
+      const lockedCopy = mode.id === "time-trial"
+        ? "Clear Act II to unlock Time Trial."
+        : mode.id === "challenge"
+          ? "Clear Act III to unlock Challenge."
+          : "Clear the Campaign to expose THE REVERSE.";
+      return {
+        id: mode.id,
+        label: mode.label,
+        description: locked ? lockedCopy : mode.description,
+        disabled: locked
+      };
+    })
   });
 };
 
@@ -295,20 +302,32 @@ app.ui.updateScreen("credits", {
     { id: "credit-tech", label: "Technology // Three.js + SLU Web Game Shell", disabled: true },
     { id: "credit-type", label: "Typography // Rajdhani + Sora", disabled: true },
     { id: "credit-tools", label: "Development Assistance // OpenAI + Anthropic", disabled: true },
-    { id: "credit-build", label: "Build // v0.14 Alpha Reversal", description: "32 Campaign sectors // 8 Reversal chambers // 24 Challenges // 16 Time Trials", disabled: true }
+    { id: "credit-build", label: "Build // v0.15 Content Pass", description: "42 Campaign sectors // 8 Reversal chambers // 24 Challenges // 18 Time Trials", disabled: true }
   ]
 });
 
-const sectorChoices = (choiceId: string) => CAMPAIGN_MAPS.map((map) => ({
-  id: map.id,
-  label: map.label,
-  description: !map.implemented
-    ? "In development"
-    : choiceId === "standard"
-      ? map.subtitle
-      : `${map.courseRooms.length} sector course`,
-  disabled: !map.implemented
-}));
+const sectorChoices = () => {
+  const snapshot = progression.snapshot();
+  const selectable = new Set([
+    ...snapshot.completedMaps,
+    ...snapshot.campaign.discoveredSectors,
+    ...(snapshot.campaign.currentSectorId ? [snapshot.campaign.currentSectorId] : [])
+  ]);
+  return CAMPAIGN_MAPS.map((map) => ({
+    id: map.id,
+    label: map.label,
+    description: map.subtitle,
+    disabled: !map.implemented || !selectable.has(map.id)
+  }));
+};
+
+const campaignChoices = () => {
+  if (mapSelectUnlocked()) return sectorChoices();
+  const snapshot = progression.snapshot();
+  const current = snapshot.campaign.currentSectorId ?? "map-01";
+  const map = CAMPAIGN_MAPS.find((entry) => entry.id === current) ?? CAMPAIGN_MAPS[0]!;
+  return [{ id: map.id, label: snapshot.campaign.active ? "Continue Campaign" : "Begin Campaign", description: map.label }];
+};
 
 const originalActivate = app.flow.onActivate.bind(app.flow);
 app.flow.onActivate = (screenId: string, choiceId: string) => {
@@ -335,10 +354,9 @@ app.flow.onActivate = (screenId: string, choiceId: string) => {
         choices: [
           {
             id: "suite-time-trial",
-            label: "Full Time Trial Suite // 01–16",
-            description: "Canonical back-to-back optimization run. Provisional medal pars are shown inside each course."
-          },
-          ...sectorChoices(choiceId)
+            label: "Run Time Trial Circuit // 01–18",
+            description: "Eighteen dedicated racing courses with canonical Standard medal times."
+          }
         ]
       });
     } else if (choiceId === "challenge") {
@@ -347,10 +365,9 @@ app.flow.onActivate = (screenId: string, choiceId: string) => {
         choices: [
           {
             id: "suite-challenge",
-            label: "Full Challenge Suite // 01–24",
-            description: "Canonical back-to-back mastery run: Precision → Logic → Flow → Synthesis."
-          },
-          ...sectorChoices(choiceId)
+            label: "Run Challenge Chambers // 01–24",
+            description: "Precision → Logic → Flow → Synthesis across twenty-four dedicated puzzles."
+          }
         ]
       });
     } else if (choiceId === "reversal") {
@@ -361,14 +378,14 @@ app.flow.onActivate = (screenId: string, choiceId: string) => {
           {
             id: "suite-reversal",
             label: "Enter the Labyrinth // 01–08",
-            description: "Eight authored postgame chambers. No new verbs. No tutorialization. Find the way back."
+            description: "Eight authored postgame chambers. No new verbs. Find the way back."
           }
         ]
       });
     } else {
       app.ui.updateScreen("stage-select", {
-        title: "Campaign",
-        choices: sectorChoices(choiceId)
+        title: mapSelectUnlocked() ? "Campaign // Map Select" : "Campaign",
+        choices: campaignChoices()
       });
     }
   }
@@ -428,24 +445,24 @@ game.start();
 console.info("Traversal FPS ready", {
   shellVersion: "1.0.2+settings+mode-replace",
   shellCommit: "d45d5b89b56eb65cf10cc25ef3a89595d63f6b3f",
-  gameVersion: "0.14.0-alpha-reversal",
+  gameVersion: "0.15.0-alpha-content",
   renderTarget: "Vector Surface",
   typography: "Rajdhani / Sora",
   starfield: "shader-twinkle",
   movement: "run + crouch + warp + one-step rewind",
   controller: "left move // right look // RT fire // LT warp // RB shorter // LB longer // L3-B crouch // R3 scope // Y rewind // X reset",
-  controllerAim: "horizontal 1-10 // vertical 1-10 // acceleration 0-5 // scope multiplier // separate move/look deadzones",
+  controllerAim: "horizontal 1-10 // vertical 1-10 // acceleration 0-5 // scope multiplier // separate move/look deadzones // XInput noise floor",
   controls: "semantic bindings // persistent overrides // Settings > Controls",
   scope: "R3 / Q / touch toggle // precision look // 36-48 degree FOV",
   campaignScoring: "no live score // sphere progress + completion stats",
-  campaignFlow: "new-continue before difficulty // implemented sectors chain // Sector 32 unlocks THE REVERSE",
+  campaignFlow: "8 / 10 / 12 / 12 acts // Map Select after Act I // Time Trial after Act II // Challenge after Act III // Reverse after Sector 42",
   landingAssist: "warp arrival cushion + ground-below placement cue + audited campaign sphere vectors",
   exitGate: "dormant until required spheres resolved",
   rewind: "Campaign/Training only // last movement only // firing cancels",
   settingsFocus: "select row // left-right adjust // selection retained",
   rifleCadenceMs: 320,
   stopShortStepPercent: 4,
-  feelPass: "provisionally certified",
+  feelPass: "content-overhaul playtest candidate",
   autoStepMeters: 0.38,
   puzzleGrammar: PUZZLE_GRAMMAR_V1.map((entry) => entry.id),
   trainingRooms: 12,
@@ -458,11 +475,11 @@ console.info("Traversal FPS ready", {
     courseRooms: map.courseRooms.length
   })),
   achievements: ACHIEVEMENTS.length,
-  hazards: ["lethal-field", "sweep", "sightline-gate", "aperture-wall"],
+  hazards: ["lethal-field", "sweep", "sightline-gate", "aperture-wall", "solid-wall"],
   audio: "authored + approved generated SFX through shared buses // movement foley // moving-platform bed // Construct ambience // positional hazards",
   accessibility: "reduce flash // reduce motion // colour profile + shape/rate cues // HUD contrast // UI text scale // CVD preview",
   spatialActors: "sphere movement // cube state // diamond motion // prism energy // gravity ring progression",
-  postgame: "THE REVERSE // 8-chamber authored labyrinth // unlocked by Sector 32 clear",
+  postgame: "THE REVERSE // 8-chamber authored labyrinth // unlocked by Campaign clear",
   editor: "development-only // F2 // backquote; public menu entry deferred",
   mobileControls: true,
   vrStatus: "future-compatible target; not current production scope",
