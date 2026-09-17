@@ -18,7 +18,8 @@ export function registerCampaign04(): void {
 
   for (const entry of CAMPAIGN_MAPS) {
     const sector = Number(entry.id.replace("map-", ""));
-    const act = sector <= 8 ? "ACT I" : sector <= 16 ? "ACT II" : sector <= 24 ? "ACT III" : "ACT IV";
-    if (!entry.label.startsWith(`${act} //`)) entry.label = `${act} // ${entry.label}`;
+    const act = sector <= 8 ? "ACT I" : sector <= 18 ? "ACT II" : sector <= 30 ? "ACT III" : "ACT IV";
+    const bare = entry.label.replace(/^ACT [IVX]+ \/\/ /, "");
+    entry.label = `${act} // ${bare}`;
   }
 }
