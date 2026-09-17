@@ -12,10 +12,13 @@ type EndpointFx = {
   flash: number;
 };
 
+type CommitValidator = (from: THREE.Vector3, to: THREE.Vector3) => boolean;
+
 export class WarpSystem {
   private anchor: { origin: THREE.Vector3; target: THREE.Vector3 } | null = null;
   private fraction = 1;
   private transit: { from: THREE.Vector3; to: THREE.Vector3; elapsed: number; duration: number } | null = null;
+  private commitValidator: CommitValidator | null = null;
   private readonly line: THREE.Line;
   private readonly beam: THREE.Mesh<THREE.CylinderGeometry, THREE.MeshBasicMaterial>;
   private readonly marker = new THREE.Group();
@@ -70,6 +73,30 @@ export class WarpSystem {
     this.refreshLiveVector();
   }
 
+  /**
+   * A kill locks the destination, not the player's historical firing point.
+   * While the vector is armed the origin follows the player, turning the
+   * playtest-discovered walk/reposition/commit behavior into intentional grammar.
+   */
+  syncOrigin(currentPosition: THREE.Vector3): void {
+    if (!this.anchor || this.transit) return;
+    if (this.anchor.origin.distanceToSquared(currentPosition) < 0.0001) return;
+    this.anchor.origin.copy(currentPosition);
+    this.refreshLiveVector();
+  }
+
+  clearAnchor(): void {
+    this.anchor = null;
+    this.fraction = 1;
+    this.line.visible = false;
+    this.beam.visible = false;
+    this.marker.visible = false;
+  }
+
+  setCommitValidator(validator: CommitValidator | null): void {
+    this.commitValidator = validator;
+  }
+
   setSelectionFraction(fraction: number): void {
     if (!this.anchor) return;
     this.fraction = THREE.MathUtils.clamp(fraction, 0.12, 1);
@@ -78,7 +105,6 @@ export class WarpSystem {
   updateSelection(isHeld: boolean, wheelDelta: number, timeSeconds = 0): void {
     if (!this.anchor) return;
     if (isHeld && wheelDelta !== 0) {
-      // Fine enough for puzzle placement, coarse enough that a shoulder tap is meaningful.
       this.fraction = THREE.MathUtils.clamp(this.fraction - wheelDelta * 0.04, 0.12, 1);
     }
 
@@ -87,9 +113,8 @@ export class WarpSystem {
     lineMaterial.opacity = isHeld ? 0.42 : 0.78;
     this.beam.material.opacity = isHeld ? 0.36 : 0.1;
 
-    // The thin line always preserves the full written vector. While placing a
-    // landing, the brighter beam terminates at the selected point. The player can
-    // therefore read both the original endpoint and the route they are actually buying.
+    // The thin line is always the live player->target vector. While placing a
+    // landing, the brighter beam terminates at the selected point.
     this.positionBeam(
       this.beam,
       this.anchor.origin,
@@ -112,7 +137,10 @@ export class WarpSystem {
 
   commit(currentPosition: THREE.Vector3): boolean {
     if (!this.anchor || this.transit) return false;
+    this.syncOrigin(currentPosition);
     const to = this.selectedPoint();
+    if (this.commitValidator && !this.commitValidator(currentPosition, to)) return false;
+
     const distance = currentPosition.distanceTo(to);
     this.transit = {
       from: currentPosition.clone(),
@@ -120,13 +148,10 @@ export class WarpSystem {
       elapsed: 0,
       duration: Math.max(0.075, distance / 82)
     };
-    this.addTrail(this.anchor.origin, this.anchor.target);
+    this.addTrail(currentPosition, to);
     this.addEndpointBurst(currentPosition, false, to.clone().sub(currentPosition));
     this.addDestinationLock(to, to.clone().sub(currentPosition));
-    this.anchor = null;
-    this.line.visible = false;
-    this.beam.visible = false;
-    this.marker.visible = false;
+    this.clearAnchor();
     return true;
   }
 
@@ -165,12 +190,8 @@ export class WarpSystem {
   }
 
   reset(): void {
-    this.anchor = null;
+    this.clearAnchor();
     this.transit = null;
-    this.fraction = 1;
-    this.line.visible = false;
-    this.beam.visible = false;
-    this.marker.visible = false;
     this.trails.clear();
     for (const effect of this.endpointFx) this.disposeEndpointFx(effect);
     this.endpointFx.length = 0;
@@ -236,9 +257,6 @@ export class WarpSystem {
   }
 
   private addEndpointBurst(position: THREE.Vector3, arrival: boolean, direction: THREE.Vector3): void {
-    // The strengthened arrival flash is the loudest thing in the game to look at.
-    // Reduce Flash caps its peak; it never removes the burst, because the burst is
-    // how you read where you landed.
     const flash = flashScale();
     const root = new THREE.Group();
     root.position.copy(position);
@@ -315,8 +333,6 @@ export class WarpSystem {
       const scale = effect.arrival ? 0.75 + t * 1.9 : 0.8 + t * 1.35;
       effect.root.scale.setScalar(scale);
       effect.root.rotation.z += dt * (effect.arrival ? 5.5 : -4.2);
-      // The cap is applied on the live fade curve, not just the spawn value, so
-      // Reduce Flash actually holds for the whole burst.
       for (const material of effect.materials) material.opacity = Math.max(0, fade * fade) * effect.flash;
       effect.light.intensity *= Math.pow(0.025, dt / Math.max(0.01, effect.duration));
       if (t < 1) continue;
