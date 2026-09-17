@@ -20,6 +20,13 @@ type RuntimeState = {
   };
 };
 
+type ResultChoice = {
+  id?: string;
+  label?: string;
+  description?: string;
+  [key: string]: unknown;
+};
+
 const SECTOR_HANDOFF_MS = 620;
 const MAP_SELECT_UNLOCK = "map-08";
 const TIME_TRIAL_UNLOCK = "map-18";
@@ -59,7 +66,7 @@ export function installCampaignFlow(game: object, content: ContentRuntime): void
         {
           id: "time-trial",
           label: "Time Trial",
-          description: unlocked.timeTrial ? "16 purpose-built route races." : "LOCKED // Clear Act II to unlock Time Trial.",
+          description: unlocked.timeTrial ? "16 curated route races: bespoke courses plus selected Campaign reprises." : "LOCKED // Clear Act II to unlock Time Trial.",
           disabled: !unlocked.timeTrial
         },
         {
@@ -153,7 +160,7 @@ export function installCampaignFlow(game: object, content: ContentRuntime): void
     const campaign = state.modeId === "standard" && content.activeForm() === "campaign-field";
     if (!campaign) {
       telemetry.record("level.complete", { levelId: currentId });
-      originalFinishRun();
+      runWithPlayerFacingResults(state, originalFinishRun);
       return;
     }
 
@@ -218,6 +225,49 @@ export function installCampaignFlow(game: object, content: ContentRuntime): void
       state.beginRun();
     }, SECTOR_HANDOFF_MS);
   };
+}
+
+function runWithPlayerFacingResults(state: RuntimeState, finish: () => void): void {
+  const originalUpdateScreen = state.ui.updateScreen.bind(state.ui);
+  state.ui.updateScreen = (screenId: string, payload: Record<string, unknown>) => {
+    originalUpdateScreen(
+      screenId,
+      screenId === "results" ? simplifyResultsPayload(payload, state.modeId) : payload
+    );
+  };
+  try {
+    finish();
+  } finally {
+    state.ui.updateScreen = originalUpdateScreen;
+  }
+}
+
+function simplifyResultsPayload(payload: Record<string, unknown>, modeId: string): Record<string, unknown> {
+  const choices = Array.isArray(payload.choices) ? payload.choices as ResultChoice[] : [];
+  const cleaned = choices
+    .filter((choice) => !(modeId === "reversal" && choice.id === "result-time"))
+    .map((choice) => ({
+      ...choice,
+      label: playerFacingText(choice.label),
+      description: playerFacingText(choice.description)
+    }));
+
+  return {
+    ...payload,
+    choices: cleaned
+  };
+}
+
+function playerFacingText(value: string | undefined): string | undefined {
+  return value
+    ?.replaceAll("non-kill shots", "misses")
+    .replaceAll("theoretical minimum", "par")
+    .replaceAll("minimum route", "required route")
+    .replaceAll("exact route requirement met", "required Spheres cleared")
+    .replaceAll("Kills", "Spheres")
+    .replaceAll("kills", "spheres")
+    .replaceAll("Kill", "Sphere")
+    .replaceAll("kill", "sphere");
 }
 
 function ensureSectorClearFx(): void {
