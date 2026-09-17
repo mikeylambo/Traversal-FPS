@@ -1,3 +1,4 @@
+import * as THREE from "three";
 import { ROOMS } from "../world/stages";
 
 type RuntimeState = {
@@ -10,17 +11,25 @@ type RuntimeState = {
   warps: number;
   roomRestarts: number;
   shotAllowance: number;
+  camera: THREE.PerspectiveCamera;
+  platformMeshes: THREE.Mesh[];
   shell: {
     events: { on(event: string, handler: () => void): void };
   };
   warp: {
     hasAnchor(): boolean;
     selectionPercent(): number;
+    syncOrigin(position: THREE.Vector3): void;
+    clearAnchor(): void;
+    setCommitValidator(validator: ((from: THREE.Vector3, to: THREE.Vector3) => boolean) | null): void;
   };
   input: {
     isWarpHeld(): boolean;
   };
+  update(dt: number): void;
+  shoot(): void;
   updateHUD(): void;
+  flashMessage(message: string, duration: number): void;
 };
 
 const touchHUD = navigator.maxTouchPoints > 0 || matchMedia("(pointer: coarse)").matches;
@@ -32,6 +41,7 @@ export function installGameplayClarity(game: object): void {
 
   installMenuPresentation();
   installPauseContext(state);
+  installLiveWarpGrammar(state, game);
   document.querySelector("#mission-panel .hud-eyebrow")?.remove();
 
   const stopShort = document.createElement("section");
@@ -84,10 +94,53 @@ export function installGameplayClarity(game: object): void {
   };
 }
 
+function installLiveWarpGrammar(state: RuntimeState, game: object): void {
+  const collisionRay = new THREE.Raycaster();
+  state.warp.setCommitValidator((from, to) => {
+    const direction = to.clone().sub(from);
+    const distance = direction.length();
+    if (distance <= 0.5) return true;
+
+    collisionRay.set(from, direction.normalize());
+    // Contact at the destination platform is valid. Anything meaningfully before
+    // the selected landing is solid route geometry and blocks the warp.
+    collisionRay.far = Math.max(0, distance - 0.48);
+    const blocked = collisionRay.intersectObjects(state.platformMeshes, false).length > 0;
+    if (blocked) state.flashMessage("VECTOR BLOCKED // SOLID GEOMETRY", 1050);
+    return !blocked;
+  });
+
+  const originalUpdate = state.update.bind(game);
+  state.update = (dt: number) => {
+    if (state.warp.hasAnchor()) state.warp.syncOrigin(state.camera.position);
+    originalUpdate(dt);
+    // Movement occurs inside the original update. Refresh once more so the visible
+    // line ends the frame at the same origin the player will commit from.
+    if (state.warp.hasAnchor()) state.warp.syncOrigin(state.camera.position);
+  };
+
+  const originalShoot = state.shoot.bind(game);
+  state.shoot = () => {
+    const replacingHeldVector = state.input.isWarpHeld() && state.warp.hasAnchor();
+    const shotsBefore = state.shots;
+    const killsBefore = state.totalKills;
+    originalShoot();
+
+    // A successful second Sphere writes its own destination. A miss, wall hit or
+    // rejected shot while Warp is held cancels the old destination instead of
+    // silently preserving it and warping the player somewhere they no longer chose.
+    if (
+      replacingHeldVector &&
+      state.shots > shotsBefore &&
+      state.totalKills === killsBefore
+    ) {
+      state.warp.clearAnchor();
+    }
+  };
+}
+
 function installPauseContext(state: RuntimeState): void {
   state.shell.events.on("game:pause", () => {
-    // The Shell can finish swapping screens after the pause event. Two RAFs keeps
-    // this additive and avoids coupling Traversal to Shell render timing.
     requestAnimationFrame(() => requestAnimationFrame(() => {
       const screen = document.querySelector<HTMLElement>(
         '[data-screen-id="pause"], [data-screen-id="pause-menu"]'
@@ -233,7 +286,6 @@ function updateRoomIdentity(state: RuntimeState): void {
     return;
   }
 
-  // TT and Challenge titles are already authored with their player-facing number.
   roomLabel.textContent = room.title;
 }
 
@@ -247,9 +299,7 @@ function simplifyModeHUD(state: RuntimeState): void {
   if (!room) return;
   const roomObjective = document.getElementById("room-objective");
 
-  if (campaign && roomObjective) {
-    roomObjective.textContent = `${state.roomKills}/${room.requiredKills} SPHERES`;
-  } else if (reversal && roomObjective) {
+  if ((campaign || reversal) && roomObjective) {
     roomObjective.textContent = `${state.roomKills}/${room.requiredKills} SPHERES`;
   }
 }
