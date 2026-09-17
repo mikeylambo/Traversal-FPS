@@ -42,6 +42,8 @@ type PadFrame = {
 
 const BASE_LOOK_X = 15.5;
 const BASE_LOOK_Y = 13.5;
+const WARP_ENGAGE = 0.42;
+const WARP_RELEASE_HOLD = 0.18;
 
 /**
  * The Shell owns menu-pad navigation. Traversal owns gameplay-pad input.
@@ -66,13 +68,30 @@ export function installGamepadGameplay(game: object, settings: TraversalSettings
   let frame: PadFrame = emptyFrame();
   let previousButtons: boolean[] = [];
   let previousWarp = false;
+  let warpReleaseCandidateFrames = 0;
   let adjustRepeatAt = 0;
 
   const originalUpdate = state.update.bind(game);
   state.update = (dt: number) => {
     frame = pollGamepad(dt, previousButtons, previousWarp, adjustRepeatAt, settings);
+
+    // Trigger noise on some XInput pads can momentarily fall below the release
+    // threshold. Require two consecutive released frames before committing a warp.
+    if (previousWarp && !frame.warpHeld) {
+      warpReleaseCandidateFrames += 1;
+      frame.warpReleased = warpReleaseCandidateFrames >= 2;
+    } else {
+      warpReleaseCandidateFrames = 0;
+      frame.warpReleased = false;
+    }
+
     previousButtons = currentButtons();
-    previousWarp = frame.warpHeld;
+    previousWarp = frame.warpHeld || (previousWarp && warpReleaseCandidateFrames === 1);
+    if (frame.warpReleased) {
+      previousWarp = false;
+      warpReleaseCandidateFrames = 0;
+    }
+
     if (frame.wheelDelta !== 0) {
       adjustRepeatAt = performance.now() + 82;
       if (settings.value.accessibility.haptics) rumbleLandingAdjustment();
@@ -109,11 +128,6 @@ export function installGamepadGameplay(game: object, settings: TraversalSettings
   installAudioPauseLifecycle(state);
 }
 
-/**
- * Input/accessibility options that need the fully-combined keyboard, touch and
- * gamepad stream live here so they do not duplicate binding logic in each device
- * implementation. Touch crouch is already latched by FPSInput and stays that way.
- */
 function installComfortAccessLayer(state: RuntimeState, settings: TraversalSettingsStore): void {
   const input = state.input;
 
@@ -132,7 +146,6 @@ function installComfortAccessLayer(state: RuntimeState, settings: TraversalSetti
   input.isCrouchHeld = () => {
     const held = originalCrouch();
 
-    // Touch already uses tap-to-toggle, independent of the sustained-input option.
     if (document.body.classList.contains("touch-device")) {
       wasHeld = held;
       return held;
@@ -186,15 +199,18 @@ function pollGamepad(
   const [moveXIndex, moveYIndex] = axisPair("move", [0, 1]);
   const [lookXIndex, lookYIndex] = axisPair("look", [2, 3]);
   const aim = settings.value;
+  const xboxLike = /xbox|xinput/i.test(pad.id);
+  const moveDeadzone = Math.max(aim.controllerMoveDeadzone, xboxLike ? 0.20 : 0.12);
+  const lookDeadzone = Math.max(aim.controllerRightDeadzone, xboxLike ? 0.14 : 0.08);
   const left = curveMoveVector(
     pad.axes[moveXIndex] ?? 0,
     pad.axes[moveYIndex] ?? 0,
-    aim.controllerMoveDeadzone
+    moveDeadzone
   );
   const right = curveLookVector(
     pad.axes[lookXIndex] ?? 0,
     pad.axes[lookYIndex] ?? 0,
-    aim.controllerRightDeadzone,
+    lookDeadzone,
     aim.controllerLookAcceleration
   );
 
@@ -208,7 +224,10 @@ function pollGamepad(
 
   const fireHeld = maxButtonValue(pad, fireIndices) > 0.45;
   const previousFire = anyPrevious(previousButtons, fireIndices);
-  const warpHeld = maxButtonValue(pad, warpIndices) > 0.32;
+  const warpValue = maxButtonValue(pad, warpIndices);
+  const warpHeld = previousWarp
+    ? warpValue > WARP_RELEASE_HOLD
+    : warpValue > WARP_ENGAGE;
 
   const shorten = anyPressed(buttons, shorterIndices);
   const extend = anyPressed(buttons, longerIndices);
@@ -233,7 +252,7 @@ function pollGamepad(
     firePressed: fireHeld && !previousFire,
     crouchHeld: anyPressed(buttons, crouchIndices),
     warpHeld,
-    warpReleased: previousWarp && !warpHeld,
+    warpReleased: false,
     wheelDelta,
     resetPressed: anyPressed(buttons, resetIndices) && !anyPrevious(previousButtons, resetIndices),
     scopePressed: anyPressed(buttons, scopeIndices) && !anyPrevious(previousButtons, scopeIndices)
