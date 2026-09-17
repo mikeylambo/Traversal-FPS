@@ -10,6 +10,9 @@ type RuntimeState = {
   warps: number;
   roomRestarts: number;
   shotAllowance: number;
+  shell: {
+    events: { on(event: string, handler: () => void): void };
+  };
   warp: {
     hasAnchor(): boolean;
     selectionPercent(): number;
@@ -27,6 +30,8 @@ export function installGameplayClarity(game: object): void {
   const hud = document.getElementById("hud");
   if (!hud) return;
 
+  installMenuPresentation();
+  installPauseContext(state);
   document.querySelector("#mission-panel .hud-eyebrow")?.remove();
 
   const stopShort = document.createElement("section");
@@ -77,6 +82,117 @@ export function installGameplayClarity(game: object): void {
     updateShotBudget(state);
     emphasizeTrainingStopShort(state);
   };
+}
+
+function installPauseContext(state: RuntimeState): void {
+  state.shell.events.on("game:pause", () => {
+    // The Shell can finish swapping screens after the pause event. Two RAFs keeps
+    // this additive and avoids coupling Traversal to Shell render timing.
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const screen = document.querySelector<HTMLElement>(
+        '[data-screen-id="pause"], [data-screen-id="pause-menu"]'
+      );
+      if (!screen) return;
+
+      let context = screen.querySelector<HTMLElement>(".traversal-pause-context");
+      if (!context) {
+        context = document.createElement("div");
+        context.className = "traversal-pause-context";
+        const title = screen.querySelector("h1, h2, .slu-screen-title");
+        if (title?.parentElement) title.insertAdjacentElement("afterend", context);
+        else screen.prepend(context);
+      }
+      context.textContent = pauseContextText(state);
+    }));
+  });
+}
+
+function pauseContextText(state: RuntimeState): string {
+  const room = ROOMS[state.roomIndex];
+  if (!room) return "TRAVERSAL";
+
+  if (state.modeId === "standard") {
+    const sector = Number(room.id.match(/(?:sector|map)-(\d+)/)?.[1] ?? 0);
+    const number = sector > 0 ? String(sector).padStart(2, "0") : "--";
+    const act = sector > 30 ? "ACT IV" : sector > 18 ? "ACT III" : sector > 8 ? "ACT II" : "ACT I";
+    return `${act} · SECTOR ${number} // ${room.title}`;
+  }
+
+  if (state.modeId === "time-trial") return `TIME TRIAL · ${room.title}`;
+  if (state.modeId === "challenge") return `CHALLENGE · ${room.title}`;
+  if (state.modeId === "reversal") {
+    return `THE REVERSE · ${String(state.roomIndex + 1).padStart(2, "0")} // ${room.title}`;
+  }
+  return `TRAINING · ${room.title}`;
+}
+
+function installMenuPresentation(): void {
+  if (document.getElementById("traversal-menu-presentation")) return;
+  const style = document.createElement("style");
+  style.id = "traversal-menu-presentation";
+  style.textContent = `
+    .slu-screen[data-screen-id="main-menu"] {
+      background:
+        linear-gradient(104deg, rgba(2, 8, 18, .96) 0 38%, rgba(4, 13, 27, .82) 58%, rgba(1, 5, 12, .96) 100%),
+        radial-gradient(circle at 76% 35%, rgba(53, 214, 255, .13), transparent 24%),
+        radial-gradient(circle at 84% 66%, rgba(255, 72, 190, .08), transparent 28%);
+      overflow: hidden;
+    }
+    .slu-screen[data-screen-id="main-menu"]::before {
+      content: "";
+      position: absolute;
+      inset: -12%;
+      pointer-events: none;
+      opacity: .34;
+      background-image:
+        linear-gradient(rgba(111, 228, 255, .055) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(111, 228, 255, .04) 1px, transparent 1px);
+      background-size: 42px 42px;
+      transform: perspective(700px) rotateX(62deg) rotateZ(-8deg) translateY(20%);
+      transform-origin: center bottom;
+      mask-image: linear-gradient(to left, #000, transparent 72%);
+    }
+    .slu-screen[data-screen-id="main-menu"] .slu-choice {
+      max-width: min(460px, 72vw);
+      min-height: 0;
+      padding-block: 10px;
+      background: rgba(3, 12, 24, .64);
+      border-color: rgba(111, 228, 255, .18);
+      backdrop-filter: blur(12px);
+    }
+    .slu-screen[data-screen-id="main-menu"] .slu-choice:nth-of-type(even) {
+      transform: translateX(8px);
+    }
+    .slu-screen[data-screen-id="main-menu"] .slu-choice:hover,
+    .slu-screen[data-screen-id="main-menu"] .slu-choice:focus-visible,
+    .slu-screen[data-screen-id="main-menu"] .slu-choice[data-focused="true"] {
+      transform: translateX(14px);
+    }
+    .slu-screen[data-screen-id="main-menu"] .slu-choice-description,
+    .slu-screen[data-screen-id="main-menu"] .slu-choice-desc,
+    .slu-screen[data-screen-id="main-menu"] [class*="description"],
+    .slu-screen[data-screen-id="main-menu"] small {
+      opacity: .52;
+      letter-spacing: .09em;
+    }
+    .traversal-pause-context {
+      margin: -2px 0 18px;
+      font-family: "Sora", sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .13em;
+      color: rgba(199, 242, 255, .72);
+      text-transform: uppercase;
+    }
+    .traversal-achievement-count {
+      display: block;
+      margin-top: 4px;
+      opacity: .52;
+      font-size: 10px;
+      letter-spacing: .09em;
+    }
+  `;
+  document.head.appendChild(style);
 }
 
 function normalizeSpatialLanguage(): void {
