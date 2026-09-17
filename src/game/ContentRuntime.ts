@@ -58,10 +58,16 @@ export function installContentRuntime(shell: any): ContentRuntime {
   });
   telemetry.record("playtest.ready", {
     campaignMaps: CAMPAIGN_MAPS.length,
-    timeTrials: 16,
+    timeTrials: 18,
     challenges: 24,
     reversalRooms: 8
   });
+
+  const publishActiveContext = () => {
+    document.body.dataset.traversalContentId = String(activeId);
+    document.body.dataset.traversalContentForm = activeForm;
+    document.body.dataset.traversalModeId = shell.modes.active()?.id ?? "unknown";
+  };
 
   const loadGrammarRooms = (): RoomSpec[] => structuredClone(trainingRooms) as RoomSpec[];
 
@@ -123,6 +129,7 @@ export function installContentRuntime(shell: any): ContentRuntime {
   const reloadSelected = () => {
     const next = selectRooms();
     ROOMS.splice(0, ROOMS.length, ...next);
+    publishActiveContext();
     telemetry.setContext({
       modeId: shell.modes.active()?.id ?? "unknown",
       difficultyId: shell.difficulty.active()?.id ?? "unknown",
@@ -219,6 +226,7 @@ export function installContentRuntime(shell: any): ContentRuntime {
       selectedTrainingPath = "grammar";
       selectedModeSuite = null;
       ROOMS.splice(0, ROOMS.length, ...loadGrammarRooms());
+      publishActiveContext();
       telemetry.record("content.loaded", { contentId: activeId, contentForm: activeForm, roomCount: ROOMS.length, parKills: ROOMS.reduce((sum, room) => sum + room.requiredKills, 0) });
     }
   };
