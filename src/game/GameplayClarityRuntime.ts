@@ -22,10 +22,6 @@ type RuntimeState = {
 
 const touchHUD = navigator.maxTouchPoints > 0 || matchMedia("(pointer: coarse)").matches;
 
-/**
- * Keeps the signature spatial information large and immediate. Campaign is
- * intentionally sparse: location + sphere progress are enough during play.
- */
 export function installGameplayClarity(game: object): void {
   const state = game as unknown as RuntimeState;
   const hud = document.getElementById("hud");
@@ -44,13 +40,9 @@ export function installGameplayClarity(game: object): void {
   `;
   hud.appendChild(stopShort);
 
-  /* The legacy vector console duplicates the landing instrument and uses older
-     terminology. Keep one authoritative readout on every platform. */
   document.getElementById("vector-console")?.style.setProperty("display", "none", "important");
 
   if (touchHUD) {
-    /* Mobile keeps its own compact presentation so desktop sizing never leaks into
-       the phone HUD, but the semantics are identical to desktop. */
     stopShort.style.setProperty("display", "none", "important");
 
     const mobileLanding = document.createElement("section");
@@ -79,7 +71,8 @@ export function installGameplayClarity(game: object): void {
     originalHUD();
     document.getElementById("vector-console")?.style.setProperty("display", "none", "important");
     normalizeSpatialLanguage();
-    simplifyCampaignHUD(state);
+    updateRoomIdentity(state);
+    simplifyModeHUD(state);
     updateStopShort(state);
     updateShotBudget(state);
     emphasizeTrainingStopShort(state);
@@ -108,20 +101,41 @@ function normalizeSpatialLanguage(): void {
   }
 }
 
-function simplifyCampaignHUD(state: RuntimeState): void {
+function updateRoomIdentity(state: RuntimeState): void {
+  const room = ROOMS[state.roomIndex];
+  const roomLabel = document.getElementById("room-label");
+  if (!room || !roomLabel) return;
+
+  if (state.modeId === "standard") {
+    const sector = room.id.match(/(?:sector|map)-(\d+)/)?.[1]?.padStart(2, "0");
+    roomLabel.textContent = sector ? `${sector} // ${room.title}` : room.title;
+    return;
+  }
+
+  if (state.modeId === "reversal") {
+    roomLabel.textContent = `${String(state.roomIndex + 1).padStart(2, "0")} // ${room.title}`;
+    return;
+  }
+
+  // TT and Challenge titles are already authored with their player-facing number.
+  roomLabel.textContent = room.title;
+}
+
+function simplifyModeHUD(state: RuntimeState): void {
   const campaign = state.modeId === "standard";
+  const reversal = state.modeId === "reversal";
   const metricPanel = document.getElementById("metric-panel");
-  if (metricPanel) metricPanel.hidden = campaign;
-  if (!campaign) return;
+  if (metricPanel) metricPanel.hidden = campaign || reversal;
 
   const room = ROOMS[state.roomIndex];
   if (!room) return;
-
-  const roomLabel = document.getElementById("room-label");
   const roomObjective = document.getElementById("room-objective");
 
-  if (roomLabel) roomLabel.textContent = room.title;
-  if (roomObjective) roomObjective.textContent = `${state.roomKills}/${room.requiredKills} SPHERES`;
+  if (campaign && roomObjective) {
+    roomObjective.textContent = `${state.roomKills}/${room.requiredKills} SPHERES`;
+  } else if (reversal && roomObjective) {
+    roomObjective.textContent = `${state.roomKills}/${room.requiredKills} SPHERES`;
+  }
 }
 
 function updateStopShort(state: RuntimeState): void {
