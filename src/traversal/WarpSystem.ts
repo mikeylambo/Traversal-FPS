@@ -8,7 +8,6 @@ type EndpointFx = {
   age: number;
   duration: number;
   arrival: boolean;
-  /** Reduce Flash cap, sampled when the burst is spawned. */
   flash: number;
 };
 
@@ -70,6 +69,26 @@ export class WarpSystem {
     this.refreshLiveVector();
   }
 
+  /**
+   * A shot stores the destination, not a frozen historical origin. Until the
+   * player commits, the current player position owns the start of the vector.
+   * This deliberately preserves shoot -> reposition -> commit as real grammar.
+   */
+  updateLiveOrigin(currentPosition: THREE.Vector3): void {
+    if (!this.anchor || this.transit) return;
+    if (this.anchor.origin.distanceToSquared(currentPosition) < 0.0004) return;
+    this.anchor.origin.copy(currentPosition);
+    this.refreshLiveVector();
+  }
+
+  clearAnchor(): void {
+    this.anchor = null;
+    this.fraction = 1;
+    this.line.visible = false;
+    this.beam.visible = false;
+    this.marker.visible = false;
+  }
+
   setSelectionFraction(fraction: number): void {
     if (!this.anchor) return;
     this.fraction = THREE.MathUtils.clamp(fraction, 0.12, 1);
@@ -78,23 +97,19 @@ export class WarpSystem {
   updateSelection(isHeld: boolean, wheelDelta: number, timeSeconds = 0): void {
     if (!this.anchor) return;
     if (isHeld && wheelDelta !== 0) {
-      // Fine enough for puzzle placement, coarse enough that a shoulder tap is meaningful.
       this.fraction = THREE.MathUtils.clamp(this.fraction - wheelDelta * 0.04, 0.12, 1);
     }
 
     const selected = this.selectedPoint();
+    const blocked = this.pathBlocked(this.anchor.origin, selected);
     const lineMaterial = this.line.material as THREE.LineBasicMaterial;
+    const ringMaterial = this.markerRing.material as THREE.MeshBasicMaterial;
     lineMaterial.opacity = isHeld ? 0.42 : 0.78;
+    lineMaterial.color.setHex(blocked ? 0xff8a70 : 0xbffcff);
     this.beam.material.opacity = isHeld ? 0.36 : 0.1;
+    this.beam.material.color.setHex(blocked ? 0xff6f61 : 0x36e8ff);
 
-    // The thin line always preserves the full written vector. While placing a
-    // landing, the brighter beam terminates at the selected point. The player can
-    // therefore read both the original endpoint and the route they are actually buying.
-    this.positionBeam(
-      this.beam,
-      this.anchor.origin,
-      isHeld ? selected : this.anchor.target
-    );
+    this.positionBeam(this.beam, this.anchor.origin, isHeld ? selected : this.anchor.target);
 
     this.marker.visible = isHeld;
     if (isHeld) {
@@ -103,16 +118,17 @@ export class WarpSystem {
       const shortScale = this.fraction < 0.995 ? 1.16 : 1;
       this.marker.scale.setScalar(pulse * shortScale);
       this.markerRing.rotation.z = timeSeconds * 1.8;
-
-      const ringMaterial = this.markerRing.material as THREE.MeshBasicMaterial;
-      ringMaterial.color.setHex(this.fraction < 0.995 ? 0xffffff : 0x78f7ff);
+      ringMaterial.color.setHex(blocked ? 0xff8a70 : this.fraction < 0.995 ? 0xffffff : 0x78f7ff);
       ringMaterial.opacity = this.fraction < 0.995 ? 1 : 0.9;
     }
   }
 
   commit(currentPosition: THREE.Vector3): boolean {
     if (!this.anchor || this.transit) return false;
+    this.updateLiveOrigin(currentPosition);
     const to = this.selectedPoint();
+    if (this.pathBlocked(currentPosition, to)) return false;
+
     const distance = currentPosition.distanceTo(to);
     this.transit = {
       from: currentPosition.clone(),
@@ -120,13 +136,10 @@ export class WarpSystem {
       elapsed: 0,
       duration: Math.max(0.075, distance / 82)
     };
-    this.addTrail(this.anchor.origin, this.anchor.target);
+    this.addTrail(currentPosition, to);
     this.addEndpointBurst(currentPosition, false, to.clone().sub(currentPosition));
     this.addDestinationLock(to, to.clone().sub(currentPosition));
-    this.anchor = null;
-    this.line.visible = false;
-    this.beam.visible = false;
-    this.marker.visible = false;
+    this.clearAnchor();
     return true;
   }
 
@@ -179,6 +192,31 @@ export class WarpSystem {
   private selectedPoint(): THREE.Vector3 {
     if (!this.anchor) return new THREE.Vector3();
     return this.anchor.origin.clone().lerp(this.anchor.target, this.fraction);
+  }
+
+  /** Only tall box geometry is warp-solid. Floors remain valid landing surfaces. */
+  private pathBlocked(origin: THREE.Vector3, target: THREE.Vector3): boolean {
+    const delta = target.clone().sub(origin);
+    const distance = delta.length();
+    if (distance <= 0.6) return false;
+
+    const blockers: THREE.Object3D[] = [];
+    this.scene.traverse((object) => {
+      const mesh = object as THREE.Mesh;
+      if (!mesh.visible || !(mesh.geometry instanceof THREE.BoxGeometry)) return;
+      const parameters = mesh.geometry.parameters;
+      const height = Math.abs(parameters.height * mesh.scale.y);
+      const width = Math.abs(parameters.width * mesh.scale.x);
+      const depth = Math.abs(parameters.depth * mesh.scale.z);
+      if (height < 2.4) return;
+      // Tall panels, ribs, aperture walls and authored solid walls count. Large
+      // horizontal decks do not, even when parent transforms make them broad.
+      if (width <= 2.5 || depth <= 2.5 || height >= 5) blockers.push(mesh);
+    });
+
+    if (!blockers.length) return false;
+    const ray = new THREE.Raycaster(origin, delta.normalize(), 0.3, Math.max(0.3, distance - 0.45));
+    return ray.intersectObjects(blockers, false).length > 0;
   }
 
   private refreshLiveVector(): void {
@@ -236,9 +274,6 @@ export class WarpSystem {
   }
 
   private addEndpointBurst(position: THREE.Vector3, arrival: boolean, direction: THREE.Vector3): void {
-    // The strengthened arrival flash is the loudest thing in the game to look at.
-    // Reduce Flash caps its peak; it never removes the burst, because the burst is
-    // how you read where you landed.
     const flash = flashScale();
     const root = new THREE.Group();
     root.position.copy(position);
@@ -315,8 +350,6 @@ export class WarpSystem {
       const scale = effect.arrival ? 0.75 + t * 1.9 : 0.8 + t * 1.35;
       effect.root.scale.setScalar(scale);
       effect.root.rotation.z += dt * (effect.arrival ? 5.5 : -4.2);
-      // The cap is applied on the live fade curve, not just the spawn value, so
-      // Reduce Flash actually holds for the whole burst.
       for (const material of effect.materials) material.opacity = Math.max(0, fade * fade) * effect.flash;
       effect.light.intensity *= Math.pow(0.025, dt / Math.max(0.01, effect.duration));
       if (t < 1) continue;
