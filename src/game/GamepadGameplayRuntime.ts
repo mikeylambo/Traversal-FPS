@@ -1,6 +1,8 @@
+import * as THREE from "three";
 import { setTraversalAudioSuspended } from "../audio/TraversalAudio";
 import { resolveTraversalAction } from "../input/TraversalBindings";
 import type { TraversalActionId } from "../input/TraversalActions";
+import type { WarpSystem } from "../traversal/WarpSystem";
 import { installAimAssistRuntime } from "./AimAssistRuntime";
 import type { TraversalSettingsStore } from "./TraversalSettings";
 
@@ -17,6 +19,9 @@ type GameplayInput = {
 
 type RuntimeState = {
   input: GameplayInput;
+  warp: WarpSystem;
+  camera: THREE.PerspectiveCamera;
+  platformMeshes: THREE.Mesh[];
   shell: {
     events: { on(event: string, handler: () => void): void };
   };
@@ -45,11 +50,6 @@ const BASE_LOOK_Y = 13.5;
 const WARP_ENGAGE = 0.42;
 const WARP_RELEASE_HOLD = 0.18;
 
-/**
- * The Shell owns menu-pad navigation. Traversal owns gameplay-pad input.
- * Bindings resolve from the persistent semantic action store every frame, so a
- * future remap UI can apply changes immediately without rebuilding gameplay.
- */
 export function installGamepadGameplay(game: object, settings: TraversalSettingsStore): void {
   const state = game as unknown as RuntimeState;
   const input = state.input;
@@ -71,12 +71,30 @@ export function installGamepadGameplay(game: object, settings: TraversalSettings
   let warpReleaseCandidateFrames = 0;
   let adjustRepeatAt = 0;
 
+  // Only tall platform meshes act as hard warp blockers. Floors remain valid
+  // Stop Short landing surfaces, while walls cannot be phased through anymore.
+  const blockerRay = new THREE.Raycaster();
+  state.warp.setCommitValidator((from, to) => {
+    const direction = to.clone().sub(from);
+    const distance = direction.length();
+    if (distance <= 0.2) return true;
+    blockerRay.set(from, direction.normalize());
+    blockerRay.far = Math.max(0, distance - 0.22);
+    const hardWalls = state.platformMeshes.filter((mesh) => {
+      const geometry = mesh.geometry as THREE.BoxGeometry;
+      const height = Number(geometry.parameters?.height ?? 1);
+      return height > 2.4;
+    });
+    const blocked = blockerRay.intersectObjects(hardWalls, false).length > 0;
+    if (blocked) state.flashMessage("VECTOR BLOCKED // FIND A CLEAR LINE", 900);
+    return !blocked;
+  });
+
   const originalUpdate = state.update.bind(game);
   state.update = (dt: number) => {
+    state.warp.syncOrigin(state.camera.position);
     frame = pollGamepad(dt, previousButtons, previousWarp, adjustRepeatAt, settings);
 
-    // Trigger noise on some XInput pads can momentarily fall below the release
-    // threshold. Require two consecutive released frames before committing a warp.
     if (previousWarp && !frame.warpHeld) {
       warpReleaseCandidateFrames += 1;
       frame.warpReleased = warpReleaseCandidateFrames >= 2;
@@ -101,6 +119,7 @@ export function installGamepadGameplay(game: object, settings: TraversalSettings
       window.dispatchEvent(new CustomEvent("traversal:scope-toggle", { detail: { source: "gamepad" } }));
     }
     originalUpdate(dt);
+    state.warp.syncOrigin(state.camera.position);
   };
 
   input.movement = () => {
@@ -116,7 +135,11 @@ export function installGamepadGameplay(game: object, settings: TraversalSettings
     return { x: base.x + frame.lookX, y: base.y + frame.lookY };
   };
 
-  input.consumeFire = () => original.consumeFire() || frame.firePressed;
+  input.consumeFire = () => {
+    const fired = original.consumeFire() || frame.firePressed;
+    if (fired && input.isWarpHeld() && state.warp.hasAnchor()) state.warp.clearAnchor();
+    return fired;
+  };
   input.isCrouchHeld = () => original.isCrouchHeld() || frame.crouchHeld;
   input.isWarpHeld = () => original.isWarpHeld() || frame.warpHeld;
   input.consumeWarpRelease = () => original.consumeWarpRelease() || frame.warpReleased;
