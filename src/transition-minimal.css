@@ -13,6 +13,10 @@
   animation: premium-transition-shell 2.6s ease forwards;
 }
 
+body.act-boundary #sector-transition.show {
+  animation: premium-act-shell 3.9s cubic-bezier(.2,.7,.2,1) forwards;
+}
+
 .sector-transition-line {
   left: 50%;
   top: calc(50% + 58px);
@@ -27,6 +31,11 @@
   animation: premium-sector-line 1.9s .3s ease forwards;
 }
 
+body.act-boundary #sector-transition.show .sector-transition-line {
+  width: min(520px, 70vw);
+  animation: premium-sector-line 2.8s .48s ease forwards;
+}
+
 .sector-transition-copy {
   gap: 4px;
   transform: translateY(6px);
@@ -34,6 +43,10 @@
 
 #sector-transition.show .sector-transition-copy {
   animation: premium-sector-copy 2.1s .24s ease forwards;
+}
+
+body.act-boundary #sector-transition.show .sector-transition-copy {
+  animation: premium-act-copy 3.1s .34s ease forwards;
 }
 
 .sector-transition-copy span {
@@ -52,11 +65,22 @@
   text-shadow: 0 0 26px color-mix(in srgb, var(--hud-accent, #69e7ff) 18%, transparent);
 }
 
+body.act-boundary .sector-transition-copy span {
+  font-size: clamp(11px, .9vw, 14px);
+  letter-spacing: .42em;
+  opacity: .78;
+}
+
+body.act-boundary .sector-transition-copy strong {
+  font-size: clamp(58px, 8vw, 118px);
+  letter-spacing: .09em;
+  text-shadow: 0 0 44px color-mix(in srgb, var(--hud-accent, #69e7ff) 26%, transparent);
+}
+
 .sector-transition-copy em {
   display: none;
 }
 
-/* Brief sector-clear punctuation before the next title card. No copy. */
 #campaign-sector-clear-fx {
   position: fixed;
   inset: 0;
@@ -126,6 +150,12 @@
   11%, 82% { opacity: 1; background: rgba(1, 6, 12, .78); }
 }
 
+@keyframes premium-act-shell {
+  0%, 100% { opacity: 0; background: rgba(0, 3, 8, 0); backdrop-filter: saturate(1); }
+  12% { opacity: 1; background: rgba(0, 3, 8, .92); backdrop-filter: saturate(.18); }
+  78% { opacity: 1; background: rgba(0, 3, 8, .9); backdrop-filter: saturate(.18); }
+}
+
 @keyframes premium-sector-line {
   0% { transform: translateX(-50%) scaleX(0); opacity: 0; }
   28%, 78% { transform: translateX(-50%) scaleX(1); opacity: .9; }
@@ -136,4 +166,10 @@
   0% { opacity: 0; transform: translateY(8px); filter: blur(3px); }
   16%, 78% { opacity: 1; transform: translateY(0); filter: blur(0); }
   100% { opacity: 0; transform: translateY(-4px); }
+}
+
+@keyframes premium-act-copy {
+  0% { opacity: 0; transform: translateY(16px) scale(.98); filter: blur(6px); }
+  18%, 74% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+  100% { opacity: 0; transform: translateY(-8px) scale(1.01); }
 }
