@@ -22,10 +22,6 @@ type RuntimeState = {
 
 const touchHUD = navigator.maxTouchPoints > 0 || matchMedia("(pointer: coarse)").matches;
 
-/**
- * Keeps the signature spatial information large and immediate. Campaign is
- * intentionally sparse: location + sphere progress are enough during play.
- */
 export function installGameplayClarity(game: object): void {
   const state = game as unknown as RuntimeState;
   const hud = document.getElementById("hud");
@@ -44,15 +40,10 @@ export function installGameplayClarity(game: object): void {
   `;
   hud.appendChild(stopShort);
 
-  /* The legacy vector console duplicates the landing instrument and uses older
-     terminology. Keep one authoritative readout on every platform. */
   document.getElementById("vector-console")?.style.setProperty("display", "none", "important");
 
   if (touchHUD) {
-    /* Mobile keeps its own compact presentation so desktop sizing never leaks into
-       the phone HUD, but the semantics are identical to desktop. */
     stopShort.style.setProperty("display", "none", "important");
-
     const mobileLanding = document.createElement("section");
     mobileLanding.id = "mobile-landing-readout";
     mobileLanding.innerHTML = `
@@ -79,7 +70,7 @@ export function installGameplayClarity(game: object): void {
     originalHUD();
     document.getElementById("vector-console")?.style.setProperty("display", "none", "important");
     normalizeSpatialLanguage();
-    simplifyCampaignHUD(state);
+    updateModeHUD(state);
     updateStopShort(state);
     updateShotBudget(state);
     emphasizeTrainingStopShort(state);
@@ -108,20 +99,25 @@ function normalizeSpatialLanguage(): void {
   }
 }
 
-function simplifyCampaignHUD(state: RuntimeState): void {
+function updateModeHUD(state: RuntimeState): void {
   const campaign = state.modeId === "standard";
+  const reversal = state.modeId === "reversal";
   const metricPanel = document.getElementById("metric-panel");
-  if (metricPanel) metricPanel.hidden = campaign;
-  if (!campaign) return;
+  if (metricPanel) metricPanel.hidden = campaign || reversal;
 
   const room = ROOMS[state.roomIndex];
   if (!room) return;
 
   const roomLabel = document.getElementById("room-label");
   const roomObjective = document.getElementById("room-objective");
+  const sectorNumber = String(state.roomIndex + 1).padStart(2, "0");
+  const cleanTitle = room.title
+    .replace(/^TT-?\d+\s*\/\/\s*/i, "")
+    .replace(/^CHALLENGE-?\d+\s*\/\/\s*/i, "")
+    .replace(/^\d+\s*\/\/\s*/, "");
 
-  if (roomLabel) roomLabel.textContent = room.title;
-  if (roomObjective) roomObjective.textContent = `${state.roomKills}/${room.requiredKills} SPHERES`;
+  if (roomLabel) roomLabel.textContent = `${sectorNumber} // ${cleanTitle}`;
+  if (campaign && roomObjective) roomObjective.textContent = `${state.roomKills}/${room.requiredKills} SPHERES`;
 }
 
 function updateStopShort(state: RuntimeState): void {
