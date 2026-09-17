@@ -20,16 +20,13 @@ type RuntimeState = {
 };
 
 const SECTOR_HANDOFF_MS = 620;
+const ACT_HANDOFF_MS = 1500;
+const ACT_COMPLETES: Record<string, string> = {
+  "map-08": "ACT I // COMPLETE",
+  "map-18": "ACT II // COMPLETE",
+  "map-30": "ACT III // COMPLETE"
+};
 
-/**
- * Campaign is a journey through the construct, not a list of isolated score runs.
- * Intermediate sector results are still processed internally (progression,
- * achievements, best times) but their menu screen is suppressed; the next
- * implemented sector loads after a brief audiovisual handoff and receives the
- * normal sector title card. Sector entry is also persisted as a resume checkpoint.
- * Route-efficiency calculations are bound to the active content instead of the
- * Training rooms that happened to exist when TraversalGame.ts first evaluated.
- */
 export function installCampaignFlow(game: object, content: ContentRuntime): void {
   const state = game as unknown as RuntimeState;
   const originalFinishRun = state.finishRun.bind(game);
@@ -79,8 +76,6 @@ export function installCampaignFlow(game: object, content: ContentRuntime): void
       originalFinishRun();
 
       if (laterMaps.length > 0) {
-        // This preview currently ends before the authored Campaign does. Record
-        // the sector clear without poisoning Continue state with a false ending.
         void activeProgression?.completeCampaignContentBoundary(currentId);
         state.ui.updateScreen("results", {
           title: "Available Sectors Cleared",
@@ -103,8 +98,6 @@ export function installCampaignFlow(game: object, content: ContentRuntime): void
       return;
     }
 
-    // Let the existing completion/progression wrappers run, but don't surface an
-    // intermediate results menu between connected campaign sectors.
     const originalUpdateScreen = state.ui.updateScreen.bind(state.ui);
     const originalShowResults = state.flow.showResults.bind(state.flow);
     state.ui.updateScreen = (screenId: string, payload: Record<string, unknown>) => {
@@ -121,13 +114,14 @@ export function installCampaignFlow(game: object, content: ContentRuntime): void
 
     void activeProgression?.completeCampaignSector(currentId, nextMap.id);
     telemetry.record("campaign.advance", { from: currentId, to: nextMap.id });
-    playSectorClearCue();
+    const actComplete = ACT_COMPLETES[currentId];
+    playSectorClearCue(actComplete);
 
     window.setTimeout(() => {
       content.setSelectedMap(nextMap.id);
       content.reloadSelected();
       state.beginRun();
-    }, SECTOR_HANDOFF_MS);
+    }, actComplete ? ACT_HANDOFF_MS : SECTOR_HANDOFF_MS);
   };
 }
 
@@ -136,17 +130,23 @@ function ensureSectorClearFx(): void {
   const fx = document.createElement("div");
   fx.id = "campaign-sector-clear-fx";
   fx.setAttribute("aria-hidden", "true");
-  fx.innerHTML = "<i></i><b></b>";
+  fx.innerHTML = "<i></i><b></b><span></span>";
   document.body.appendChild(fx);
 }
 
-function playSectorClearCue(): void {
+function playSectorClearCue(actLabel?: string): void {
   const fx = document.getElementById("campaign-sector-clear-fx");
   if (fx) {
+    const label = fx.querySelector("span");
+    if (label) label.textContent = actLabel ?? "";
+    fx.classList.toggle("act-complete", Boolean(actLabel));
     fx.classList.remove("pulse");
     void fx.offsetWidth;
     fx.classList.add("pulse");
-    window.setTimeout(() => fx.classList.remove("pulse"), 720);
+    window.setTimeout(() => {
+      fx.classList.remove("pulse", "act-complete");
+      if (label) label.textContent = "";
+    }, actLabel ? 1320 : 720);
   }
   emitTraversalAudio("sector.clear");
 }
