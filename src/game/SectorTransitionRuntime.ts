@@ -11,11 +11,12 @@ type RuntimeState = {
 };
 
 const TITLE_DURATION_MS = 2600;
-const ACT_BOUNDARIES: Record<string, { kicker: string; title: string }> = {
-  "map-08": { kicker: "ACT I // FINALE", title: "THE CONSTRUCT OPENS" },
-  "map-16": { kicker: "ACT II // FINALE", title: "DESCEND INTO THE MACHINE" },
-  "map-24": { kicker: "ACT III // FINALE", title: "THE SYSTEM TURNS HOSTILE" },
-  "map-32": { kicker: "ACT IV // FINALE", title: "THE VECTOR RETURNS" }
+const ACT_ENTRY_DURATION_MS = 3900;
+const ACT_ENTRIES: Record<string, { kicker: string; title: string }> = {
+  "map-09": { kicker: "ACT II", title: "THE MACHINE OPENS" },
+  "map-19": { kicker: "ACT III", title: "THE FIELD EXPANDS" },
+  "map-31": { kicker: "ACT IV", title: "MASTERY" },
+  "map-42": { kicker: "ACT IV // FINALE", title: "ASCENSION" }
 };
 
 /** Gives each content family a restrained entrance card and stronger Act-boundary punctuation. */
@@ -56,8 +57,10 @@ function showTransition(
   const contentId = content.selectedContentId();
   const map = CAMPAIGN_MAPS.find((entry) => entry.id === contentId);
   const sectorNumber = map?.id.match(/(\d+)/)?.[1]?.padStart(2, "0") ?? "01";
-  const mapTitle = map?.label.replace(/^SECTOR \d+ \/\/ /, "") ?? "THE SPAN";
-  const boundary = state.modeId === "standard" ? ACT_BOUNDARIES[contentId] : undefined;
+  const mapTitle = map?.label
+    .replace(/^ACT [IVX]+ \/\/ /, "")
+    .replace(/^SECTOR \d+ \/\/ /, "") ?? "THE SPAN";
+  const boundary = state.modeId === "standard" ? ACT_ENTRIES[contentId] : undefined;
 
   document.body.classList.toggle("act-boundary", Boolean(boundary));
 
@@ -75,13 +78,13 @@ function showTransition(
     title.textContent = mapTitle;
   } else if (state.modeId === "time-trial") {
     kicker.textContent = "TIME TRIAL";
-    title.textContent = mapTitle;
+    title.textContent = content.activeRooms()[state.roomIndex]?.title ?? "COURSE";
   } else if (state.modeId === "reversal") {
     kicker.textContent = "THE REVERSE";
     title.textContent = content.activeRooms()[state.roomIndex]?.title ?? "LABYRINTH";
   } else {
     kicker.textContent = "CHALLENGE";
-    title.textContent = mapTitle;
+    title.textContent = content.activeRooms()[state.roomIndex]?.title ?? "CHAMBER";
   }
 
   overlay.dataset.serial = String(serial);
@@ -94,5 +97,5 @@ function showTransition(
       overlay.classList.remove("show");
       document.body.classList.remove("act-boundary");
     }
-  }, boundary ? TITLE_DURATION_MS + 700 : TITLE_DURATION_MS);
+  }, boundary ? ACT_ENTRY_DURATION_MS : TITLE_DURATION_MS);
 }
