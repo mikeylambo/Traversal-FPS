@@ -17,21 +17,12 @@ const ADJUSTABLE = new Set([
   "traversal-aim-smoothing",
   "traversal-aim-assist",
   "traversal-reticle-scale",
-  // Accessibility rows with more than two states adjust the same way; the plain
-  // on/off toggles activate directly, like Invert Y.
   "traversal-color-profile",
   "traversal-ui-scale",
   "traversal-text-timing",
   "traversal-cvd-preview"
 ]);
 
-/**
- * Console-style settings editing:
- * - Up/Down chooses a row.
- * - A / Enter selects an adjustable row.
- * - Left/Right changes its value.
- * - A / Enter confirms, B / Escape cancels edit focus without leaving Settings.
- */
 export function installSettingsAdjustmentRuntime(
   flow: FlowLike,
   root: HTMLElement,
@@ -43,6 +34,8 @@ export function installSettingsAdjustmentRuntime(
   let previousPadDirection = 0;
   let repeatAt = 0;
   let frame = 0;
+  let applyFrame = 0;
+  let pendingDirection: -1 | 1 | 0 = 0;
 
   const isSettingsOpen = () => Boolean(root.querySelector('[data-screen-id="settings"]'));
 
@@ -66,15 +59,26 @@ export function installSettingsAdjustmentRuntime(
   const clearEditing = () => {
     editingId = null;
     previousPadDirection = 0;
+    pendingDirection = 0;
+    if (applyFrame) cancelAnimationFrame(applyFrame);
+    applyFrame = 0;
     markEditing();
   };
 
+  // The old path reactivated and rebuilt the complete Settings screen several
+  // times per repeat tick. Coalesce to one mutation/render per animation frame.
   const apply = (direction: -1 | 1) => {
     if (!editingId || !isSettingsOpen()) return;
-    settings.setAdjustmentDirection(direction);
-    originalActivate("settings", editingId);
-    window.setTimeout(markEditing, 0);
-    window.setTimeout(markEditing, 35);
+    pendingDirection = direction;
+    if (applyFrame) return;
+    applyFrame = requestAnimationFrame(() => {
+      applyFrame = 0;
+      if (!editingId || !pendingDirection || !isSettingsOpen()) return;
+      settings.setAdjustmentDirection(pendingDirection);
+      pendingDirection = 0;
+      originalActivate("settings", editingId);
+      requestAnimationFrame(markEditing);
+    });
   };
 
   flow.onActivate = (screenId: string, choiceId: string) => {
@@ -148,11 +152,9 @@ export function installSettingsAdjustmentRuntime(
     const direction = dpadLeft || stickX < -0.7 ? -1 : dpadRight || stickX > 0.7 ? 1 : 0;
     const now = performance.now();
 
-    if (direction !== 0) {
-      if (direction !== previousPadDirection || now >= repeatAt) {
-        apply(direction as -1 | 1);
-        repeatAt = now + (direction !== previousPadDirection ? 330 : 115);
-      }
+    if (direction !== 0 && (direction !== previousPadDirection || now >= repeatAt)) {
+      apply(direction as -1 | 1);
+      repeatAt = now + (direction !== previousPadDirection ? 300 : 105);
     }
 
     previousPadDirection = direction;
@@ -182,7 +184,10 @@ export function installSettingsAdjustmentRuntime(
     document.head.appendChild(style);
   }
 
-  window.addEventListener("beforeunload", () => cancelAnimationFrame(frame), { once: true });
+  window.addEventListener("beforeunload", () => {
+    cancelAnimationFrame(frame);
+    if (applyFrame) cancelAnimationFrame(applyFrame);
+  }, { once: true });
 }
 
 function activeGamepad(): Gamepad | null {
