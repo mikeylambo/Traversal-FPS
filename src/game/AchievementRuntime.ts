@@ -25,9 +25,15 @@ export function installAchievementRuntime(
 ): void {
   const state = game as unknown as RuntimeState;
 
+  syncMainMenuAchievementCount(progression);
+
   progression.onUnlock((achievement) => {
     showAchievementToast(achievement);
     emitTraversalAudio("achievement.unlock");
+    // The Achievements screen already refreshes from main.ts. Keep the main-menu
+    // summary in the same live state so it can never say 0 while the detail screen
+    // shows unlocked entries.
+    queueMicrotask(() => syncMainMenuAchievementCount(progression));
   });
 
   const originalShoot = state.shoot.bind(game);
@@ -78,6 +84,30 @@ export function installAchievementRuntime(
     if (modeId === "time-trial") void progression.unlock("time-trial-clear");
     void progression.recordRun(contentId, modeId, elapsed);
   };
+}
+
+function syncMainMenuAchievementCount(progression: TraversalProgression): void {
+  const choice = document.querySelector<HTMLElement>(
+    '[data-screen-id="main-menu"] [data-choice-id="achievements"]'
+  );
+  if (!choice) return;
+
+  const text = `${progression.snapshot().achievements.length} / ${ACHIEVEMENTS.length}`;
+  const description = choice.querySelector<HTMLElement>(
+    ".slu-choice-description, .slu-choice-desc, [class*='description'], small"
+  );
+  if (description) {
+    description.textContent = text;
+    return;
+  }
+
+  let fallback = choice.querySelector<HTMLElement>(".traversal-achievement-count");
+  if (!fallback) {
+    fallback = document.createElement("small");
+    fallback.className = "traversal-achievement-count";
+    choice.appendChild(fallback);
+  }
+  fallback.textContent = text;
 }
 
 function unlockTrainingRoom(progression: TraversalProgression, roomIndex: number): void {
