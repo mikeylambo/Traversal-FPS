@@ -10,13 +10,18 @@ type RuntimeState = {
   warps: number;
   roomRestarts: number;
   shotAllowance: number;
+  camera: { position: any };
   warp: {
     hasAnchor(): boolean;
     selectionPercent(): number;
+    updateLiveOrigin(position: any): void;
+    clearAnchor(): void;
   };
   input: {
     isWarpHeld(): boolean;
   };
+  update(dt: number): void;
+  shoot(): void;
   updateHUD(): void;
 };
 
@@ -64,6 +69,20 @@ export function installGameplayClarity(game: object): void {
     <div id="shot-budget-pips"></div>
   `;
   hud.appendChild(budget);
+
+  const originalUpdate = state.update.bind(game);
+  state.update = (dt: number) => {
+    if (state.warp.hasAnchor()) state.warp.updateLiveOrigin(state.camera.position);
+    originalUpdate(dt);
+  };
+
+  const originalShoot = state.shoot.bind(game);
+  state.shoot = () => {
+    // Any new fire input while Warp is held replaces the pending destination.
+    // If that shot misses/rejects, there is no stale older target to commit to.
+    if (state.input.isWarpHeld() && state.warp.hasAnchor()) state.warp.clearAnchor();
+    originalShoot();
+  };
 
   const originalHUD = state.updateHUD.bind(game);
   state.updateHUD = () => {
