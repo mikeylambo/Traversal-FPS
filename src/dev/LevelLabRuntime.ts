@@ -183,7 +183,7 @@ export function installLevelLab(game: object, content: ContentRuntime, shell: Sh
           ${thumbSvg(d.room, true)}
           <div class="lab-metrics">
             <span>PLATFORMS <b>${stats.platforms}</b></span>
-            <span>SPHERES <b>${stats.enemies}</b></span>
+            <span>ACTORS <b>${stats.actors}</b></span>
             <span>HAZARDS <b>${stats.hazards}</b></span>
             <span>PAR <b>${d.room.requiredKills}</b></span>
             <span>SPAN <b>${stats.spanX.toFixed(0)}×${stats.spanZ.toFixed(0)}</b></span>
@@ -764,7 +764,7 @@ function cardHtml(d: RoomDescriptor, triage: Triage, nearest?: { score: number }
       <strong>${esc(d.label)}</strong>
       <small>${esc(d.sublabel)}</small>
       <div class="lab-card-meta">
-        <span>P${stats.platforms}</span><span>S${stats.enemies}</span><span>H${stats.hazards}</span>
+        <span>P${stats.platforms}</span><span>V${stats.vectors}</span><span>U${stats.utility}</span><span>H${stats.hazards}</span>
         <span>PAR ${d.room.requiredKills}</span>
         <span class="${report.errors ? "bad" : report.warnings ? "warn" : "ok"}">${report.errors ? `${report.errors}E` : report.warnings ? `${report.warnings}W` : "PASS"}</span>
         ${nearest && nearest.score > 0.82 ? `<span class="warn">SIM ${Math.round(nearest.score * 100)}%</span>` : ""}
@@ -793,6 +793,15 @@ function thumbSvg(room: RoomSpec, large: boolean): string {
     const wall = p.size[1] > 2.4;
     parts.push(`<rect x="${px.toFixed(1)}" y="${py.toFixed(1)}" width="${pw.toFixed(1)}" height="${ph.toFixed(1)}" class="${wall ? "wall" : "platform"}"/>`);
   }
+  for (const p of room.platforms) {
+    if (!p.motion || p.motion.axis === "y") continue;
+    const cx = x(p.center[0]), cy = y(p.center[2]);
+    if (p.motion.axis === "x") {
+      parts.push(`<line x1="${x(p.center[0] - p.motion.amplitude)}" y1="${cy}" x2="${x(p.center[0] + p.motion.amplitude)}" y2="${cy}" class="motion"/>`);
+    } else if (p.motion.axis === "z") {
+      parts.push(`<line x1="${cx}" y1="${y(p.center[2] - p.motion.amplitude)}" x2="${cx}" y2="${y(p.center[2] + p.motion.amplitude)}" class="motion"/>`);
+    }
+  }
   for (const hazard of room.hazards ?? []) {
     const px = x(hazard.center[0] - hazard.size[0] / 2);
     const py = y(hazard.center[2] + hazard.size[2] / 2);
@@ -800,7 +809,14 @@ function thumbSvg(room: RoomSpec, large: boolean): string {
   }
   parts.push(`<line x1="${x(room.spawn[0])}" y1="${y(room.spawn[2])}" x2="${x(room.goal[0])}" y2="${y(room.goal[2])}" class="route"/>`);
   for (const enemy of room.enemies) {
-    parts.push(`<circle cx="${x(enemy.position[0])}" cy="${y(enemy.position[2])}" r="${large ? 4.2 : 2.7}" fill="#${actorColor(enemy.kind).toString(16).padStart(6,"0")}"/>`);
+    const color = `#${actorColor(enemy.kind).toString(16).padStart(6,"0")}`;
+    if (enemy.drift?.axis === "x") {
+      parts.push(`<line x1="${x(enemy.position[0] - enemy.drift.amplitude)}" y1="${y(enemy.position[2])}" x2="${x(enemy.position[0] + enemy.drift.amplitude)}" y2="${y(enemy.position[2])}" class="actor-motion" stroke="${color}"/>`);
+    }
+    if (enemy.orbit?.plane === "xz") {
+      parts.push(`<ellipse cx="${x(enemy.position[0])}" cy="${y(enemy.position[2])}" rx="${Math.abs(enemy.orbit.radiusA * scale)}" ry="${Math.abs(enemy.orbit.radiusB * scale)}" class="actor-motion" stroke="${color}"/>`);
+    }
+    parts.push(`<circle cx="${x(enemy.position[0])}" cy="${y(enemy.position[2])}" r="${large ? 4.2 : 2.7}" fill="${color}"/>`);
   }
   parts.push(`<polygon points="${x(room.spawn[0])},${y(room.spawn[2])-6} ${x(room.spawn[0])-5},${y(room.spawn[2])+4} ${x(room.spawn[0])+5},${y(room.spawn[2])+4}" class="spawn"/>`);
   parts.push(`<rect x="${x(room.goal[0])-4}" y="${y(room.goal[2])-4}" width="8" height="8" class="goal"/>`);
@@ -818,7 +834,7 @@ function compareHtml(a: RoomDescriptor, b: RoomDescriptor): string {
     </div>
     <div class="lab-compare-table">
       <span>PLATFORMS <b>${sa.platforms}</b> / <b>${sb.platforms}</b></span>
-      <span>SPHERES <b>${sa.enemies}</b> / <b>${sb.enemies}</b></span>
+      <span>VECTORS <b>${sa.vectors}</b> / <b>${sb.vectors}</b></span>
       <span>HAZARDS <b>${sa.hazards}</b> / <b>${sb.hazards}</b></span>
       <span>SPAN X <b>${sa.spanX.toFixed(0)}</b> / <b>${sb.spanX.toFixed(0)}</b></span>
       <span>SPAN Z <b>${sa.spanZ.toFixed(0)}</b> / <b>${sb.spanZ.toFixed(0)}</b></span>
@@ -851,7 +867,7 @@ function signature(room: RoomSpec): number[] {
   const actorKinds = ["sentry","drifter","shield","orbit","cube","diamond","prism"];
   const hazardKinds = ["lethal-field","sweep","sightline-gate","aperture-wall"];
   return [
-    norm(s.platforms, 16), norm(s.enemies, 12), norm(s.hazards, 6), norm(room.requiredKills, 10),
+    norm(s.platforms, 16), norm(s.actors, 12), norm(s.hazards, 6), norm(room.requiredKills, 10),
     norm(s.spanX, 50), norm(s.spanZ, 170), norm(s.height, 25),
     ...actorKinds.map((kind) => norm(room.enemies.filter((e) => e.kind === kind).length, 6)),
     ...hazardKinds.map((kind) => norm((room.hazards ?? []).filter((h) => h.kind === kind).length, 4)),
@@ -866,7 +882,9 @@ function roomStats(room: RoomSpec) {
   const b = bounds3(room);
   return {
     platforms: room.platforms.length,
-    enemies: room.enemies.length,
+    actors: room.enemies.length,
+    vectors: room.enemies.filter((e) => ["sentry", "drifter", "shield", "orbit"].includes(e.kind)).length,
+    utility: room.enemies.filter((e) => ["cube", "diamond", "prism"].includes(e.kind)).length,
     hazards: room.hazards?.length ?? 0,
     spanX: b.maxX - b.minX,
     spanZ: b.maxZ - b.minZ,
