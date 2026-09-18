@@ -130,6 +130,8 @@ body.level-lab-open #editor-toggle { opacity: 0; pointer-events: none; }
 .lab-thumb .wall { fill: #091321; stroke: #5ea0d2; stroke-width: 1.5; }
 .lab-thumb .hazard { fill: rgba(255,75,113,.18); stroke: #ff5d7e; stroke-width: 1; stroke-dasharray: 4 3; }
 .lab-thumb .route { stroke: rgba(196,238,255,.28); stroke-width: 1; stroke-dasharray: 4 4; }
+.lab-thumb .motion { stroke: rgba(104,231,255,.42); stroke-width: 1; stroke-dasharray: 3 3; }
+.lab-thumb .actor-motion { fill: none; stroke-width: 1; stroke-opacity: .42; stroke-dasharray: 3 3; }
 .lab-thumb .spawn { fill: #68f7c5; }
 .lab-thumb .goal { fill: #ffcf60; }
 .lab-card > strong {
