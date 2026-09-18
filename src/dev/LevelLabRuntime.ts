@@ -118,6 +118,7 @@ export function installLevelLab(game: object, content: ContentRuntime, shell: Sh
     root.hidden = !next;
     document.body.classList.toggle("level-lab-open", next);
     if (next) {
+      root.classList.remove("detail-open");
       resumeOnClose = shell.session.phase === "playing";
       if (resumeOnClose && shell.session.setPhase) {
         try { shell.session.setPhase("paused"); } catch { /* dev surface may bypass flow policy */ }
@@ -152,7 +153,7 @@ export function installLevelLab(game: object, content: ContentRuntime, shell: Sh
       if (family !== "all" && d.family !== family) return false;
       if (triageFilter !== "all" && (triage[d.key] ?? "untested") !== triageFilter) return false;
       if (!q) return true;
-      const haystack = [d.label, d.sublabel, d.mapId, d.sourceMapId, d.room.title, d.room.lesson, ...d.room.grammar]
+      const haystack = [d.label, d.sublabel, d.act, d.mapId, d.sourceMapId, d.room.title, d.room.lesson, ...d.room.grammar]
         .filter(Boolean).join(" ").toLowerCase();
       return haystack.includes(q);
     });
@@ -474,10 +475,15 @@ export function installLevelLab(game: object, content: ContentRuntime, shell: Sh
   }
 
   root.addEventListener("click", (event) => {
-    const target = (event.target as HTMLElement).closest<HTMLElement>("[data-lab-select],[data-lab-action],[data-lab-family],[data-lab-triage-filter],[data-lab-triage],[data-camera],[data-overlay]");
+    const target = (event.target as HTMLElement).closest<HTMLElement>("[data-lab-select],[data-lab-action],[data-lab-family],[data-lab-triage],[data-camera],[data-overlay]");
     if (!target) return;
 
-    if (target.dataset.labSelect) { selectByKey(target.dataset.labSelect); return; }
+    if (target.dataset.labSelect) {
+      const picked = descriptors.find((entry) => entry.key === target.dataset.labSelect);
+      if (picked && compareA) openCompare(picked);
+      else if (picked) selectByKey(picked.key);
+      return;
+    }
     if (target.dataset.labFamily) {
       family = target.dataset.labFamily as LabFamily | "all";
       root.querySelectorAll("[data-lab-family]").forEach((x) => x.classList.toggle("active", (x as HTMLElement).dataset.labFamily === family));
@@ -531,7 +537,8 @@ export function installLevelLab(game: object, content: ContentRuntime, shell: Sh
     if (action === "play-camera" && selected) play(selected, true);
     if (action === "editor") {
       const editorToggle = document.getElementById("editor-toggle") as HTMLButtonElement | null;
-      if (editorToggle) editorToggle.click();
+      setOpen(false);
+      if (editorToggle) requestAnimationFrame(() => editorToggle.click());
     }
   });
 
