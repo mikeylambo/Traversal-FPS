@@ -536,6 +536,10 @@ export function installLevelLab(game: object, content: ContentRuntime, shell: Sh
   });
 
   search.addEventListener("input", renderGrid);
+  root.querySelector<HTMLSelectElement>("[data-lab-triage-filter]")?.addEventListener("change", (event) => {
+    triageFilter = (event.currentTarget as HTMLSelectElement).value as Triage | "all";
+    renderGrid();
+  });
   toggle.addEventListener("click", () => setOpen(!open));
 
   window.addEventListener("keydown", (event) => {
@@ -734,10 +738,6 @@ function buildRoot(total: number): HTMLElement {
       <div class="lab-toast" data-lab-toast></div>
     </div>
   `;
-  const triageSelect = root.querySelector<HTMLSelectElement>("[data-lab-triage-filter]")!;
-  triageSelect.addEventListener("change", () => {
-    root.dispatchEvent(new CustomEvent("lab-triage-filter", { detail: triageSelect.value }));
-  });
   return root;
 }
 
