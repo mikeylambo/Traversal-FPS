@@ -8,6 +8,7 @@ import "./transition-minimal.css";
 import "./onboarding.css";
 import "./scope.css";
 import "./editor/editor.css";
+import "./level-lab.css";
 // Last, so its caps and contrast fixes win over the styles they moderate.
 import "./accessibility.css";
 import {
@@ -53,6 +54,7 @@ import { installCampaignFieldPresentation } from "./render/CampaignFieldPresenta
 import { installTraversalEditor } from "./editor/TraversalEditor";
 import { installEditorShortcut } from "./editor/EditorShortcutRuntime";
 import { installMapEditorNaming } from "./editor/MapEditorNamingRuntime";
+import { installLevelLab } from "./dev/LevelLabRuntime";
 import { PUZZLE_GRAMMAR_V1 } from "./world/puzzleGrammar";
 import { CAMPAIGN_MAPS } from "./world/campaign";
 import { CHALLENGE_ENTRIES, TIME_TRIAL_ENTRIES } from "./world/modeSuites";
@@ -416,6 +418,7 @@ installMovementAudioRuntime(game);
 installPlatformMotionAudioRuntime(game);
 installConstructAmbienceRuntime(game);
 installEditorShortcut();
+installLevelLab(game, contentRuntime, app.shell);
 game.start();
 
 console.info("Traversal FPS ready", {
