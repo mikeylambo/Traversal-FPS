@@ -267,15 +267,16 @@ export function installLevelLab(game: object, content: ContentRuntime, shell: Sh
 
   function play(d: RoomDescriptor, fromCamera = false): void {
     selected = d;
+    const cameraSpawn = fromCamera
+      ? [round(state.camera.position.x), round(state.camera.position.y), round(state.camera.position.z)] as [number, number, number]
+      : null;
     loadDescriptor(d);
-    if (fromCamera) {
+    if (cameraSpawn) {
       const room = content.activeRooms()[state.roomIndex];
-      room.spawn = [
-        round(state.camera.position.x),
-        round(state.camera.position.y),
-        round(state.camera.position.z)
-      ];
-      state.loadRoom(state.roomIndex);
+      if (room) {
+        room.spawn = cameraSpawn;
+        state.loadRoom(state.roomIndex);
+      }
     }
     clearDebug();
     setInspectMode(false);
@@ -307,10 +308,12 @@ export function installLevelLab(game: object, content: ContentRuntime, shell: Sh
       state.camera.lookAt(center);
     } else if (preset === "spawn") {
       const p = room.spawn;
+      state.camera.up.set(0, 1, 0);
       state.camera.position.set(p[0], p[1] + 0.4, p[2]);
       state.camera.lookAt(room.goal[0], room.goal[1] + 1.1, room.goal[2]);
     } else if (preset === "goal") {
       const p = room.goal;
+      state.camera.up.set(0, 1, 0);
       state.camera.position.set(p[0], p[1] + 1.2, p[2]);
       state.camera.lookAt(room.spawn[0], room.spawn[1] + 1.1, room.spawn[2]);
     } else {
