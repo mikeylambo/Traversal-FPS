@@ -131,7 +131,9 @@ export function installCampaignFlow(game: object, content: ContentRuntime): void
     originalActivate(screenId, choiceId);
 
     if (screenId === "main-menu" && choiceId === "play") refreshModeSelect();
-    if (screenId === "mode-select" && choiceId === "standard") refreshCampaignStageSelect();
+    // CampaignPersistenceRuntime owns the Campaign setup screens. Do not overwrite
+    // its New/Continue stage menu here; doing so creates a stage choice that the
+    // persistence flow intentionally rejects and leaves Campaign unable to launch.
   };
 
   refreshModeSelect();
