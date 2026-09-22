@@ -60,11 +60,24 @@ const CAMERA_SPEED = 22;
 const FAST_CAMERA_SPEED = 54;
 
 export function installLevelLab(game: object, content: ContentRuntime, shell: ShellLike): void {
-  const enabled = import.meta.env.DEV || new URLSearchParams(location.search).get("lab") === "1";
+  const params = new URLSearchParams(location.search);
+  const previewHost = location.hostname.endsWith(".vercel.app");
+  const enabled = import.meta.env.DEV || previewHost || params.get("lab") === "1";
   if (!enabled || matchMedia("(pointer: coarse)").matches) return;
 
   const state = game as unknown as RuntimeState;
-  const descriptors = buildDescriptors();
+  if (!state.scene || !state.camera || !state.input) {
+    console.warn("Level Lab unavailable: gameplay runtime is not ready.");
+    return;
+  }
+
+  let descriptors: RoomDescriptor[];
+  try {
+    descriptors = buildDescriptors();
+  } catch (error) {
+    console.error("Level Lab content atlas failed to build.", error);
+    return;
+  }
   const triage = readRecord<Triage>(TRIAGE_KEY);
   const notes = readRecord<string>(NOTE_KEY);
   const similarity = buildSimilarity(descriptors);
