@@ -66,7 +66,7 @@ function repairAscentRoom(room: RoomSpec): RoomSpec {
     if (index === 0) return { ...enemy, position: [-7, 14.2, -10] };
     if (index === 1) return { ...enemy, position: [7, 20.2, -5] };
     if (index === 2) return { ...enemy, position: [-6, 27.2, 0] };
-    if (index === 3) return { ...enemy, position: [0, 34, -8] };
+    if (index === 3) return { ...enemy, position: [-2, 31, -8] };
     if (index === 4) return { ...enemy, position: [0, 34.2, -8] };
     return { ...enemy, position: [0, 38.2, -8] };
   });
