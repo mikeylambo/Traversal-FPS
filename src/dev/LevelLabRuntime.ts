@@ -60,10 +60,9 @@ const CAMERA_SPEED = 22;
 const FAST_CAMERA_SPEED = 54;
 
 export function installLevelLab(game: object, content: ContentRuntime, shell: ShellLike): void {
-  const params = new URLSearchParams(location.search);
-  const previewHost = location.hostname.endsWith(".vercel.app");
-  const enabled = import.meta.env.DEV || previewHost || params.get("lab") === "1";
-  if (!enabled || matchMedia("(pointer: coarse)").matches) return;
+  // RC playtest tooling: install Level Lab in every browser build so F3 is
+  // deterministic on desktop, touch-capable laptops, previews and custom hosts.
+  // Shipping builds can gate this again once the release playtest is complete.
 
   const state = game as unknown as RuntimeState;
   if (!state.scene || !state.camera || !state.input) {
