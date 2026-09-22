@@ -3,7 +3,7 @@
   left: 22px;
   bottom: 22px;
   z-index: 920;
-  display: none;
+  display: block;
   padding: 9px 13px;
   border: 1px solid rgba(111, 238, 255, .34);
   background: rgba(3, 14, 24, .72);
@@ -13,9 +13,6 @@
   clip-path: polygon(0 0, calc(100% - 9px) 0, 100% 9px, 100% 100%, 9px 100%, 0 calc(100% - 9px));
   cursor: pointer;
 }
-
-body.playing #editor-toggle { display: block; }
-body.touch-device #editor-toggle { display: none !important; }
 
 #traversal-editor {
   position: fixed;
