@@ -41,6 +41,39 @@ function downloadJSON(filename: string, value: unknown): void {
   setTimeout(() => URL.revokeObjectURL(url), 0);
 }
 
+/**
+ * RC playtest repair for Sector 33. The authored divider used to enclose the
+ * spawn and also occlude the final target. Keep the visual idea, but preserve a
+ * readable first move and a valid final warp line.
+ */
+function repairAscentRoom(room: RoomSpec): RoomSpec {
+  if (room.id !== "sector-33-ascent") return room;
+
+  room.spawn = [-4, 2.2, 8];
+  room.lesson = "Height is the route. Move off the floor, then read upward through the alternating perches.";
+
+  const divider = room.platforms.find((platform) =>
+    Math.abs(platform.center[0]) < 0.01 &&
+    Math.abs(platform.center[1] - 18) < 0.01 &&
+    Math.abs(platform.center[2] - 4) < 0.01
+  );
+  if (divider) {
+    divider.center[1] = 8;
+    divider.size[1] = 16;
+  }
+
+  room.enemies = room.enemies.map((enemy, index) => {
+    if (index === 0) return { ...enemy, position: [-7, 14.2, -10] };
+    if (index === 1) return { ...enemy, position: [7, 20.2, -5] };
+    if (index === 2) return { ...enemy, position: [-6, 27.2, 0] };
+    if (index === 3) return { ...enemy, position: [0, 34, -8] };
+    if (index === 4) return { ...enemy, position: [0, 34.2, -8] };
+    return { ...enemy, position: [0, 38.2, -8] };
+  });
+
+  return room;
+}
+
 export function installContentRuntime(shell: any): ContentRuntime {
   const trainingRooms = structuredClone([...ROOMS, ...SPATIAL_ACTOR_TRAINING]) as RoomSpec[];
   let selectedMapId = "map-01";
@@ -102,7 +135,8 @@ export function installContentRuntime(shell: any): ContentRuntime {
 
     if (modeId === "standard") {
       activeForm = "campaign-field";
-      return structuredClone(map?.campaignRooms ?? []) as RoomSpec[];
+      const rooms = structuredClone(map?.campaignRooms ?? []) as RoomSpec[];
+      return rooms.map(repairAscentRoom);
     }
 
     if (modeId === "reversal") {
