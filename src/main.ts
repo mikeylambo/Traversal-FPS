@@ -418,8 +418,13 @@ installMovementAudioRuntime(game);
 installPlatformMotionAudioRuntime(game);
 installConstructAmbienceRuntime(game);
 installEditorShortcut();
-installLevelLab(game, contentRuntime, app.shell);
 game.start();
+
+try {
+  installLevelLab(game, contentRuntime, app.shell);
+} catch (error) {
+  console.error("Level Lab failed to initialize; gameplay remains available.", error);
+}
 
 console.info("Traversal FPS ready", {
   shellVersion: "1.0.2+settings+mode-replace",
