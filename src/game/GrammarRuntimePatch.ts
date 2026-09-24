@@ -2,6 +2,16 @@ import { CAMPAIGN_MAPS } from "../world/campaign";
 import { ROOMS } from "../world/stages";
 import type { ContentRuntime } from "./ContentRuntime";
 
+const SUITE_LABELS: Record<string, string> = {
+  "suite-time-trial": "Time Trial",
+  "suite-challenge": "Challenge",
+  "suite-reversal": "The Reverse"
+};
+
+function suiteLabel(contentId: string): string {
+  return SUITE_LABELS[contentId] ?? contentId.toUpperCase();
+}
+
 type ResultChoice = {
   id: string;
   label: string;
@@ -94,7 +104,7 @@ function rewriteResults(
   } else if (campaign) {
     subtitle = map?.label ?? "Sector Cleared";
   } else {
-    subtitle = `${subtitle} · ${contentId.toUpperCase()}`;
+    subtitle = `${subtitle} · ${suiteLabel(contentId)}`;
   }
 
   const sourceChoices = Array.isArray(payload.choices)

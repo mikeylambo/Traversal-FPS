@@ -11,13 +11,36 @@ import {
 } from "./campaign05to08";
 
 export function registerCampaign05to08(): void {
+  const reconfiguration = MAP_05_FIELD[0];
+
   // Playtest fix: Reconfiguration's final drifter was centered in front of the
   // last platform, so a full warp could resolve into empty space. Keep the
   // horizontal timing read, but move the endpoint locus onto the exit deck.
-  const reconfigFinal = MAP_05_FIELD[0]?.enemies.find((enemy) => enemy.id === "reconfig-final");
+  const reconfigFinal = reconfiguration?.enemies.find((enemy) => enemy.id === "reconfig-final");
   if (reconfigFinal) {
     reconfigFinal.position = [0, 3.2, -153];
     if (reconfigFinal.drift) reconfigFinal.drift.amplitude = 4.5;
+  }
+
+  // The first playtest also exposed moving endpoints whose cycles spent too much
+  // time outside the platform they visually belonged to. Keep the timing puzzle,
+  // but make the useful part of each cycle agree with the visible landing geometry.
+  const reconfigMid = reconfiguration?.enemies.find((enemy) => enemy.id === "reconfig-mid");
+  if (reconfigMid?.orbit) reconfigMid.orbit.radiusA = 5.2;
+
+  const reconfigLeft = reconfiguration?.enemies.find((enemy) => enemy.id === "reconfig-left");
+  if (reconfigLeft?.drift) reconfigLeft.drift.amplitude = 3.2;
+
+  const reconfigRight = reconfiguration?.enemies.find((enemy) => enemy.id === "reconfig-right");
+  if (reconfigRight?.orbit) reconfigRight.orbit.radiusB = 3.6;
+
+  // Gate A was reading like a large opaque obstruction rather than a timed line.
+  // Preserve the gate mechanic while giving the player more peripheral read and a
+  // slightly longer opening to parse its cycle on first contact.
+  const entryGate = reconfiguration?.hazards?.find((hazard) => hazard.id === "reconfig-gate-a");
+  if (entryGate) {
+    entryGate.size = [15, 7, 0.34];
+    if (entryGate.cycle) entryGate.cycle.openFor = 1.35;
   }
 
   const definitions = [

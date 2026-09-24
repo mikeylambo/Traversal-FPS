@@ -3,6 +3,7 @@ import { MAP_10_COURSE, MAP_10_FIELD } from "./campaign10";
 import { MAPS_11_TO_16 } from "./campaign11to16";
 import { MAPS_17_TO_24 } from "./campaign17to24";
 import { MAPS_25_TO_32 } from "./campaign25to32";
+import { MAPS_33_TO_42 } from "./campaign33to42";
 import type { RoomSpec } from "./stages";
 
 export type ExtendedCampaignMap = CampaignMapDefinition & {
@@ -28,6 +29,8 @@ export function registerCampaign10(): void {
     });
   }
 
+  // Legacy Acts II-III/early-IV maps keep their existing course material for now;
+  // the RC content pass can selectively replace them without breaking IDs.
   for (const map of [...MAPS_11_TO_16, ...MAPS_17_TO_24, ...MAPS_25_TO_32]) {
     const extended = map as ExtendedCampaignMap;
     extended.timeTrialRooms = map.courseRooms.map((room, index) => modeClone(
@@ -44,6 +47,14 @@ export function registerCampaign10(): void {
     const current = CAMPAIGN_MAPS.find((entry) => entry.id === map.id);
     if (current) Object.assign(current, extended);
     else CAMPAIGN_MAPS.push(extended);
+  }
+
+  // Sectors 33-42 are authored around missing spatial families and already carry
+  // bespoke TT/Challenge geometry where that family benefits those modes.
+  for (const map of MAPS_33_TO_42) {
+    const current = CAMPAIGN_MAPS.find((entry) => entry.id === map.id);
+    if (current) Object.assign(current, map);
+    else CAMPAIGN_MAPS.push(map);
   }
 }
 

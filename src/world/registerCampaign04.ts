@@ -16,9 +16,15 @@ export function registerCampaign04(): void {
   registerCampaign09();
   registerCampaign10();
 
+  // Expanded campaign cadence: Act I remains the tight eight-sector curriculum,
+  // then the later acts gain room for spatial-family variation without renumbering
+  // any of the existing sectors.
   for (const entry of CAMPAIGN_MAPS) {
     const sector = Number(entry.id.replace("map-", ""));
-    const act = sector <= 8 ? "ACT I" : sector <= 16 ? "ACT II" : sector <= 24 ? "ACT III" : "ACT IV";
-    if (!entry.label.startsWith(`${act} //`)) entry.label = `${act} // ${entry.label}`;
+    const act = sector <= 8 ? "ACT I" : sector <= 18 ? "ACT II" : sector <= 30 ? "ACT III" : "ACT IV";
+    if (!entry.label.startsWith(`${act} //`)) {
+      entry.label = entry.label.replace(/^ACT [IVX]+ \/\/ /, "");
+      entry.label = `${act} // ${entry.label}`;
+    }
   }
 }

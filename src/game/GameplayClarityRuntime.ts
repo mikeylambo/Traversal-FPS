@@ -1,3 +1,4 @@
+import * as THREE from "three";
 import { ROOMS } from "../world/stages";
 
 type RuntimeState = {
@@ -10,27 +11,37 @@ type RuntimeState = {
   warps: number;
   roomRestarts: number;
   shotAllowance: number;
+  camera: THREE.PerspectiveCamera;
+  platformMeshes: THREE.Mesh[];
+  shell: {
+    events: { on(event: string, handler: () => void): void };
+  };
   warp: {
     hasAnchor(): boolean;
     selectionPercent(): number;
+    syncOrigin(position: THREE.Vector3): void;
+    clearAnchor(): void;
+    setCommitValidator(validator: ((from: THREE.Vector3, to: THREE.Vector3) => boolean) | null): void;
   };
   input: {
     isWarpHeld(): boolean;
   };
+  update(dt: number): void;
+  shoot(): void;
   updateHUD(): void;
+  flashMessage(message: string, duration: number): void;
 };
 
 const touchHUD = navigator.maxTouchPoints > 0 || matchMedia("(pointer: coarse)").matches;
 
-/**
- * Keeps the signature spatial information large and immediate. Campaign is
- * intentionally sparse: location + sphere progress are enough during play.
- */
 export function installGameplayClarity(game: object): void {
   const state = game as unknown as RuntimeState;
   const hud = document.getElementById("hud");
   if (!hud) return;
 
+  installMenuPresentation();
+  installPauseContext(state);
+  installLiveWarpGrammar(state, game);
   document.querySelector("#mission-panel .hud-eyebrow")?.remove();
 
   const stopShort = document.createElement("section");
@@ -44,13 +55,9 @@ export function installGameplayClarity(game: object): void {
   `;
   hud.appendChild(stopShort);
 
-  /* The legacy vector console duplicates the landing instrument and uses older
-     terminology. Keep one authoritative readout on every platform. */
   document.getElementById("vector-console")?.style.setProperty("display", "none", "important");
 
   if (touchHUD) {
-    /* Mobile keeps its own compact presentation so desktop sizing never leaks into
-       the phone HUD, but the semantics are identical to desktop. */
     stopShort.style.setProperty("display", "none", "important");
 
     const mobileLanding = document.createElement("section");
@@ -79,11 +86,166 @@ export function installGameplayClarity(game: object): void {
     originalHUD();
     document.getElementById("vector-console")?.style.setProperty("display", "none", "important");
     normalizeSpatialLanguage();
-    simplifyCampaignHUD(state);
+    updateRoomIdentity(state);
+    simplifyModeHUD(state);
     updateStopShort(state);
     updateShotBudget(state);
     emphasizeTrainingStopShort(state);
   };
+}
+
+function installLiveWarpGrammar(state: RuntimeState, game: object): void {
+  const collisionRay = new THREE.Raycaster();
+  state.warp.setCommitValidator((from, to) => {
+    const direction = to.clone().sub(from);
+    const distance = direction.length();
+    if (distance <= 0.5) return true;
+
+    collisionRay.set(from, direction.normalize());
+    // Contact at the destination platform is valid. Anything meaningfully before
+    // the selected landing is solid route geometry and blocks the warp.
+    collisionRay.far = Math.max(0, distance - 0.48);
+    const blocked = collisionRay.intersectObjects(state.platformMeshes, false).length > 0;
+    if (blocked) state.flashMessage("VECTOR BLOCKED // SOLID GEOMETRY", 1050);
+    return !blocked;
+  });
+
+  const originalUpdate = state.update.bind(game);
+  state.update = (dt: number) => {
+    if (state.warp.hasAnchor()) state.warp.syncOrigin(state.camera.position);
+    originalUpdate(dt);
+    // Movement occurs inside the original update. Refresh once more so the visible
+    // line ends the frame at the same origin the player will commit from.
+    if (state.warp.hasAnchor()) state.warp.syncOrigin(state.camera.position);
+  };
+
+  const originalShoot = state.shoot.bind(game);
+  state.shoot = () => {
+    const replacingHeldVector = state.input.isWarpHeld() && state.warp.hasAnchor();
+    const shotsBefore = state.shots;
+    const killsBefore = state.totalKills;
+    originalShoot();
+
+    // A successful second Sphere writes its own destination. A miss, wall hit or
+    // rejected shot while Warp is held cancels the old destination instead of
+    // silently preserving it and warping the player somewhere they no longer chose.
+    if (
+      replacingHeldVector &&
+      state.shots > shotsBefore &&
+      state.totalKills === killsBefore
+    ) {
+      state.warp.clearAnchor();
+    }
+  };
+}
+
+function installPauseContext(state: RuntimeState): void {
+  state.shell.events.on("game:pause", () => {
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const screen = document.querySelector<HTMLElement>(
+        '[data-screen-id="pause"], [data-screen-id="pause-menu"]'
+      );
+      if (!screen) return;
+
+      let context = screen.querySelector<HTMLElement>(".traversal-pause-context");
+      if (!context) {
+        context = document.createElement("div");
+        context.className = "traversal-pause-context";
+        const title = screen.querySelector("h1, h2, .slu-screen-title");
+        if (title?.parentElement) title.insertAdjacentElement("afterend", context);
+        else screen.prepend(context);
+      }
+      context.textContent = pauseContextText(state);
+    }));
+  });
+}
+
+function pauseContextText(state: RuntimeState): string {
+  const room = ROOMS[state.roomIndex];
+  if (!room) return "TRAVERSAL";
+
+  if (state.modeId === "standard") {
+    const sector = Number(room.id.match(/(?:sector|map)-(\d+)/)?.[1] ?? 0);
+    const number = sector > 0 ? String(sector).padStart(2, "0") : "--";
+    const act = sector > 30 ? "ACT IV" : sector > 18 ? "ACT III" : sector > 8 ? "ACT II" : "ACT I";
+    return `${act} · SECTOR ${number} // ${room.title}`;
+  }
+
+  if (state.modeId === "time-trial") return `TIME TRIAL · ${room.title}`;
+  if (state.modeId === "challenge") return `CHALLENGE · ${room.title}`;
+  if (state.modeId === "reversal") {
+    return `THE REVERSE · ${String(state.roomIndex + 1).padStart(2, "0")} // ${room.title}`;
+  }
+  return `TRAINING · ${room.title}`;
+}
+
+function installMenuPresentation(): void {
+  if (document.getElementById("traversal-menu-presentation")) return;
+  const style = document.createElement("style");
+  style.id = "traversal-menu-presentation";
+  style.textContent = `
+    .slu-screen[data-screen-id="main-menu"] {
+      background:
+        linear-gradient(104deg, rgba(2, 8, 18, .96) 0 38%, rgba(4, 13, 27, .82) 58%, rgba(1, 5, 12, .96) 100%),
+        radial-gradient(circle at 76% 35%, rgba(53, 214, 255, .13), transparent 24%),
+        radial-gradient(circle at 84% 66%, rgba(255, 72, 190, .08), transparent 28%);
+      overflow: hidden;
+    }
+    .slu-screen[data-screen-id="main-menu"]::before {
+      content: "";
+      position: absolute;
+      inset: -12%;
+      pointer-events: none;
+      opacity: .34;
+      background-image:
+        linear-gradient(rgba(111, 228, 255, .055) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(111, 228, 255, .04) 1px, transparent 1px);
+      background-size: 42px 42px;
+      transform: perspective(700px) rotateX(62deg) rotateZ(-8deg) translateY(20%);
+      transform-origin: center bottom;
+      mask-image: linear-gradient(to left, #000, transparent 72%);
+    }
+    .slu-screen[data-screen-id="main-menu"] .slu-choice {
+      max-width: min(460px, 72vw);
+      min-height: 0;
+      padding-block: 10px;
+      background: rgba(3, 12, 24, .64);
+      border-color: rgba(111, 228, 255, .18);
+      backdrop-filter: blur(12px);
+    }
+    .slu-screen[data-screen-id="main-menu"] .slu-choice:nth-of-type(even) {
+      transform: translateX(8px);
+    }
+    .slu-screen[data-screen-id="main-menu"] .slu-choice:hover,
+    .slu-screen[data-screen-id="main-menu"] .slu-choice:focus-visible,
+    .slu-screen[data-screen-id="main-menu"] .slu-choice[data-focused="true"] {
+      transform: translateX(14px);
+    }
+    .slu-screen[data-screen-id="main-menu"] .slu-choice-description,
+    .slu-screen[data-screen-id="main-menu"] .slu-choice-desc,
+    .slu-screen[data-screen-id="main-menu"] [class*="description"],
+    .slu-screen[data-screen-id="main-menu"] small {
+      opacity: .52;
+      letter-spacing: .09em;
+    }
+    .traversal-pause-context {
+      margin: -2px 0 18px;
+      font-family: "Sora", sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .13em;
+      color: rgba(199, 242, 255, .72);
+      text-transform: uppercase;
+    }
+    .traversal-achievement-count {
+      display: block;
+      margin-top: 4px;
+      opacity: .52;
+      font-size: 10px;
+      letter-spacing: .09em;
+    }
+  `;
+  document.head.appendChild(style);
 }
 
 function normalizeSpatialLanguage(): void {
@@ -108,20 +270,38 @@ function normalizeSpatialLanguage(): void {
   }
 }
 
-function simplifyCampaignHUD(state: RuntimeState): void {
+function updateRoomIdentity(state: RuntimeState): void {
+  const room = ROOMS[state.roomIndex];
+  const roomLabel = document.getElementById("room-label");
+  if (!room || !roomLabel) return;
+
+  if (state.modeId === "standard") {
+    const sector = room.id.match(/(?:sector|map)-(\d+)/)?.[1]?.padStart(2, "0");
+    roomLabel.textContent = sector ? `${sector} // ${room.title}` : room.title;
+    return;
+  }
+
+  if (state.modeId === "reversal") {
+    roomLabel.textContent = `${String(state.roomIndex + 1).padStart(2, "0")} // ${room.title}`;
+    return;
+  }
+
+  roomLabel.textContent = room.title;
+}
+
+function simplifyModeHUD(state: RuntimeState): void {
   const campaign = state.modeId === "standard";
+  const reversal = state.modeId === "reversal";
   const metricPanel = document.getElementById("metric-panel");
-  if (metricPanel) metricPanel.hidden = campaign;
-  if (!campaign) return;
+  if (metricPanel) metricPanel.hidden = campaign || reversal;
 
   const room = ROOMS[state.roomIndex];
   if (!room) return;
-
-  const roomLabel = document.getElementById("room-label");
   const roomObjective = document.getElementById("room-objective");
 
-  if (roomLabel) roomLabel.textContent = room.title;
-  if (roomObjective) roomObjective.textContent = `${state.roomKills}/${room.requiredKills} SPHERES`;
+  if ((campaign || reversal) && roomObjective) {
+    roomObjective.textContent = `${state.roomKills}/${room.requiredKills} SPHERES`;
+  }
 }
 
 function updateStopShort(state: RuntimeState): void {

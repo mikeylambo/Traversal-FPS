@@ -40,7 +40,6 @@ const DRAFT_PREFIX = "traversal-vector-lab:v0:";
  */
 export function installTraversalEditor(game: object, content: ContentRuntime): void {
   const state = game as unknown as RuntimeState;
-  if (matchMedia("(pointer: coarse)").matches) return;
 
   const toggle = document.createElement("button");
   toggle.id = "editor-toggle";

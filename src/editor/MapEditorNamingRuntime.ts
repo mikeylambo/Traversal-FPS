@@ -1,9 +1,14 @@
+import { installRCEditorInputFix } from "./RCEditorInputFix";
+
 export function installMapEditorNaming(): void {
   const toggle = document.getElementById("editor-toggle");
   if (toggle) toggle.textContent = "F2 // MAP EDITOR";
 
   const panel = document.getElementById("traversal-editor");
-  if (!panel) return;
+  if (!panel) {
+    installRCEditorInputFix();
+    return;
+  }
 
   const header = panel.querySelector("header div");
   const kicker = header?.querySelector("span");
@@ -13,4 +18,5 @@ export function installMapEditorNaming(): void {
   if (kicker) kicker.textContent = "BUILD // TEST";
   if (title) title.textContent = "MAP EDITOR";
   if (footer) footer.textContent = "` / F2 TOGGLE // 0.5m SNAP";
+  installRCEditorInputFix();
 }

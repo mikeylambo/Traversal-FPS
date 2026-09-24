@@ -11,14 +11,20 @@ type RuntimeState = {
 };
 
 const TITLE_DURATION_MS = 2600;
-const ACT_BOUNDARIES: Record<string, { kicker: string; title: string }> = {
-  "map-08": { kicker: "ACT I // FINALE", title: "THE CONSTRUCT OPENS" },
-  "map-16": { kicker: "ACT II // FINALE", title: "DESCEND INTO THE MACHINE" },
-  "map-24": { kicker: "ACT III // FINALE", title: "THE SYSTEM TURNS HOSTILE" },
-  "map-32": { kicker: "ACT IV // FINALE", title: "THE VECTOR RETURNS" }
+const ACT_ENTRIES: Record<string, { kicker: string; title: string }> = {
+  "map-01": { kicker: "ACT I", title: "WRITE THE LANGUAGE" },
+  "map-09": { kicker: "ACT II", title: "THE MACHINE OPENS" },
+  "map-19": { kicker: "ACT III", title: "THE CONSTRUCT PUSHES BACK" },
+  "map-31": { kicker: "ACT IV", title: "MASTERY WITHOUT A MAP" }
+};
+const ACT_FINALES: Record<string, { kicker: string; title: string }> = {
+  "map-08": { kicker: "ACT I // FINALE", title: "TERMINAL VECTOR" },
+  "map-18": { kicker: "ACT II // FINALE", title: "SWEEP" },
+  "map-30": { kicker: "ACT III // FINALE", title: "KINETIC" },
+  "map-42": { kicker: "ACT IV // FINALE", title: "CONVERGENCE" }
 };
 
-/** Gives each content family a restrained entrance card and stronger Act-boundary punctuation. */
+/** Gives each content family a restrained entrance card and stronger Act punctuation. */
 export function installSectorTransitions(game: object, content: ContentRuntime): void {
   const state = game as unknown as RuntimeState;
   const overlay = document.createElement("div");
@@ -56,43 +62,48 @@ function showTransition(
   const contentId = content.selectedContentId();
   const map = CAMPAIGN_MAPS.find((entry) => entry.id === contentId);
   const sectorNumber = map?.id.match(/(\d+)/)?.[1]?.padStart(2, "0") ?? "01";
-  const mapTitle = map?.label.replace(/^SECTOR \d+ \/\/ /, "") ?? "THE SPAN";
-  const boundary = state.modeId === "standard" ? ACT_BOUNDARIES[contentId] : undefined;
+  const mapTitle = map?.label.replace(/^ACT [IVX]+ \/\/ /, "").replace(/^SECTOR \d+ \/\/ /, "") ?? "THE SPAN";
+  const campaign = state.modeId === "standard";
+  const actEntry = campaign ? ACT_ENTRIES[contentId] : undefined;
+  const finale = campaign ? ACT_FINALES[contentId] : undefined;
+  const major = actEntry ?? finale;
 
-  document.body.classList.toggle("act-boundary", Boolean(boundary));
+  document.body.classList.toggle("act-boundary", Boolean(major));
+  document.body.classList.toggle("act-entry", Boolean(actEntry));
+  document.body.classList.toggle("act-finale", Boolean(finale));
 
-  if (boundary) {
-    kicker.textContent = boundary.kicker;
-    title.textContent = boundary.title;
+  if (major) {
+    kicker.textContent = major.kicker;
+    title.textContent = major.title;
   } else if (contentId === "controls") {
     kicker.textContent = "TRAINING";
     title.textContent = "CONTROLS";
   } else if (contentId === "training") {
     kicker.textContent = "TRAINING";
     title.textContent = "VECTOR FUNDAMENTALS";
-  } else if (state.modeId === "standard") {
+  } else if (campaign) {
     kicker.textContent = `SECTOR ${sectorNumber}`;
     title.textContent = mapTitle;
   } else if (state.modeId === "time-trial") {
     kicker.textContent = "TIME TRIAL";
-    title.textContent = mapTitle;
+    title.textContent = content.activeRooms()[state.roomIndex]?.title ?? mapTitle;
   } else if (state.modeId === "reversal") {
     kicker.textContent = "THE REVERSE";
     title.textContent = content.activeRooms()[state.roomIndex]?.title ?? "LABYRINTH";
   } else {
     kicker.textContent = "CHALLENGE";
-    title.textContent = mapTitle;
+    title.textContent = content.activeRooms()[state.roomIndex]?.title ?? mapTitle;
   }
 
   overlay.dataset.serial = String(serial);
   overlay.classList.remove("show");
   void overlay.offsetWidth;
   overlay.classList.add("show");
-  emitTraversalAudio("sector.enter", { campaign: state.modeId === "standard" });
+  emitTraversalAudio("sector.enter", { campaign });
   window.setTimeout(() => {
     if (overlay.dataset.serial === String(serial)) {
       overlay.classList.remove("show");
-      document.body.classList.remove("act-boundary");
+      document.body.classList.remove("act-boundary", "act-entry", "act-finale");
     }
-  }, boundary ? TITLE_DURATION_MS + 700 : TITLE_DURATION_MS);
+  }, major ? TITLE_DURATION_MS + 950 : TITLE_DURATION_MS);
 }

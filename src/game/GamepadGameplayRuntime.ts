@@ -1,6 +1,8 @@
+import * as THREE from "three";
 import { setTraversalAudioSuspended } from "../audio/TraversalAudio";
 import { resolveTraversalAction } from "../input/TraversalBindings";
 import type { TraversalActionId } from "../input/TraversalActions";
+import type { WarpSystem } from "../traversal/WarpSystem";
 import { installAimAssistRuntime } from "./AimAssistRuntime";
 import type { TraversalSettingsStore } from "./TraversalSettings";
 
@@ -17,6 +19,9 @@ type GameplayInput = {
 
 type RuntimeState = {
   input: GameplayInput;
+  warp: WarpSystem;
+  camera: THREE.PerspectiveCamera;
+  platformMeshes: THREE.Mesh[];
   shell: {
     events: { on(event: string, handler: () => void): void };
   };
@@ -42,12 +47,9 @@ type PadFrame = {
 
 const BASE_LOOK_X = 15.5;
 const BASE_LOOK_Y = 13.5;
+const WARP_ENGAGE = 0.42;
+const WARP_RELEASE_HOLD = 0.18;
 
-/**
- * The Shell owns menu-pad navigation. Traversal owns gameplay-pad input.
- * Bindings resolve from the persistent semantic action store every frame, so a
- * future remap UI can apply changes immediately without rebuilding gameplay.
- */
 export function installGamepadGameplay(game: object, settings: TraversalSettingsStore): void {
   const state = game as unknown as RuntimeState;
   const input = state.input;
@@ -66,13 +68,48 @@ export function installGamepadGameplay(game: object, settings: TraversalSettings
   let frame: PadFrame = emptyFrame();
   let previousButtons: boolean[] = [];
   let previousWarp = false;
+  let warpReleaseCandidateFrames = 0;
   let adjustRepeatAt = 0;
+
+  // Only tall platform meshes act as hard warp blockers. Floors remain valid
+  // Stop Short landing surfaces, while walls cannot be phased through anymore.
+  const blockerRay = new THREE.Raycaster();
+  state.warp.setCommitValidator((from, to) => {
+    const direction = to.clone().sub(from);
+    const distance = direction.length();
+    if (distance <= 0.2) return true;
+    blockerRay.set(from, direction.normalize());
+    blockerRay.far = Math.max(0, distance - 0.22);
+    const hardWalls = state.platformMeshes.filter((mesh) => {
+      const geometry = mesh.geometry as THREE.BoxGeometry;
+      const height = Number(geometry.parameters?.height ?? 1);
+      return height > 2.4;
+    });
+    const blocked = blockerRay.intersectObjects(hardWalls, false).length > 0;
+    if (blocked) state.flashMessage("VECTOR BLOCKED // FIND A CLEAR LINE", 900);
+    return !blocked;
+  });
 
   const originalUpdate = state.update.bind(game);
   state.update = (dt: number) => {
+    state.warp.syncOrigin(state.camera.position);
     frame = pollGamepad(dt, previousButtons, previousWarp, adjustRepeatAt, settings);
+
+    if (previousWarp && !frame.warpHeld) {
+      warpReleaseCandidateFrames += 1;
+      frame.warpReleased = warpReleaseCandidateFrames >= 2;
+    } else {
+      warpReleaseCandidateFrames = 0;
+      frame.warpReleased = false;
+    }
+
     previousButtons = currentButtons();
-    previousWarp = frame.warpHeld;
+    previousWarp = frame.warpHeld || (previousWarp && warpReleaseCandidateFrames === 1);
+    if (frame.warpReleased) {
+      previousWarp = false;
+      warpReleaseCandidateFrames = 0;
+    }
+
     if (frame.wheelDelta !== 0) {
       adjustRepeatAt = performance.now() + 82;
       if (settings.value.accessibility.haptics) rumbleLandingAdjustment();
@@ -82,6 +119,7 @@ export function installGamepadGameplay(game: object, settings: TraversalSettings
       window.dispatchEvent(new CustomEvent("traversal:scope-toggle", { detail: { source: "gamepad" } }));
     }
     originalUpdate(dt);
+    state.warp.syncOrigin(state.camera.position);
   };
 
   input.movement = () => {
@@ -97,7 +135,11 @@ export function installGamepadGameplay(game: object, settings: TraversalSettings
     return { x: base.x + frame.lookX, y: base.y + frame.lookY };
   };
 
-  input.consumeFire = () => original.consumeFire() || frame.firePressed;
+  input.consumeFire = () => {
+    const fired = original.consumeFire() || frame.firePressed;
+    if (fired && input.isWarpHeld() && state.warp.hasAnchor()) state.warp.clearAnchor();
+    return fired;
+  };
   input.isCrouchHeld = () => original.isCrouchHeld() || frame.crouchHeld;
   input.isWarpHeld = () => original.isWarpHeld() || frame.warpHeld;
   input.consumeWarpRelease = () => original.consumeWarpRelease() || frame.warpReleased;
@@ -109,11 +151,6 @@ export function installGamepadGameplay(game: object, settings: TraversalSettings
   installAudioPauseLifecycle(state);
 }
 
-/**
- * Input/accessibility options that need the fully-combined keyboard, touch and
- * gamepad stream live here so they do not duplicate binding logic in each device
- * implementation. Touch crouch is already latched by FPSInput and stays that way.
- */
 function installComfortAccessLayer(state: RuntimeState, settings: TraversalSettingsStore): void {
   const input = state.input;
 
@@ -132,7 +169,6 @@ function installComfortAccessLayer(state: RuntimeState, settings: TraversalSetti
   input.isCrouchHeld = () => {
     const held = originalCrouch();
 
-    // Touch already uses tap-to-toggle, independent of the sustained-input option.
     if (document.body.classList.contains("touch-device")) {
       wasHeld = held;
       return held;
@@ -186,15 +222,18 @@ function pollGamepad(
   const [moveXIndex, moveYIndex] = axisPair("move", [0, 1]);
   const [lookXIndex, lookYIndex] = axisPair("look", [2, 3]);
   const aim = settings.value;
+  const xboxLike = /xbox|xinput/i.test(pad.id);
+  const moveDeadzone = Math.max(aim.controllerMoveDeadzone, xboxLike ? 0.20 : 0.12);
+  const lookDeadzone = Math.max(aim.controllerRightDeadzone, xboxLike ? 0.14 : 0.08);
   const left = curveMoveVector(
     pad.axes[moveXIndex] ?? 0,
     pad.axes[moveYIndex] ?? 0,
-    aim.controllerMoveDeadzone
+    moveDeadzone
   );
   const right = curveLookVector(
     pad.axes[lookXIndex] ?? 0,
     pad.axes[lookYIndex] ?? 0,
-    aim.controllerRightDeadzone,
+    lookDeadzone,
     aim.controllerLookAcceleration
   );
 
@@ -208,7 +247,10 @@ function pollGamepad(
 
   const fireHeld = maxButtonValue(pad, fireIndices) > 0.45;
   const previousFire = anyPrevious(previousButtons, fireIndices);
-  const warpHeld = maxButtonValue(pad, warpIndices) > 0.32;
+  const warpValue = maxButtonValue(pad, warpIndices);
+  const warpHeld = previousWarp
+    ? warpValue > WARP_RELEASE_HOLD
+    : warpValue > WARP_ENGAGE;
 
   const shorten = anyPressed(buttons, shorterIndices);
   const extend = anyPressed(buttons, longerIndices);
@@ -233,7 +275,7 @@ function pollGamepad(
     firePressed: fireHeld && !previousFire,
     crouchHeld: anyPressed(buttons, crouchIndices),
     warpHeld,
-    warpReleased: previousWarp && !warpHeld,
+    warpReleased: false,
     wheelDelta,
     resetPressed: anyPressed(buttons, resetIndices) && !anyPrevious(previousButtons, resetIndices),
     scopePressed: anyPressed(buttons, scopeIndices) && !anyPrevious(previousButtons, scopeIndices)

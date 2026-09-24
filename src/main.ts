@@ -8,6 +8,7 @@ import "./transition-minimal.css";
 import "./onboarding.css";
 import "./scope.css";
 import "./editor/editor.css";
+import "./level-lab.css";
 // Last, so its caps and contrast fixes win over the styles they moderate.
 import "./accessibility.css";
 import {
@@ -53,6 +54,7 @@ import { installCampaignFieldPresentation } from "./render/CampaignFieldPresenta
 import { installTraversalEditor } from "./editor/TraversalEditor";
 import { installEditorShortcut } from "./editor/EditorShortcutRuntime";
 import { installMapEditorNaming } from "./editor/MapEditorNamingRuntime";
+import { installLevelLab } from "./dev/LevelLabRuntime";
 import { PUZZLE_GRAMMAR_V1 } from "./world/puzzleGrammar";
 import { CAMPAIGN_MAPS } from "./world/campaign";
 import { CHALLENGE_ENTRIES, TIME_TRIAL_ENTRIES } from "./world/modeSuites";
@@ -74,7 +76,7 @@ const rendererAdapter = createThreeStarterAdapter(canvas);
 const app = await createGameApp({
   gameId: "traversal-fps",
   gameName: "Traversal FPS",
-  version: "0.14.0-alpha-reversal",
+  version: "0.15.0-rc-content",
   renderer: rendererAdapter,
   root: uiRoot,
   assemblies: [
@@ -170,8 +172,6 @@ const traversalDifficulties = [
 app.shell.modes.replace(traversalModes);
 app.shell.difficulty.register(traversalDifficulties);
 
-// Every sound in the game — authored, procedural, positional — runs through the
-// bus graph these three sliders drive, so the Settings screen stays accurate.
 configureTraversalAudio(() => {
   const shellSettings = app.shell.settings.snapshot();
   return {
@@ -180,12 +180,7 @@ configureTraversalAudio(() => {
     sfx: Number(shellSettings.sfxVolume ?? 1)
   };
 });
-// Deliberately not awaited: the core SFX set warms in the background while the
-// player is still in the menus, so first Campaign entry never waits on audio.
 void preloadCoreTraversalAudio();
-// Body foley is intentionally outside the certified boot bundle. Warm it while
-// the player is still in menus so first use is authored audio without bloating
-// the <=700 KB core SFX budget.
 void preloadTraversalAudioEvents([
   "movement.land-light",
   "movement.land-heavy",
@@ -200,7 +195,7 @@ const contentRuntime = installContentRuntime(app.shell);
 
 const reversalUnlocked = () => {
   const snapshot = progression.snapshot();
-  return snapshot.campaign.completed || snapshot.completedMaps.includes("map-32");
+  return snapshot.campaign.completed || snapshot.completedMaps.includes("map-42");
 };
 
 app.ui.register([
@@ -229,7 +224,7 @@ const refreshModeSelect = () => {
       id: mode.id,
       label: mode.label,
       description: mode.id === "reversal" && !postgameOpen
-        ? "LOCKED // Clear Sector 32 to expose the hidden side of the Construct."
+        ? "LOCKED // Clear the Campaign to expose the hidden side of the Construct."
         : mode.description,
       disabled: mode.id === "reversal" && !postgameOpen
     }))
@@ -295,7 +290,7 @@ app.ui.updateScreen("credits", {
     { id: "credit-tech", label: "Technology // Three.js + SLU Web Game Shell", disabled: true },
     { id: "credit-type", label: "Typography // Rajdhani + Sora", disabled: true },
     { id: "credit-tools", label: "Development Assistance // OpenAI + Anthropic", disabled: true },
-    { id: "credit-build", label: "Build // v0.14 Alpha Reversal", description: "32 Campaign sectors // 8 Reversal chambers // 24 Challenges // 16 Time Trials", disabled: true }
+    { id: "credit-build", label: "Build // v0.15 RC Content", description: "42 Campaign sectors // 8 Reversal chambers // 24 Challenges // 16 Time Trials", disabled: true }
   ]
 });
 
@@ -335,8 +330,8 @@ app.flow.onActivate = (screenId: string, choiceId: string) => {
         choices: [
           {
             id: "suite-time-trial",
-            label: "Full Time Trial Suite // 01–16",
-            description: "Canonical back-to-back optimization run. Provisional medal pars are shown inside each course."
+            label: "Time Trial // 01–16",
+            description: "Sixteen curated route races with medals and distinct spatial families."
           },
           ...sectorChoices(choiceId)
         ]
@@ -347,8 +342,8 @@ app.flow.onActivate = (screenId: string, choiceId: string) => {
         choices: [
           {
             id: "suite-challenge",
-            label: "Full Challenge Suite // 01–24",
-            description: "Canonical back-to-back mastery run: Precision → Logic → Flow → Synthesis."
+            label: "Challenge // 01–24",
+            description: "Precision → Logic → Flow → Synthesis."
           },
           ...sectorChoices(choiceId)
         ]
@@ -361,7 +356,7 @@ app.flow.onActivate = (screenId: string, choiceId: string) => {
           {
             id: "suite-reversal",
             label: "Enter the Labyrinth // 01–08",
-            description: "Eight authored postgame chambers. No new verbs. No tutorialization. Find the way back."
+            description: "Eight postgame chambers. Find the way back."
           }
         ]
       });
@@ -425,46 +420,18 @@ installConstructAmbienceRuntime(game);
 installEditorShortcut();
 game.start();
 
+try {
+  installLevelLab(game, contentRuntime, app.shell);
+} catch (error) {
+  console.error("Level Lab failed to initialize; gameplay remains available.", error);
+}
+
 console.info("Traversal FPS ready", {
   shellVersion: "1.0.2+settings+mode-replace",
   shellCommit: "d45d5b89b56eb65cf10cc25ef3a89595d63f6b3f",
-  gameVersion: "0.14.0-alpha-reversal",
-  renderTarget: "Vector Surface",
-  typography: "Rajdhani / Sora",
-  starfield: "shader-twinkle",
-  movement: "run + crouch + warp + one-step rewind",
-  controller: "left move // right look // RT fire // LT warp // RB shorter // LB longer // L3-B crouch // R3 scope // Y rewind // X reset",
-  controllerAim: "horizontal 1-10 // vertical 1-10 // acceleration 0-5 // scope multiplier // separate move/look deadzones",
-  controls: "semantic bindings // persistent overrides // Settings > Controls",
-  scope: "R3 / Q / touch toggle // precision look // 36-48 degree FOV",
-  campaignScoring: "no live score // sphere progress + completion stats",
-  campaignFlow: "new-continue before difficulty // implemented sectors chain // Sector 32 unlocks THE REVERSE",
-  landingAssist: "warp arrival cushion + ground-below placement cue + audited campaign sphere vectors",
-  exitGate: "dormant until required spheres resolved",
-  rewind: "Campaign/Training only // last movement only // firing cancels",
-  settingsFocus: "select row // left-right adjust // selection retained",
-  rifleCadenceMs: 320,
-  stopShortStepPercent: 4,
-  feelPass: "provisionally certified",
-  autoStepMeters: 0.38,
-  puzzleGrammar: PUZZLE_GRAMMAR_V1.map((entry) => entry.id),
-  trainingRooms: 12,
-  modeSuites: { timeTrials: TIME_TRIAL_ENTRIES.length, challenges: CHALLENGE_ENTRIES.length, reversal: REVERSAL_LABYRINTH_ROOMS.length },
-  onboarding: "action-gated controls // keyboard + controller + touch",
-  campaignMaps: CAMPAIGN_MAPS.map((map) => ({
-    id: map.id,
-    implemented: map.implemented,
-    campaignFields: map.campaignRooms.length,
-    courseRooms: map.courseRooms.length
-  })),
-  achievements: ACHIEVEMENTS.length,
-  hazards: ["lethal-field", "sweep", "sightline-gate", "aperture-wall"],
-  audio: "authored + approved generated SFX through shared buses // movement foley // moving-platform bed // Construct ambience // positional hazards",
-  accessibility: "reduce flash // reduce motion // colour profile + shape/rate cues // HUD contrast // UI text scale // CVD preview",
-  spatialActors: "sphere movement // cube state // diamond motion // prism energy // gravity ring progression",
-  postgame: "THE REVERSE // 8-chamber authored labyrinth // unlocked by Sector 32 clear",
-  editor: "development-only // F2 // backquote; public menu entry deferred",
-  mobileControls: true,
-  vrStatus: "future-compatible target; not current production scope",
-  assemblies: app.composer.listAssemblies()
+  puzzleGrammar: PUZZLE_GRAMMAR_V1.length,
+  campaignMaps: CAMPAIGN_MAPS.length,
+  timeTrials: TIME_TRIAL_ENTRIES.length,
+  challenges: CHALLENGE_ENTRIES.length,
+  reversalRooms: REVERSAL_LABYRINTH_ROOMS.length
 });

@@ -56,7 +56,7 @@ export const SPATIAL_ACTORS: readonly SpatialActorDefinition[] = [
     defaultOriginConstraint: {
       axis: "x",
       min: 2.5,
-      rejectMessage: "SPHERE REJECT // CHANGE YOUR FIRING ORIGIN"
+      rejectMessage: "FIRE FROM THE RIGHT SIDE"
     }
   },
   {
@@ -128,8 +128,30 @@ export function evaluateActorOrigin(
   const aboveMax = constraint.max !== undefined && value > constraint.max;
   if (!belowMin && !aboveMax) return { allowed: true };
 
+  // Prefer a concrete direction over implementation language such as
+  // "origin reject". These hints map directly to what the player should do next.
   return {
     allowed: false,
-    message: constraint.rejectMessage ?? "TARGET REJECT // CHANGE YOUR FIRING ORIGIN"
+    message: directionalOriginHint(constraint, belowMin, aboveMax)
   };
+}
+
+function directionalOriginHint(
+  constraint: OriginConstraint,
+  belowMin: boolean,
+  aboveMax: boolean
+): string {
+  if (constraint.axis === "x") {
+    if (belowMin) return "FIRE FROM THE RIGHT SIDE";
+    if (aboveMax) return "FIRE FROM THE LEFT SIDE";
+  }
+  if (constraint.axis === "y") {
+    if (belowMin) return "FIRE FROM ABOVE";
+    if (aboveMax) return "FIRE FROM BELOW";
+  }
+  if (constraint.axis === "z") {
+    if (belowMin) return "FIRE FROM THE FAR SIDE";
+    if (aboveMax) return "FIRE FROM THE NEAR SIDE";
+  }
+  return constraint.rejectMessage ?? "FIRE FROM ANOTHER SIDE";
 }

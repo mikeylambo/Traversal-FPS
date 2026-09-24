@@ -17,8 +17,6 @@ const ADJUSTABLE = new Set([
   "traversal-aim-smoothing",
   "traversal-aim-assist",
   "traversal-reticle-scale",
-  // Accessibility rows with more than two states adjust the same way; the plain
-  // on/off toggles activate directly, like Invert Y.
   "traversal-color-profile",
   "traversal-ui-scale",
   "traversal-text-timing",
@@ -31,6 +29,10 @@ const ADJUSTABLE = new Set([
  * - A / Enter selects an adjustable row.
  * - Left/Right changes its value.
  * - A / Enter confirms, B / Escape cancels edit focus without leaving Settings.
+ *
+ * Adjustments mutate the Traversal settings store directly and repaint only the
+ * active row. Re-entering the Shell's full settings activation path on every
+ * repeat tick caused expensive screen rebuilds and noticeable controller lag.
  */
 export function installSettingsAdjustmentRuntime(
   flow: FlowLike,
@@ -45,6 +47,37 @@ export function installSettingsAdjustmentRuntime(
   let frame = 0;
 
   const isSettingsOpen = () => Boolean(root.querySelector('[data-screen-id="settings"]'));
+
+  const editingButton = (): HTMLButtonElement | null => {
+    if (!editingId) return null;
+    return root.querySelector<HTMLButtonElement>(
+      `[data-screen-id="settings"] [data-choice-id="${editingId}"]`
+    );
+  };
+
+  const refreshEditingRow = () => {
+    const button = editingButton();
+    if (!button || !editingId) return;
+    const choice = settings.choices().find((entry) => entry.id === editingId);
+    if (!choice) return;
+
+    const label = button.querySelector<HTMLElement>(".slu-choice__label, .slu-choice-label, [data-choice-label]");
+    if (label) {
+      label.textContent = choice.label;
+    } else {
+      for (const node of Array.from(button.childNodes)) {
+        if (node.nodeType === Node.TEXT_NODE && node.textContent?.trim()) {
+          node.textContent = choice.label;
+          break;
+        }
+      }
+    }
+
+    const description = button.querySelector<HTMLElement>(
+      ".slu-choice__description, .slu-choice-description, [data-choice-description]"
+    );
+    if (description && choice.description !== undefined) description.textContent = choice.description;
+  };
 
   const markEditing = () => {
     const screen = root.querySelector<HTMLElement>('[data-screen-id="settings"]');
@@ -72,9 +105,9 @@ export function installSettingsAdjustmentRuntime(
   const apply = (direction: -1 | 1) => {
     if (!editingId || !isSettingsOpen()) return;
     settings.setAdjustmentDirection(direction);
-    originalActivate("settings", editingId);
-    window.setTimeout(markEditing, 0);
-    window.setTimeout(markEditing, 35);
+    settings.handle(editingId);
+    refreshEditingRow();
+    markEditing();
   };
 
   flow.onActivate = (screenId: string, choiceId: string) => {

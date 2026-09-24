@@ -16,20 +16,23 @@ type RuntimeState = {
   };
   flow: {
     showResults(): void;
+    onActivate(screenId: string, choiceId: string): void;
   };
 };
 
-const SECTOR_HANDOFF_MS = 620;
+type ResultChoice = {
+  id?: string;
+  label?: string;
+  description?: string;
+  [key: string]: unknown;
+};
 
-/**
- * Campaign is a journey through the construct, not a list of isolated score runs.
- * Intermediate sector results are still processed internally (progression,
- * achievements, best times) but their menu screen is suppressed; the next
- * implemented sector loads after a brief audiovisual handoff and receives the
- * normal sector title card. Sector entry is also persisted as a resume checkpoint.
- * Route-efficiency calculations are bound to the active content instead of the
- * Training rooms that happened to exist when TraversalGame.ts first evaluated.
- */
+const SECTOR_HANDOFF_MS = 620;
+const MAP_SELECT_UNLOCK = "map-08";
+const TIME_TRIAL_UNLOCK = "map-18";
+const CHALLENGE_UNLOCK = "map-30";
+const REVERSAL_UNLOCK = "map-42";
+
 export function installCampaignFlow(game: object, content: ContentRuntime): void {
   const state = game as unknown as RuntimeState;
   const originalFinishRun = state.finishRun.bind(game);
@@ -40,6 +43,100 @@ export function installCampaignFlow(game: object, content: ContentRuntime): void
 
   state.extraKills = () => Math.max(0, state.totalKills - content.activeParKills());
   ensureSectorClearFx();
+
+  const unlockState = () => {
+    const snapshot = progression?.snapshot();
+    const completed = new Set(snapshot?.completedMaps ?? []);
+    const campaignComplete = Boolean(snapshot?.campaign.completed);
+    return {
+      mapSelect: campaignComplete || completed.has(MAP_SELECT_UNLOCK),
+      timeTrial: campaignComplete || completed.has(TIME_TRIAL_UNLOCK),
+      challenge: campaignComplete || completed.has(CHALLENGE_UNLOCK),
+      reversal: campaignComplete || completed.has(REVERSAL_UNLOCK)
+    };
+  };
+
+  const refreshModeSelect = () => {
+    const unlocked = unlockState();
+    state.ui.updateScreen("mode-select", {
+      title: unlocked.reversal ? "Select Mode // Construct Reversed" : "Select Mode",
+      choices: [
+        { id: "training", label: "Training", description: "Learn the Warp Rifle grammar." },
+        { id: "standard", label: "Campaign", description: unlocked.mapSelect ? "Continue or revisit discovered sectors." : "Explore the construct." },
+        {
+          id: "time-trial",
+          label: "Time Trial",
+          description: unlocked.timeTrial ? "16 curated route races: bespoke courses plus selected Campaign reprises." : "LOCKED // Clear Act II to unlock Time Trial.",
+          disabled: !unlocked.timeTrial
+        },
+        {
+          id: "challenge",
+          label: "Challenge // Clean Route",
+          description: unlocked.challenge ? "24 precision, logic, flow and synthesis chambers." : "LOCKED // Clear Act III to unlock Challenge.",
+          disabled: !unlocked.challenge
+        },
+        {
+          id: "reversal",
+          label: "THE REVERSE // Labyrinth",
+          description: unlocked.reversal ? "Postgame. Cross to the hidden side of the Construct and find the way back." : "LOCKED // Clear the Campaign to expose the hidden side of the Construct.",
+          disabled: !unlocked.reversal
+        }
+      ]
+    });
+  };
+
+  const refreshCampaignStageSelect = () => {
+    const snapshot = progression?.snapshot();
+    const unlocked = unlockState();
+    const discovered = new Set([
+      ...(snapshot?.campaign.discoveredSectors ?? []),
+      ...(snapshot?.completedMaps ?? [])
+    ]);
+    const current = snapshot?.campaign.currentSectorId
+      ?? CAMPAIGN_MAPS.find((entry) => entry.implemented && !snapshot?.completedMaps.includes(entry.id))?.id
+      ?? "map-01";
+    discovered.add(current);
+
+    if (!unlocked.mapSelect) {
+      const map = CAMPAIGN_MAPS.find((entry) => entry.id === current) ?? CAMPAIGN_MAPS[0];
+      state.ui.updateScreen("stage-select", {
+        title: "Campaign",
+        choices: [{
+          id: map?.id ?? "map-01",
+          label: map?.label ?? "SECTOR 01 // THE SPAN",
+          description: "Continue the Campaign // Map Select unlocks after Act I."
+        }]
+      });
+      return;
+    }
+
+    const visible = CAMPAIGN_MAPS.filter((entry) => entry.implemented && discovered.has(entry.id));
+    state.ui.updateScreen("stage-select", {
+      title: "Campaign // Map Select",
+      choices: visible.map((entry) => ({
+        id: entry.id,
+        label: entry.label,
+        description: entry.subtitle
+      }))
+    });
+  };
+
+  const originalActivate = state.flow.onActivate.bind(state.flow);
+  state.flow.onActivate = (screenId: string, choiceId: string) => {
+    const unlocked = unlockState();
+    if (screenId === "mode-select" && choiceId === "time-trial" && !unlocked.timeTrial) return;
+    if (screenId === "mode-select" && choiceId === "challenge" && !unlocked.challenge) return;
+    if (screenId === "mode-select" && choiceId === "reversal" && !unlocked.reversal) return;
+
+    originalActivate(screenId, choiceId);
+
+    if (screenId === "main-menu" && choiceId === "play") refreshModeSelect();
+    // CampaignPersistenceRuntime owns the Campaign setup screens. Do not overwrite
+    // its New/Continue stage menu here; doing so creates a stage choice that the
+    // persistence flow intentionally rejects and leaves Campaign unable to launch.
+  };
+
+  refreshModeSelect();
 
   state.beginRun = () => {
     telemetry.record("run.start", {
@@ -65,7 +162,7 @@ export function installCampaignFlow(game: object, content: ContentRuntime): void
     const campaign = state.modeId === "standard" && content.activeForm() === "campaign-field";
     if (!campaign) {
       telemetry.record("level.complete", { levelId: currentId });
-      originalFinishRun();
+      runWithPlayerFacingResults(state, originalFinishRun);
       return;
     }
 
@@ -79,8 +176,6 @@ export function installCampaignFlow(game: object, content: ContentRuntime): void
       originalFinishRun();
 
       if (laterMaps.length > 0) {
-        // This preview currently ends before the authored Campaign does. Record
-        // the sector clear without poisoning Continue state with a false ending.
         void activeProgression?.completeCampaignContentBoundary(currentId);
         state.ui.updateScreen("results", {
           title: "Available Sectors Cleared",
@@ -98,13 +193,11 @@ export function installCampaignFlow(game: object, content: ContentRuntime): void
           ]
         });
       } else {
-        void activeProgression?.completeCampaignSector(currentId);
+        void activeProgression?.completeCampaignSector(currentId).then(() => refreshModeSelect());
       }
       return;
     }
 
-    // Let the existing completion/progression wrappers run, but don't surface an
-    // intermediate results menu between connected campaign sectors.
     const originalUpdateScreen = state.ui.updateScreen.bind(state.ui);
     const originalShowResults = state.flow.showResults.bind(state.flow);
     state.ui.updateScreen = (screenId: string, payload: Record<string, unknown>) => {
@@ -119,7 +212,12 @@ export function installCampaignFlow(game: object, content: ContentRuntime): void
       state.flow.showResults = originalShowResults;
     }
 
-    void activeProgression?.completeCampaignSector(currentId, nextMap.id);
+    void activeProgression?.completeCampaignSector(currentId, nextMap.id).then(() => {
+      refreshModeSelect();
+      if (currentId === MAP_SELECT_UNLOCK || currentId === TIME_TRIAL_UNLOCK || currentId === CHALLENGE_UNLOCK) {
+        emitTraversalAudio("achievement.unlock");
+      }
+    });
     telemetry.record("campaign.advance", { from: currentId, to: nextMap.id });
     playSectorClearCue();
 
@@ -129,6 +227,49 @@ export function installCampaignFlow(game: object, content: ContentRuntime): void
       state.beginRun();
     }, SECTOR_HANDOFF_MS);
   };
+}
+
+function runWithPlayerFacingResults(state: RuntimeState, finish: () => void): void {
+  const originalUpdateScreen = state.ui.updateScreen.bind(state.ui);
+  state.ui.updateScreen = (screenId: string, payload: Record<string, unknown>) => {
+    originalUpdateScreen(
+      screenId,
+      screenId === "results" ? simplifyResultsPayload(payload, state.modeId) : payload
+    );
+  };
+  try {
+    finish();
+  } finally {
+    state.ui.updateScreen = originalUpdateScreen;
+  }
+}
+
+function simplifyResultsPayload(payload: Record<string, unknown>, modeId: string): Record<string, unknown> {
+  const choices = Array.isArray(payload.choices) ? payload.choices as ResultChoice[] : [];
+  const cleaned = choices
+    .filter((choice) => !(modeId === "reversal" && choice.id === "result-time"))
+    .map((choice) => ({
+      ...choice,
+      label: playerFacingText(choice.label),
+      description: playerFacingText(choice.description)
+    }));
+
+  return {
+    ...payload,
+    choices: cleaned
+  };
+}
+
+function playerFacingText(value: string | undefined): string | undefined {
+  return value
+    ?.replaceAll("non-kill shots", "misses")
+    .replaceAll("theoretical minimum", "par")
+    .replaceAll("minimum route", "required route")
+    .replaceAll("exact route requirement met", "required Spheres cleared")
+    .replaceAll("Kills", "Spheres")
+    .replaceAll("kills", "spheres")
+    .replaceAll("Kill", "Sphere")
+    .replaceAll("kill", "sphere");
 }
 
 function ensureSectorClearFx(): void {
