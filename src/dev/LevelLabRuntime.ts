@@ -60,9 +60,8 @@ const CAMERA_SPEED = 22;
 const FAST_CAMERA_SPEED = 54;
 
 export function installLevelLab(game: object, content: ContentRuntime, shell: ShellLike): void {
-  // RC playtest tooling: install Level Lab in every browser build so F3 is
-  // deterministic on desktop, touch-capable laptops, previews and custom hosts.
-  // Shipping builds can gate this again once the release playtest is complete.
+  // Installed only when devToolsEnabled() (vite dev or ?dev=1). Within a dev
+  // session F3 is deterministic on desktop, touch-capable laptops and previews.
 
   const state = game as unknown as RuntimeState;
   if (!state.scene || !state.camera || !state.input) {

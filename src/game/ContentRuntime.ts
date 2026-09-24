@@ -1,3 +1,4 @@
+import { devToolsEnabled } from "../dev/devTools";
 import { installBrowserLifecycle, mountBrowserDevConsole } from "@slu/web-shell";
 import { CAMPAIGN_MAPS, type CampaignMapDefinition } from "../world/campaign";
 import { buildChallengeSuite, buildTimeTrialSuite } from "../world/modeSuites";
@@ -220,7 +221,7 @@ export function installContentRuntime(shell: any): ContentRuntime {
     onContextRestored: () => telemetry.record("renderer.context-restored")
   }, canvas ?? undefined);
 
-  if (new URLSearchParams(location.search).get("dev") === "1") {
+  if (devToolsEnabled()) {
     mountBrowserDevConsole(studio.dev, { title: "TRAVERSAL DEV" });
   }
 

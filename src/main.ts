@@ -55,6 +55,7 @@ import { installTraversalEditor } from "./editor/TraversalEditor";
 import { installEditorShortcut } from "./editor/EditorShortcutRuntime";
 import { installMapEditorNaming } from "./editor/MapEditorNamingRuntime";
 import { installLevelLab } from "./dev/LevelLabRuntime";
+import { devToolsEnabled } from "./dev/devTools";
 import { PUZZLE_GRAMMAR_V1 } from "./world/puzzleGrammar";
 import { CAMPAIGN_MAPS } from "./world/campaign";
 import { CHALLENGE_ENTRIES, TIME_TRIAL_ENTRIES } from "./world/modeSuites";
@@ -403,8 +404,11 @@ enhanceTraversalPresentation(game, traversalSettings);
 removeCircularEnvironment(game);
 installHazardRuntime(game);
 installCampaignFieldPresentation(game, contentRuntime);
-installTraversalEditor(game, contentRuntime);
-installMapEditorNaming();
+const devTools = devToolsEnabled();
+if (devTools) {
+  installTraversalEditor(game, contentRuntime);
+  installMapEditorNaming();
+}
 installGamepadGameplay(game, traversalSettings);
 installCombatFeel(game);
 installScopeRuntime(game, traversalSettings);
@@ -417,13 +421,15 @@ installOnboardingRuntime(game, contentRuntime);
 installMovementAudioRuntime(game);
 installPlatformMotionAudioRuntime(game);
 installConstructAmbienceRuntime(game);
-installEditorShortcut();
+if (devTools) installEditorShortcut();
 game.start();
 
-try {
-  installLevelLab(game, contentRuntime, app.shell);
-} catch (error) {
-  console.error("Level Lab failed to initialize; gameplay remains available.", error);
+if (devTools) {
+  try {
+    installLevelLab(game, contentRuntime, app.shell);
+  } catch (error) {
+    console.error("Level Lab failed to initialize; gameplay remains available.", error);
+  }
 }
 
 console.info("Traversal FPS ready", {
