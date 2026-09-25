@@ -210,7 +210,7 @@ export function installLevelLab(game: object, content: ContentRuntime, shell: Sh
           <h3>DESIGN READ</h3>
           <p><b>Grammar</b> // ${esc(d.room.grammar.join(" · ") || "none")}</p>
           <p><b>Lesson</b> // ${esc(d.room.lesson)}</p>
-          ${d.sourceMapId ? `<p><b>Source</b> // ${esc(d.sourceMapId)} · room ${(d.sourceRoomIndex ?? 0) + 1}</p>` : ""}
+          ${d.sourceMapId ? `<p><b>Idea from</b> // ${esc(d.sourceMapId)}${d.sourceRoomIndex !== undefined ? ` · room ${d.sourceRoomIndex + 1}` : ""}</p>` : ""}
           ${d.challengeFamily ? `<p><b>Family</b> // ${esc(d.challengeFamily)}</p>` : ""}
           ${d.medal ? `<p><b>Gold</b> // ${esc(d.medal)}</p>` : ""}
           <h3>VALIDATION</h3>
@@ -662,10 +662,9 @@ function buildDescriptors(): RoomDescriptor[] {
       key: `time-trial:${room.id}`,
       family: "time-trial",
       label: room.title,
-      sublabel: entry ? `SOURCE ${entry.sourceMapId} · ROOM ${entry.sourceRoomIndex + 1}` : "CURATED RACE",
+      sublabel: entry?.inspiredBy ? `BESPOKE · IDEA FROM ${entry.inspiredBy}` : "BESPOKE RACE",
       room, roomIndex,
-      sourceMapId: entry?.sourceMapId,
-      sourceRoomIndex: entry?.sourceRoomIndex,
+      sourceMapId: entry?.inspiredBy,
       medal: entry ? `${entry.goldSeconds.toFixed(1)}s` : undefined
     });
   });
@@ -676,10 +675,9 @@ function buildDescriptors(): RoomDescriptor[] {
       key: `challenge:${room.id}`,
       family: "challenge",
       label: room.title,
-      sublabel: entry ? `${entry.family} · SOURCE ${entry.sourceMapId} · ROOM ${entry.sourceRoomIndex + 1}` : "CURATED CHALLENGE",
+      sublabel: entry ? `${entry.family}${entry.inspiredBy ? ` · IDEA FROM ${entry.inspiredBy}` : ""}` : "BESPOKE CHAMBER",
       room, roomIndex,
-      sourceMapId: entry?.sourceMapId,
-      sourceRoomIndex: entry?.sourceRoomIndex,
+      sourceMapId: entry?.inspiredBy,
       challengeFamily: entry?.family
     });
   });

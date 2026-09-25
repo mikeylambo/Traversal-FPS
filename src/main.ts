@@ -59,6 +59,8 @@ import { devToolsEnabled } from "./dev/devTools";
 import { PUZZLE_GRAMMAR_V1 } from "./world/puzzleGrammar";
 import { CAMPAIGN_MAPS } from "./world/campaign";
 import { CHALLENGE_ENTRIES, TIME_TRIAL_ENTRIES } from "./world/modeSuites";
+
+const courseNumber = (index: number) => String(index + 1).padStart(2, "0");
 import { REVERSAL_LABYRINTH_ROOMS } from "./world/reversalLabyrinth";
 import { registerCampaign02 } from "./world/registerCampaign02";
 import { registerCampaign03 } from "./world/registerCampaign03";
@@ -329,24 +331,24 @@ app.flow.onActivate = (screenId: string, choiceId: string) => {
       app.ui.updateScreen("stage-select", {
         title: "Time Trial",
         choices: [
-          {
-            id: "suite-time-trial",
-            label: "Time Trial // 01–16",
-            description: "Sixteen curated route races with medals and distinct spatial families."
-          },
-          ...sectorChoices(choiceId)
+          { id: "suite-time-trial", label: "Full Run // 01–16", description: "Every course, back to back." },
+          ...TIME_TRIAL_ENTRIES.map((entry, index) => ({
+            id: `tt-course-${index}`,
+            label: `${courseNumber(index)} // ${entry.label}`,
+            description: `Gold ${entry.goldSeconds.toFixed(1)}s`
+          }))
         ]
       });
     } else if (choiceId === "challenge") {
       app.ui.updateScreen("stage-select", {
         title: "Challenge",
         choices: [
-          {
-            id: "suite-challenge",
-            label: "Challenge // 01–24",
-            description: "Precision → Logic → Flow → Synthesis."
-          },
-          ...sectorChoices(choiceId)
+          { id: "suite-challenge", label: "Full Run // 01–24", description: "Precision → Logic → Flow → Synthesis." },
+          ...CHALLENGE_ENTRIES.map((entry, index) => ({
+            id: `ch-chamber-${index}`,
+            label: `${courseNumber(index)} // ${entry.label}`,
+            description: entry.family
+          }))
         ]
       });
     } else if (choiceId === "reversal") {
@@ -375,6 +377,8 @@ app.flow.onActivate = (screenId: string, choiceId: string) => {
     if (choiceId === "suite-time-trial") contentRuntime.setModeSuite("time-trial");
     if (choiceId === "suite-challenge") contentRuntime.setModeSuite("challenge");
     if (choiceId === "suite-reversal") contentRuntime.setModeSuite("reversal");
+    if (choiceId.startsWith("tt-course-")) contentRuntime.setModeSuite("time-trial", Number(choiceId.slice(10)));
+    if (choiceId.startsWith("ch-chamber-")) contentRuntime.setModeSuite("challenge", Number(choiceId.slice(11)));
     if (choiceId.startsWith("map-")) contentRuntime.setSelectedMap(choiceId);
   }
 

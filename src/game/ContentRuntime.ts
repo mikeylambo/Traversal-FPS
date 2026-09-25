@@ -1,7 +1,7 @@
 import { devToolsEnabled } from "../dev/devTools";
 import { installBrowserLifecycle, mountBrowserDevConsole } from "@slu/web-shell";
 import { CAMPAIGN_MAPS, type CampaignMapDefinition } from "../world/campaign";
-import { buildChallengeSuite, buildTimeTrialSuite } from "../world/modeSuites";
+import { buildChallengeChamber, buildChallengeSuite, buildTimeTrialCourse, buildTimeTrialSuite } from "../world/modeSuites";
 import { CONTROLS_ROOM } from "../world/onboarding";
 import { buildReversalLabyrinth } from "../world/reversalLabyrinth";
 import { SPATIAL_ACTOR_TRAINING } from "../world/trainingSpatial";
@@ -12,18 +12,14 @@ export type TraversalContentForm = "controls" | "training" | "campaign-field" | 
 export type TrainingPath = "controls" | "grammar";
 export type ModeSuite = "time-trial" | "challenge" | "reversal" | null;
 
-type ExtendedCampaignMap = CampaignMapDefinition & {
-  timeTrialRooms?: RoomSpec[];
-  challengeRooms?: RoomSpec[];
-};
-
 export interface ContentRuntime {
   selectedContentId(): TraversalContentId;
   activeForm(): TraversalContentForm;
   activeRooms(): RoomSpec[];
   activeParKills(): number;
   setSelectedMap(id: string): void;
-  setModeSuite(suite: ModeSuite): void;
+  /** Full suite run, or a single course/chamber when `index` is given. */
+  setModeSuite(suite: ModeSuite, index?: number): void;
   reloadSelected(): void;
   setTrainingPath(path: TrainingPath): void;
   enterGrammar(): void;
@@ -47,6 +43,7 @@ export function installContentRuntime(shell: any): ContentRuntime {
   let selectedMapId = "map-01";
   let selectedTrainingPath: TrainingPath = "controls";
   let selectedModeSuite: ModeSuite = null;
+  let selectedSuiteIndex: number | null = null;
   let activeId: TraversalContentId = "training";
   let activeForm: TraversalContentForm = "training";
   const studio = shell.studio;
@@ -79,15 +76,25 @@ export function installContentRuntime(shell: any): ContentRuntime {
       return loadGrammarRooms();
     }
 
-    if (modeId === "time-trial" && selectedModeSuite === "time-trial") {
-      activeId = "suite-time-trial";
+    if (modeId === "time-trial") {
       activeForm = "course";
+      if (selectedModeSuite === "time-trial" && selectedSuiteIndex !== null) {
+        const room = buildTimeTrialCourse(selectedSuiteIndex);
+        activeId = room.id;
+        return [room];
+      }
+      activeId = "suite-time-trial";
       return buildTimeTrialSuite();
     }
 
-    if (modeId === "challenge" && selectedModeSuite === "challenge") {
-      activeId = "suite-challenge";
+    if (modeId === "challenge") {
       activeForm = "course";
+      if (selectedModeSuite === "challenge" && selectedSuiteIndex !== null) {
+        const room = buildChallengeChamber(selectedSuiteIndex);
+        activeId = room.id;
+        return [room];
+      }
+      activeId = "suite-challenge";
       return buildChallengeSuite();
     }
 
@@ -98,7 +105,7 @@ export function installContentRuntime(shell: any): ContentRuntime {
     }
 
     const map = (CAMPAIGN_MAPS.find((entry) => entry.id === selectedMapId && entry.implemented)
-      ?? CAMPAIGN_MAPS.find((entry) => entry.implemented)) as ExtendedCampaignMap | undefined;
+      ?? CAMPAIGN_MAPS.find((entry) => entry.implemented)) as CampaignMapDefinition | undefined;
     activeId = map?.id ?? "map-01";
 
     if (modeId === "standard") {
@@ -113,12 +120,7 @@ export function installContentRuntime(shell: any): ContentRuntime {
     }
 
     activeForm = "course";
-    const modeRooms = modeId === "time-trial"
-      ? map?.timeTrialRooms
-      : modeId === "challenge"
-        ? map?.challengeRooms
-        : undefined;
-    return structuredClone(modeRooms?.length ? modeRooms : map?.courseRooms ?? []) as RoomSpec[];
+    return structuredClone(map?.courseRooms ?? []) as RoomSpec[];
   };
 
   const reloadSelected = () => {
@@ -204,9 +206,10 @@ export function installContentRuntime(shell: any): ContentRuntime {
         telemetry.record("content.select", { contentId: id, kind: "campaign-map" });
       }
     },
-    setModeSuite(suite: ModeSuite) {
+    setModeSuite(suite: ModeSuite, index?: number) {
       selectedModeSuite = suite;
-      if (suite) telemetry.record("content.select", { contentId: `suite-${suite}`, kind: "mode-suite" });
+      selectedSuiteIndex = index ?? null;
+      if (suite) telemetry.record("content.select", { contentId: `suite-${suite}`, kind: "mode-suite", index: index ?? "all" });
     },
     reloadSelected,
     setTrainingPath(path: TrainingPath) {

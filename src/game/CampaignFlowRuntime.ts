@@ -66,13 +66,13 @@ export function installCampaignFlow(game: object, content: ContentRuntime): void
         {
           id: "time-trial",
           label: "Time Trial",
-          description: unlocked.timeTrial ? "16 curated route races: bespoke courses plus selected Campaign reprises." : "LOCKED // Clear Act II to unlock Time Trial.",
+          description: unlocked.timeTrial ? "16 race courses." : "LOCKED // Clear Act II to unlock Time Trial.",
           disabled: !unlocked.timeTrial
         },
         {
           id: "challenge",
           label: "Challenge // Clean Route",
-          description: unlocked.challenge ? "24 precision, logic, flow and synthesis chambers." : "LOCKED // Clear Act III to unlock Challenge.",
+          description: unlocked.challenge ? "24 chambers. Exact Spheres only." : "LOCKED // Clear Act III to unlock Challenge.",
           disabled: !unlocked.challenge
         },
         {

@@ -13,10 +13,6 @@ registerCampaign03();
 registerCampaign04();
 
 type Catalog = { label: string; rooms: RoomSpec[] };
-type ExtendedCampaignMap = CampaignMapDefinition & {
-  timeTrialRooms?: RoomSpec[];
-  challengeRooms?: RoomSpec[];
-};
 
 const timeTrialSuite = buildTimeTrialSuite();
 const challengeSuite = buildChallengeSuite();
@@ -31,11 +27,9 @@ const catalogs: Catalog[] = [
 ];
 
 for (const baseMap of CAMPAIGN_MAPS.filter((entry) => entry.implemented)) {
-  const map = baseMap as ExtendedCampaignMap;
+  const map: CampaignMapDefinition = baseMap;
   catalogs.push({ label: `${map.id}:campaign`, rooms: map.campaignRooms });
   catalogs.push({ label: `${map.id}:course`, rooms: map.courseRooms });
-  if (map.timeTrialRooms?.length) catalogs.push({ label: `${map.id}:time-trial`, rooms: map.timeTrialRooms });
-  if (map.challengeRooms?.length) catalogs.push({ label: `${map.id}:challenge`, rooms: map.challengeRooms });
 }
 
 const allIssues: Array<{ catalog: string; issue: ContentValidationIssue }> = [];

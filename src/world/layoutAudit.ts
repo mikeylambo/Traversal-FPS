@@ -110,12 +110,15 @@ export function layoutSimilarity(a: LayoutDescriptor, b: LayoutDescriptor): numb
   const scale = 1 - (
     ratioGap(a.spanX, b.spanX) + ratioGap(a.spanZ, b.spanZ) + Math.min(1, Math.abs(a.spanY - b.spanY) / 20)
   ) / 3;
+  // Structure is what a player reads first in a room: walls, crouch lanes, moving
+  // geometry, hazards and the actor mix (moving / origin-gated / utility).
   const structure = 1 - (
     gap(a.floors, b.floors, 10) + gap(a.walls, b.walls, 6) + gap(a.lowCeilings, b.lowCeilings, 3) +
-    gap(a.moving, b.moving, 3) + gap(a.spheres, b.spheres, 10) + gap(a.hazards, b.hazards, 4)
-  ) / 6;
+    gap(a.moving, b.moving, 3) + gap(a.spheres, b.spheres, 10) + gap(a.hazards, b.hazards, 4) +
+    gap(a.movingActors, b.movingActors, 4) + gap(a.originGated, b.originGated, 3) + gap(a.utility, b.utility, 3)
+  ) / 9;
   const topology = (a.skeleton === b.skeleton ? 0.6 : 0) + (a.goal === b.goal ? 0.4 : 0);
-  return clamp01(0.3 * plan + 0.15 * profile + 0.15 * scale + 0.2 * structure + 0.2 * topology);
+  return clamp01(0.3 * plan + 0.15 * profile + 0.15 * scale + 0.25 * structure + 0.15 * topology);
 }
 
 export function classifyPair(score: number, identical: boolean): ActionClass {
