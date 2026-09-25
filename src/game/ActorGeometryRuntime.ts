@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { mountRegisteredVisual, type ProceduralVisualKey } from "../art/procedural/ProceduralVisualRegistry";
 import type { EnemySpec } from "../world/stages";
 import { installActorLinkRuntime } from "./ActorLinkRuntime";
+import { actorColor } from "./TraversalAccessibility";
 
 type ActiveEnemy = {
   spec: EnemySpec;
@@ -46,7 +47,16 @@ function applyGeometry(enemy: ActiveEnemy): void {
         : new THREE.CylinderGeometry(radius * 0.7 * scale, radius * 0.7 * scale, radius * 2.8 * scale, 3, 1, false);
     replaceGeometry(enemy, shape(1));
     replaceWireShell(enemy, shape(1.18));
-    if (kind === "cube") enemy.mesh.rotation.set(0.22, 0.35, 0.12);
+    if (kind === "cube") {
+      enemy.mesh.rotation.set(0.22, 0.35, 0.12);
+      // Broad flat faces bloom less than curved ones; lift the cube's shell and
+      // add a soft inner glow so it carries the same energy as its siblings.
+      boostShell(enemy, 0.62);
+      enemy.mesh.add(new THREE.Mesh(
+        new THREE.BoxGeometry(radius * 1.95, radius * 1.95, radius * 1.95),
+        new THREE.MeshBasicMaterial({ color: actorColor("cube"), transparent: true, opacity: 0.16, blending: THREE.AdditiveBlending, depthWrite: false })
+      ));
+    }
     if (kind === "diamond") enemy.mesh.rotation.set(0, 0, 0);
     if (kind === "prism") enemy.mesh.rotation.set(Math.PI * 0.5, 0, 0);
   } else {
@@ -73,6 +83,14 @@ function replaceWireShell(enemy: ActiveEnemy, geometry: THREE.BufferGeometry): v
   }
   shell.geometry.dispose();
   shell.geometry = geometry;
+}
+
+function boostShell(enemy: ActiveEnemy, opacity: number): void {
+  for (const child of enemy.mesh.children) {
+    if (child instanceof THREE.Mesh && child.material instanceof THREE.MeshBasicMaterial && child.material.wireframe) {
+      child.material.opacity = opacity;
+    }
+  }
 }
 
 function setMaterialColor(material: THREE.Material | THREE.Material[], color: number, emissiveIntensity?: number): void {

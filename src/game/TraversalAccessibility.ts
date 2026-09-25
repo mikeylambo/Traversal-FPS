@@ -100,10 +100,10 @@ export type UtilityKind = "cube" | "diamond" | "prism";
  * chosen per profile so no two actors lean on a pair that profile can't split.
  */
 const UTILITY_PALETTE: Record<ColorProfile, Record<UtilityKind, number>> = {
-  standard: { cube: 0x9d8bff, diamond: 0x5dff9e, prism: 0xffe45c },
-  deuteranopia: { cube: 0x5b8cff, diamond: 0xffffff, prism: 0xff9f1a },
-  protanopia: { cube: 0x5b8cff, diamond: 0xffffff, prism: 0xffa640 },
-  tritanopia: { cube: 0xff5fbf, diamond: 0x3aa6ff, prism: 0xff9b5a }
+  standard: { cube: 0xbdb0ff, diamond: 0x5dff9e, prism: 0xffe45c },
+  deuteranopia: { cube: 0x8fb2ff, diamond: 0xffffff, prism: 0xff9f1a },
+  protanopia: { cube: 0x8fb2ff, diamond: 0xffffff, prism: 0xffa640 },
+  tritanopia: { cube: 0xff8fd4, diamond: 0x3aa6ff, prism: 0xff9b5a }
 };
 
 export const UTILITY_KINDS: readonly UtilityKind[] = ["cube", "diamond", "prism"];

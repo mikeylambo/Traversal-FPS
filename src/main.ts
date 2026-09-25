@@ -10,6 +10,7 @@ import "./scope.css";
 import "./editor/editor.css";
 import "./level-lab.css";
 import "./warp-readability.css";
+import "./splits.css";
 // Last, so its caps and contrast fixes win over the styles they moderate.
 import "./accessibility.css";
 import {
@@ -38,6 +39,7 @@ import { installConstructAmbienceRuntime } from "./game/ConstructAmbienceRuntime
 import { installGameplayClarity } from "./game/GameplayClarityRuntime";
 import { installWarpCancelRuntime } from "./game/WarpCancelRuntime";
 import { installInstantRestart } from "./game/InstantRestartRuntime";
+import { installSplitsRuntime } from "./game/SplitsRuntime";
 import { installExitGateRuntime } from "./game/ExitGateRuntime";
 import { installLandingReadabilityRuntime } from "./game/LandingReadabilityRuntime";
 import { installRewindWarpRuntime } from "./game/RewindWarpRuntime";
@@ -426,6 +428,7 @@ installScopeRuntime(game, traversalSettings);
 installGameplayClarity(game);
 installWarpCancelRuntime(game);
 installInstantRestart(game, contentRuntime);
+installSplitsRuntime(game, contentRuntime);
 installExitGateRuntime(game);
 installLandingReadabilityRuntime(game);
 installRewindWarpRuntime(game);

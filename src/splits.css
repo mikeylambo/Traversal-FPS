@@ -1,0 +1,15 @@
+#run-split {
+  display: block;
+  margin-top: 4px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  opacity: 0;
+  transform: translateY(-3px);
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+#run-split.show { opacity: 1; transform: none; }
+#run-split[data-state="ahead"] { color: #7cefff; text-shadow: 0 0 12px rgba(124, 239, 255, 0.55); }
+#run-split[data-state="behind"] { color: #ff8a7a; text-shadow: 0 0 12px rgba(255, 138, 122, 0.45); }
