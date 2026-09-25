@@ -36,21 +36,39 @@ function applyGeometry(enemy: ActiveEnemy): void {
   const radius = enemy.spec.radius ?? 0.72;
   const material = enemy.mesh.material;
 
-  if (enemy.spec.kind === "cube") {
-    replaceGeometry(enemy, new THREE.BoxGeometry(radius * 1.75, radius * 1.75, radius * 1.75));
-    replaceWireShell(enemy, new THREE.BoxGeometry(radius * 2.02, radius * 2.02, radius * 2.02));
-    setMaterialColor(material, UTILITY_ROLE_COLORS.cube);
-    enemy.mesh.rotation.set(0.22, 0.35, 0.12);
-  } else if (enemy.spec.kind === "diamond") {
-    replaceGeometry(enemy, new THREE.OctahedronGeometry(radius * 1.22, 0));
-    replaceWireShell(enemy, new THREE.OctahedronGeometry(radius * 1.42, 0));
-    setMaterialColor(material, UTILITY_ROLE_COLORS.diamond);
-    enemy.mesh.rotation.set(0, 0, Math.PI * 0.25);
-  } else if (enemy.spec.kind === "prism") {
-    replaceGeometry(enemy, new THREE.CylinderGeometry(radius, radius, radius * 2.05, 3, 1, false));
-    replaceWireShell(enemy, new THREE.CylinderGeometry(radius * 1.17, radius * 1.17, radius * 2.36, 3, 1, false));
-    setMaterialColor(material, UTILITY_ROLE_COLORS.prism);
-    enemy.mesh.rotation.set(Math.PI * 0.5, 0, 0);
+  const kind = enemy.spec.kind;
+  if (kind === "cube" || kind === "diamond" || kind === "prism") {
+    // Utilities are hard-edged and ringless; Spheres stay round and haloed.
+    // Silhouette carries the role even in greyscale: box, tall gem, lens bar.
+    const body = kind === "cube"
+      ? new THREE.BoxGeometry(radius * 1.7, radius * 1.7, radius * 1.7)
+      : kind === "diamond"
+        ? new THREE.OctahedronGeometry(radius * 1.1, 0).scale(0.8, 1.7, 0.8)
+        : new THREE.CylinderGeometry(radius * 0.72, radius * 0.72, radius * 3.1, 3, 1, false);
+    replaceGeometry(enemy, body);
+    stripHalo(enemy);
+    // Own material, outside the shared energy shader: dim faces, bright edges,
+    // so bloom draws the silhouette instead of a glowing blob.
+    const role = new THREE.Color(UTILITY_ROLE_COLORS[kind]);
+    const faces = new THREE.MeshStandardMaterial({
+      color: role.clone().multiplyScalar(0.32),
+      emissive: role,
+      emissiveIntensity: 0.22,
+      metalness: 0.55,
+      roughness: 0.32,
+      flatShading: true
+    });
+    enemy.mesh.material = faces;
+    const edges = new THREE.LineSegments(
+      new THREE.EdgesGeometry(body),
+      new THREE.LineBasicMaterial({ color: UTILITY_ROLE_COLORS[kind], transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false })
+    );
+    edges.scale.setScalar(1.015);
+    edges.name = "utility-edges";
+    enemy.mesh.add(edges);
+    if (kind === "cube") enemy.mesh.rotation.set(0.22, 0.35, 0.12);
+    if (kind === "diamond") enemy.mesh.rotation.set(0, 0, 0);
+    if (kind === "prism") enemy.mesh.rotation.set(Math.PI * 0.5, 0, 0);
   } else {
     setMaterialColor(material, SPHERE_COLOR);
   }
@@ -66,26 +84,28 @@ function replaceGeometry(enemy: ActiveEnemy, geometry: THREE.BufferGeometry): vo
   enemy.mesh.geometry = geometry;
 }
 
-function replaceWireShell(enemy: ActiveEnemy, geometry: THREE.BufferGeometry): void {
-  const shell = enemy.mesh.children.find((child) => {
-    if (!(child instanceof THREE.Mesh)) return false;
-    const material = child.material;
-    return material instanceof THREE.MeshBasicMaterial && material.wireframe;
-  });
-  if (!(shell instanceof THREE.Mesh)) {
-    geometry.dispose();
-    return;
-  }
-  shell.geometry.dispose();
-  shell.geometry = geometry;
-}
-
-function setMaterialColor(material: THREE.Material | THREE.Material[], color: number): void {
+function setMaterialColor(material: THREE.Material | THREE.Material[], color: number, emissiveIntensity?: number): void {
   const materials = Array.isArray(material) ? material : [material];
   for (const entry of materials) {
     if (entry instanceof THREE.MeshStandardMaterial || entry instanceof THREE.MeshBasicMaterial) {
       entry.color.setHex(color);
-      if (entry instanceof THREE.MeshStandardMaterial) entry.emissive.setHex(color);
+      if (entry instanceof THREE.MeshStandardMaterial) {
+        entry.emissive.setHex(color);
+        if (emissiveIntensity !== undefined) entry.emissiveIntensity = emissiveIntensity;
+      }
+    }
+  }
+}
+
+/** Removes the Sphere halo (wire shell + orbit rings) so utilities never read round. */
+function stripHalo(enemy: ActiveEnemy): void {
+  for (const child of [...enemy.mesh.children]) {
+    if (!(child instanceof THREE.Mesh)) continue;
+    const geometry = child.geometry;
+    const wire = child.material instanceof THREE.MeshBasicMaterial && child.material.wireframe;
+    if (wire || geometry instanceof THREE.TorusGeometry || geometry instanceof THREE.IcosahedronGeometry) {
+      enemy.mesh.remove(child);
+      geometry.dispose();
     }
   }
 }

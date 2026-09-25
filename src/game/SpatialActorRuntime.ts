@@ -199,27 +199,7 @@ function decorateActorVisuals(enemies: ActiveEnemy[]): void {
     if (enemy.spec.originConstraint || enemy.spec.kind === "shield") decorateOriginGate(enemy);
     if (enemy.spec.kind === "drifter") decorateDrifter(enemy);
     if (enemy.spec.kind === "orbit") decorateOrbit(enemy);
-    if (enemy.spec.kind === "cube") decorateUtility(enemy, "cube");
-    if (enemy.spec.kind === "diamond") decorateUtility(enemy, "diamond");
-    if (enemy.spec.kind === "prism") decorateUtility(enemy, "prism");
   }
-}
-
-function decorateUtility(enemy: ActiveEnemy, kind: "cube" | "diamond" | "prism"): void {
-  const radius = enemy.spec.radius ?? 0.72;
-  const ring = new THREE.Mesh(
-    new THREE.TorusGeometry(radius * 1.42, radius * 0.045, 8, kind === "prism" ? 3 : 36),
-    new THREE.MeshBasicMaterial({
-      color: UTILITY_ROLE_COLORS[kind],
-      transparent: true,
-      opacity: 0.78,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false
-    })
-  );
-  ring.rotation.x = kind === "diamond" ? Math.PI * 0.5 : 0;
-  ring.rotation.z = kind === "prism" ? Math.PI / 6 : 0;
-  enemy.mesh.add(ring);
 }
 
 function decorateOrbit(enemy: ActiveEnemy): void {
