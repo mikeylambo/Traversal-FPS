@@ -16,14 +16,14 @@ The old standalone HTML prototype is reference material only. Game systems in th
 
 ## Current playable scope
 
-- Campaign: 32 authored sectors across four acts
-- Time Trial: 16-course canonical suite
-- Challenge: 24 authored mastery chambers
+- Campaign: 42 authored sectors across four acts (8 / 10 / 12 / 12)
+- Time Trial: 16 bespoke race courses (no Campaign clones)
+- Challenge: 24 bespoke constraint chambers, exact Sphere count
 - Postgame: 8-room THE REVERSE labyrinth
 - Training: controls, traversal grammar, and spatial actor curriculum
 - Difficulty: Assist / Standard / Hard / Expert
 - Input: keyboard + mouse, USB controller, touch/mobile
-- Progression: campaign persistence, achievements, Sector 32 postgame unlock
+- Progression: campaign persistence, achievements; Act I → Map Select, Act II → Time Trial, Act III → Challenge, Campaign clear → The Reverse
 
 Spatial actor grammar:
 
@@ -50,11 +50,16 @@ npm run build
 
 It runs, in order:
 
-1. content doctor
-2. audio doctor
-3. regression tests
-4. TypeScript check
-5. Vite production build
+1. content doctor (structure, spawn clearance, embedded actors)
+2. route certify (every authored room proven clearable by the offline solver; near-duplicate layouts fail)
+3. audio doctor
+4. regression tests
+5. TypeScript check
+6. Vite production build
+
+`npm run content:audit -- --necessity --out audit.json` writes the layout-family report (similarity matrix, action class per room, and which verbs each room provably requires).
+
+Authoring: build rooms with `src/world/authoring.ts` (floor-relative helpers for crouch lanes, slits, crawl roofs, origin gates). Dev tools (Level Lab, Map Editor, dev console) appear only in `vite dev` or after `?dev=1`.
 
 Additional Shell certification profiles:
 
