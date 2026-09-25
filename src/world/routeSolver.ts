@@ -385,49 +385,57 @@ export function solveRoom(room: RoomSpec, options: SolveOptions = {}): SolveResu
     return eyesOf(n).some((e) => len(sub([n.x, eyeOf(n, e), n.z], goal)) <= GOAL_RADIUS);
   });
 
-  // Warp results depend on where the player can walk (the SCC) and the world, not on
-  // which Spheres are dead, so they are cached per region/target/phase.
+  // Warp results depend on where the player can walk and the world, not on which
+  // Spheres are dead. Kills are cached per region/target/phase; warps per firing
+  // region, since the warp must start somewhere reachable from where you fired
+  // (drops are one-way).
   type Landing = { node: number; out: WarpOutcome };
-  // killers: one firing spot per walkable region it can be reached in (drops are one-way).
-  type Expansion = { killer: number; killers: number[]; lands: Landing[]; airs: WarpOutcome[]; goalPass: WarpOutcome | null };
+  type Kill = { killers: number[] };
+  type Warps = { lands: Landing[]; airs: WarpOutcome[]; goalPass: WarpOutcome | null };
   type Chain = { targets: number; lands: { node: number; steps: SolveStep[] }[]; goalPass: SolveStep[] | null };
-  const expansions = new Map<string, Expansion | null>();
+  const kills = new Map<string, Kill | null>();
+  const warpsCache = new Map<string, Warps>();
   const chains = new Map<string, Chain[]>();
 
-  const expand = (w: World, scc: number, t: Target, ph: number): Expansion | null => {
+  const expand = (w: World, scc: number, t: Target, ph: number): Kill | null => {
     const key = `${w.mask}:${scc}:${t.index}:${ph}`;
-    if (expansions.has(key)) return expansions.get(key)!;
-    const reachable = reach(w, scc);
-    const reachSet = new Set(reachable);
-    const vis = visibleFrom(w, t, ph);
+    if (kills.has(key)) return kills.get(key)!;
+    const reachSet = new Set(reach(w, scc));
     const byScc = new Map<number, number>();
-    for (const k of vis) {
+    for (const k of visibleFrom(w, t, ph)) {
       if (!reachSet.has(k >> 1)) continue;
       const region = w.scc[k >> 1]!;
-      if (!byScc.has(region) || region === scc) byScc.set(region, k);
+      if (!byScc.has(region)) byScc.set(region, k);
     }
-    if (!byScc.size) { expansions.set(key, null); return null; }
-    const killer = byScc.get(scc) ?? byScc.values().next().value!;
-    const result: Expansion = { killer, killers: [...byScc.values()], lands: [], airs: [], goalPass: null };
-    if (t.sphere) {
-      const origins = allowReposition
-        ? reachable.filter((i) => w.coarse[i] === 2).flatMap((i) => eyesOf(w.nodes[i]!).map((e) => i * 2 + e))
-        : [...vis].filter((k) => reachSet.has(k >> 1));
-      const landed = new Set<number>();
-      const airs = new Set<string>();
-      for (const o of origins) {
-        for (const out of warpOutcomes(w, t, ph, o)) {
-          if (out.passesGoal && !result.goalPass) result.goalPass = out;
-          const node = out.node >= 0 ? out.node : fallFrom(w, out.air!);
-          if (node >= 0 && !landed.has(w.scc[node]!)) { landed.add(w.scc[node]!); result.lands.push({ node, out }); }
-          if (out.air) {
-            const airKey = out.air.map((v) => Math.round(v * 2)).join(",");
-            if (!airs.has(airKey)) { airs.add(airKey); result.airs.push(out); }
-          }
+    const result = byScc.size ? { killers: [...byScc.values()] } : null;
+    kills.set(key, result);
+    return result;
+  };
+
+  const warpsFrom = (w: World, firingScc: number, t: Target, ph: number): Warps => {
+    const key = `${w.mask}:${firingScc}:${t.index}:${ph}`;
+    const cached = warpsCache.get(key);
+    if (cached) return cached;
+    const reachable = reach(w, firingScc);
+    const reachSet = new Set(reachable);
+    const origins = allowReposition
+      ? reachable.filter((i) => w.coarse[i] === 2).flatMap((i) => eyesOf(w.nodes[i]!).map((e) => i * 2 + e))
+      : [...visibleFrom(w, t, ph)].filter((k) => reachSet.has(k >> 1));
+    const result: Warps = { lands: [], airs: [], goalPass: null };
+    const landed = new Set<number>();
+    const airs = new Set<string>();
+    for (const o of origins) {
+      for (const out of warpOutcomes(w, t, ph, o)) {
+        if (out.passesGoal && !result.goalPass) result.goalPass = out;
+        const node = out.node >= 0 ? out.node : fallFrom(w, out.air!);
+        if (node >= 0 && !landed.has(w.scc[node]!)) { landed.add(w.scc[node]!); result.lands.push({ node, out }); }
+        if (out.air) {
+          const airKey = out.air.map((v) => Math.round(v * 2)).join(",");
+          if (!airs.has(airKey)) { airs.add(airKey); result.airs.push(out); }
         }
       }
     }
-    expansions.set(key, result);
+    warpsCache.set(key, result);
     return result;
   };
 
@@ -487,16 +495,13 @@ export function solveRoom(room: RoomSpec, options: SolveOptions = {}): SolveResu
       for (let ph = 0; ph < t.phases.length; ph++) {
         const e = expand(w, state.scc, t, ph);
         if (!e) continue;
-        const kn = w.nodes[e.killer >> 1]!;
-        const killStep: SolveStep = { action: "kill", actor: t.spec.id, from: [kn.x, eyeOf(kn, e.killer & 1), kn.z], crouched: (e.killer & 1) === 1 };
-        const warpStepOf = (out: WarpOutcome): SolveStep => {
-          const on = w.nodes[out.origin]!;
-          return { action: "warp", actor: t.spec.id, from: [on.x, eyeOf(on, out.eye), on.z], to: out.air ?? nodeEye(w, out.node), fraction: Math.round(out.fraction * 100) / 100, crouched: out.eye === 1 };
-        };
-
         const killStepAt = (k: number): SolveStep => {
           const n = w.nodes[k >> 1]!;
           return { action: "kill", actor: t.spec.id, from: [n.x, eyeOf(n, k & 1), n.z], crouched: (k & 1) === 1 };
+        };
+        const warpStepOf = (out: WarpOutcome): SolveStep => {
+          const on = w.nodes[out.origin]!;
+          return { action: "warp", actor: t.spec.id, from: [on.x, eyeOf(on, out.eye), on.z], to: out.air ?? nodeEye(w, out.node), fraction: Math.round(out.fraction * 100) / 100, crouched: out.eye === 1 };
         };
 
         if (!t.sphere) {
@@ -509,24 +514,28 @@ export function solveRoom(room: RoomSpec, options: SolveOptions = {}): SolveResu
           break;
         }
 
-        // Without a warp the Sphere is still dead; the player stays where they fired.
-        for (const k of e.killers) push(w, k >> 1, nextMask, s, () => [killStepAt(k)]);
-        if (e.goalPass && killsMet(nextMask)) {
-          states.push({ scc: -1, mask: nextMask, world: w.mask, parent: s, step: [killStep, warpStepOf(e.goalPass)] });
-          return finish(states.length - 1);
-        }
-        for (const land of e.lands) push(w, land.node, nextMask, s, () => [killStep, warpStepOf(land.out)]);
-        if (!allowChain) continue;
-        // Airborne chains: up to two more kills + warps from hang points.
-        for (const air of e.airs) {
-          for (const chain of chainFrom(w, air.air!, 2)) {
-            if (nextMask & chain.targets) continue;
-            const chainMask = nextMask | chain.targets;
-            if (chain.goalPass && killsMet(chainMask)) {
-              states.push({ scc: -1, mask: chainMask, world: w.mask, parent: s, step: [killStep, warpStepOf(air), ...chain.goalPass] });
-              return finish(states.length - 1);
+        for (const k of e.killers) {
+          const killStep = killStepAt(k);
+          // Without a warp the Sphere is still dead; the player stays where they fired.
+          push(w, k >> 1, nextMask, s, () => [killStep]);
+          const wr = warpsFrom(w, w.scc[k >> 1]!, t, ph);
+          if (wr.goalPass && killsMet(nextMask)) {
+            states.push({ scc: -1, mask: nextMask, world: w.mask, parent: s, step: [killStep, warpStepOf(wr.goalPass)] });
+            return finish(states.length - 1);
+          }
+          for (const land of wr.lands) push(w, land.node, nextMask, s, () => [killStep, warpStepOf(land.out)]);
+          if (!allowChain) continue;
+          // Airborne chains: up to two more kills + warps from hang points.
+          for (const air of wr.airs) {
+            for (const chain of chainFrom(w, air.air!, 2)) {
+              if (nextMask & chain.targets) continue;
+              const chainMask = nextMask | chain.targets;
+              if (chain.goalPass && killsMet(chainMask)) {
+                states.push({ scc: -1, mask: chainMask, world: w.mask, parent: s, step: [killStep, warpStepOf(air), ...chain.goalPass] });
+                return finish(states.length - 1);
+              }
+              for (const land of chain.lands) push(w, land.node, chainMask, s, () => [killStep, warpStepOf(air), ...land.steps]);
             }
-            for (const land of chain.lands) push(w, land.node, chainMask, s, () => [killStep, warpStepOf(air), ...land.steps]);
           }
         }
       }
