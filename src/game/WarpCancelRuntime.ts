@@ -47,7 +47,7 @@ export function installWarpCancelRuntime(game: object): void {
   state.warp.commit = (position: unknown) => {
     const kept = state.warp.hasAnchor() && state.warp.isHoldCancelled();
     const committed = originalCommit(position);
-    if (kept && !committed) state.flashMessage("VECTOR KEPT", 900);
+    if (kept && !committed) state.flashMessage("WARP SAVED", 900);
     return committed;
   };
 }

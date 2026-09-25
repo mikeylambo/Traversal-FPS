@@ -19,7 +19,7 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
   { id: "challenge-clear", label: "UNDER CONSTRAINT", description: "Complete a Challenge run." },
   { id: "time-trial-clear", label: "ROUTE CLOCK", description: "Complete a Time Trial run." },
   { id: "hairline", label: "HAIRLINE", description: "Commit a warp at 25% or less." },
-  { id: "hold-fire", label: "HOLD FIRE", description: "Cancel a warp and keep the vector." },
+  { id: "hold-fire", label: "HOLD FIRE", description: "Cancel a warp and save it for later." },
   { id: "midair", label: "MIDAIR", description: "Destroy a Sphere while airborne." },
   { id: "thread", label: "THREAD", description: "Destroy three Spheres before touching the ground." },
   { id: "nothing-left", label: "NOTHING LEFT", description: "Clear a Campaign sector with every Sphere destroyed." },
