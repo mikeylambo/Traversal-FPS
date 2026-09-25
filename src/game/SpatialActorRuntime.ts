@@ -196,7 +196,7 @@ function decorateActorVisuals(enemies: ActiveEnemy[]): void {
     if (enemy.mesh.userData.traversalActorVisual) continue;
     enemy.mesh.userData.traversalActorVisual = true;
 
-    if (enemy.spec.kind === "shield") decorateShield(enemy);
+    if (enemy.spec.originConstraint || enemy.spec.kind === "shield") decorateOriginGate(enemy);
     if (enemy.spec.kind === "drifter") decorateDrifter(enemy);
     if (enemy.spec.kind === "orbit") decorateOrbit(enemy);
     if (enemy.spec.kind === "cube") decorateUtility(enemy, "cube");
@@ -241,38 +241,79 @@ function decorateOrbit(enemy: ActiveEnemy): void {
   enemy.mesh.add(ring);
 }
 
-function decorateShield(enemy: ActiveEnemy): void {
-  const radius = enemy.spec.radius ?? 0.72;
+/** Axis families read differently at a glance: lateral, vertical, depth. */
+const GATE_COLORS = { x: 0xffb46b, y: 0xb99bff, z: 0xff7fb8 } as const;
+
+/**
+ * Any origin-gated Sphere wears a half shell over the side it cannot be hit
+ * from, arrowheads pointing where you must fire from, and a dashed tether to
+ * the world-space line you have to cross. Colour encodes the axis.
+ */
+function decorateOriginGate(enemy: ActiveEnemy): void {
   const constraint = resolveOriginConstraint(enemy.spec.kind, enemy.spec.originConstraint);
-  const axis = constraint?.axis ?? "x";
-  const blockedSign = constraint?.min !== undefined ? -1 : 1;
-
-  const material = new THREE.MeshBasicMaterial({
-    color: actorColor("shield"),
-    transparent: true,
-    opacity: 0.34,
-    side: THREE.DoubleSide,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false
+  if (!constraint) return;
+  const radius = enemy.spec.radius ?? 0.72;
+  const axis = constraint.axis;
+  const threshold = constraint.min ?? constraint.max;
+  const allowedSign = constraint.min !== undefined ? 1 : -1;
+  const allowed = axisVector(axis).multiplyScalar(allowedSign);
+  const color = GATE_COLORS[axis];
+  const additive = (opacity: number, extra: THREE.MeshBasicMaterialParameters = {}) => new THREE.MeshBasicMaterial({
+    color, transparent: true, opacity, blending: THREE.AdditiveBlending, depthWrite: false, ...extra
   });
-  const plate = new THREE.Mesh(new THREE.CircleGeometry(radius * 1.18, 28), material);
-  orientDisc(plate, axis);
-  setAxisPosition(plate.position, axis, blockedSign * radius * 0.86);
+  const up = new THREE.Vector3(0, 1, 0);
 
-  const rim = new THREE.Mesh(
-    new THREE.TorusGeometry(radius * 1.22, radius * 0.045, 8, 40),
-    new THREE.MeshBasicMaterial({
-      color: 0xffd6ad,
-      transparent: true,
-      opacity: 0.78,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false
-    })
+  const shell = new THREE.Mesh(
+    new THREE.SphereGeometry(radius * 1.24, 32, 12, 0, Math.PI * 2, 0, Math.PI * 0.5),
+    additive(0.3, { side: THREE.DoubleSide })
   );
-  orientDisc(rim, axis);
-  setAxisPosition(rim.position, axis, blockedSign * radius * 0.9);
+  shell.quaternion.setFromUnitVectors(up, allowed.clone().negate());
 
-  enemy.mesh.add(plate, rim);
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(radius * 1.26, radius * 0.05, 8, 48), additive(0.9));
+  rim.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), allowed);
+
+  const arrows = new THREE.Group();
+  for (let i = 0; i < 2; i += 1) {
+    const head = new THREE.Mesh(new THREE.ConeGeometry(radius * 0.26, radius * 0.42, 4), additive(0.85 - i * 0.3));
+    head.quaternion.setFromUnitVectors(up, allowed);
+    head.position.copy(allowed).multiplyScalar(radius * (1.75 + i * 0.5));
+    arrows.add(head);
+  }
+  const started = performance.now();
+  (arrows.children[0] as THREE.Mesh).onBeforeRender = () => {
+    const t = ((performance.now() - started) / 900) % 1;
+    arrows.position.copy(allowed).multiplyScalar(radius * 0.35 * Math.sin(t * Math.PI));
+  };
+
+  enemy.mesh.add(shell, rim, arrows);
+
+  if (threshold === undefined) return;
+  const marker = new THREE.Mesh(new THREE.RingGeometry(radius * 0.5, radius * 0.62, 32), additive(0.75, { side: THREE.DoubleSide }));
+  marker.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), allowed);
+  const tetherGeometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]);
+  const tether = new THREE.Line(tetherGeometry, new THREE.LineDashedMaterial({
+    color, dashSize: 0.28, gapSize: 0.22, transparent: true, opacity: 0.6, depthWrite: false
+  }));
+  tether.frustumCulled = false;
+  let lastOffset = Number.NaN;
+  // Drifters move, so the world-space line is re-projected every frame.
+  tether.onBeforeRender = () => {
+    const offset = threshold - enemy.mesh.position[axis];
+    if (Math.abs(offset - lastOffset) < 0.01) return;
+    lastOffset = offset;
+    const show = Math.abs(offset) > radius * 1.3 && Math.abs(offset) < 30;
+    marker.visible = show;
+    setAxisPosition(marker.position, axis, offset);
+    const end = tetherGeometry.attributes.position as THREE.BufferAttribute;
+    const start = axisVector(axis).multiplyScalar(radius * 1.26 * Math.sign(offset));
+    end.setXYZ(0, start.x, start.y, start.z);
+    end.setXYZ(1, marker.position.x, marker.position.y, marker.position.z);
+    end.needsUpdate = true;
+    tetherGeometry.computeBoundingSphere();
+    tether.computeLineDistances();
+    tether.material.opacity = show ? 0.6 : 0;
+  };
+  enemy.mesh.add(marker, tether);
 }
 
 function decorateDrifter(enemy: ActiveEnemy): void {

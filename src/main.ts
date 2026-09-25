@@ -9,6 +9,7 @@ import "./onboarding.css";
 import "./scope.css";
 import "./editor/editor.css";
 import "./level-lab.css";
+import "./warp-readability.css";
 // Last, so its caps and contrast fixes win over the styles they moderate.
 import "./accessibility.css";
 import {
@@ -35,6 +36,7 @@ import { installMovementAudioRuntime } from "./game/MovementAudioRuntime";
 import { installPlatformMotionAudioRuntime } from "./game/PlatformMotionAudioRuntime";
 import { installConstructAmbienceRuntime } from "./game/ConstructAmbienceRuntime";
 import { installGameplayClarity } from "./game/GameplayClarityRuntime";
+import { installWarpCancelRuntime } from "./game/WarpCancelRuntime";
 import { installExitGateRuntime } from "./game/ExitGateRuntime";
 import { installLandingReadabilityRuntime } from "./game/LandingReadabilityRuntime";
 import { installRewindWarpRuntime } from "./game/RewindWarpRuntime";
@@ -193,6 +195,10 @@ void preloadTraversalAudioEvents([
 installAccessibilityRuntime();
 
 const progression = new TraversalProgression(app.storage);
+const medalSuffix = (id: string) => {
+  const medal = progression.snapshot().timeTrialMedals[id];
+  return medal ? ` // ${medal.toUpperCase()}` : "";
+};
 await progression.load();
 const contentRuntime = installContentRuntime(app.shell);
 
@@ -335,7 +341,7 @@ app.flow.onActivate = (screenId: string, choiceId: string) => {
           ...TIME_TRIAL_ENTRIES.map((entry, index) => ({
             id: `tt-course-${index}`,
             label: `${courseNumber(index)} // ${entry.label}`,
-            description: `Gold ${entry.goldSeconds.toFixed(1)}s`
+            description: `Gold ${entry.goldSeconds.toFixed(1)}s${medalSuffix(entry.id)}`
           }))
         ]
       });
@@ -347,7 +353,7 @@ app.flow.onActivate = (screenId: string, choiceId: string) => {
           ...CHALLENGE_ENTRIES.map((entry, index) => ({
             id: `ch-chamber-${index}`,
             label: `${courseNumber(index)} // ${entry.label}`,
-            description: entry.family
+            description: `${entry.family}${progression.snapshot().challengeClears.includes(entry.id) ? " // CLEARED" : ""}`
           }))
         ]
       });
@@ -417,6 +423,7 @@ installGamepadGameplay(game, traversalSettings);
 installCombatFeel(game);
 installScopeRuntime(game, traversalSettings);
 installGameplayClarity(game);
+installWarpCancelRuntime(game);
 installExitGateRuntime(game);
 installLandingReadabilityRuntime(game);
 installRewindWarpRuntime(game);

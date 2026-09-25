@@ -9,6 +9,9 @@ import { ROOMS, type RoomSpec } from "../src/world/stages";
 import { validateRoom, validateRoomCatalog } from "../src/world/contentValidation";
 import { solveRoom } from "../src/world/routeSolver";
 import { describeLayout, layoutSimilarity } from "../src/world/layoutAudit";
+import * as THREE from "three";
+import { movementCollisionForTests as movement } from "../src/game/MovementPatch";
+import { floor, solid } from "../src/world/authoring";
 import { buildChallengeSuite, buildTimeTrialSuite } from "../src/world/modeSuites";
 
 let checks = 0;
@@ -52,6 +55,7 @@ async function run(): Promise<void> {
   testSpatialActors();
   testContentValidation();
   testRouteSolverAndSuites();
+  testMovementCollision();
   console.info(`Traversal regression suite PASS // ${checks} checks`);
 }
 
@@ -236,3 +240,25 @@ void run().catch((error) => {
   console.error(error instanceof Error ? error.message : error);
   throw error;
 });
+
+function testMovementCollision(): void {
+  const platforms = [floor(0, 0, 0, 20, 20), floor(0, 0.3, -5, 4, 4), solid(3, 4, 0, 4, -2, 2)];
+  const walker = new THREE.Vector3(0, 1.7, 0);
+  let climbed = false;
+  for (let i = 0; i < 40; i += 1) {
+    movement.moveWithBodyCollision(walker, 0, -0.12, 1.7, 1.86, platforms, true);
+    const previous = walker.y;
+    walker.y -= 0.01;
+    movement.resolveFloor(walker, previous, 1.7, -1, platforms);
+    climbed ||= Math.abs(walker.y - 2) < 0.01;
+  }
+  assert(climbed, "auto-step climbs a 0.3m lip");
+
+  const embedded = new THREE.Vector3(2.8, 1.7, -1);
+  for (let i = 0; i < 10; i += 1) movement.moveWithBodyCollision(embedded, 0, 0.1, 1.7, 1.86, platforms, true);
+  assert(embedded.x < 2.68 && embedded.z > -0.05, "a body embedded in a wall is pushed out and can slide along it");
+
+  const runner = new THREE.Vector3(1, 1.7, 0);
+  for (let i = 0; i < 30; i += 1) movement.moveWithBodyCollision(runner, 0.13, 0, 1.7, 1.86, platforms, true);
+  assert(runner.x > 2.66 && runner.x <= 2.68, "walking into a wall closes to contact without a gap");
+}

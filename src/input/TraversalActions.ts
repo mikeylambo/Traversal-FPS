@@ -5,6 +5,7 @@ export type TraversalActionId =
   | "warp"
   | "landing-shorter"
   | "landing-longer"
+  | "warp-cancel"
   | "crouch"
   | "scope"
   | "rewind"
@@ -112,6 +113,14 @@ export const TRAVERSAL_ACTIONS: readonly TraversalActionDefinition[] = [
     touchControl: "mobile-range"
   },
   {
+    id: "warp-cancel",
+    label: "Cancel Warp",
+    kind: "button",
+    remappable: true,
+    keyboardMouse: { keys: ["KeyX"] },
+    gamepad: { buttons: [0] }
+  },
+  {
     id: "crouch",
     label: "Crouch",
     kind: "hold",
@@ -170,7 +179,8 @@ export const DEFAULT_KEYBOARD_CODES = {
   crouch: ["ControlLeft", "ControlRight", "KeyC"],
   scope: "KeyQ",
   rewind: "KeyZ",
-  reset: "KeyR"
+  reset: "KeyR",
+  warpCancel: "KeyX"
 } as const;
 
 export const DEFAULT_GAMEPAD_BINDINGS = {
@@ -180,6 +190,7 @@ export const DEFAULT_GAMEPAD_BINDINGS = {
   warp: 6,
   landingShorter: 5,
   landingLonger: 4,
+  warpCancel: 0,
   crouch: [10, 1] as const,
   scope: 11,
   rewind: 3,

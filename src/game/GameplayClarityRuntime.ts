@@ -22,6 +22,9 @@ type RuntimeState = {
     syncOrigin(position: THREE.Vector3): void;
     clearAnchor(): void;
     setCommitValidator(validator: ((from: THREE.Vector3, to: THREE.Vector3) => boolean) | null): void;
+    previewPoint(): THREE.Vector3 | null;
+    isHoldCancelled(): boolean;
+    setPreviewTone(tone: number | null): void;
   };
   input: {
     isWarpHeld(): boolean;
@@ -94,30 +97,65 @@ export function installGameplayClarity(game: object): void {
   };
 }
 
+const collisionRay = new THREE.Raycaster();
+const solidBounds = new THREE.Box3();
+
+/**
+ * The single answer to "would this warp commit?", shared by the commit validator
+ * and the live HUD so the preview never disagrees with what a release does.
+ */
+function warpIsClear(state: RuntimeState, from: THREE.Vector3, to: THREE.Vector3): boolean {
+  // A destination inside solid geometry would leave the player embedded in it
+  // (and able to fall through floors), so it is never a valid landing.
+  const embedded = state.platformMeshes.some((mesh) =>
+    solidBounds.setFromObject(mesh).expandByScalar(-0.05).containsPoint(to));
+  if (embedded) return false;
+
+  const direction = to.clone().sub(from);
+  const distance = direction.length();
+  if (distance <= 0.5) return true;
+
+  collisionRay.set(from, direction.normalize());
+  // Contact at the destination platform is valid. Anything meaningfully before
+  // the selected landing is solid route geometry and blocks the warp.
+  collisionRay.far = Math.max(0, distance - 0.48);
+  return collisionRay.intersectObjects(state.platformMeshes, false).length === 0;
+}
+
+type LandingPreview = "endpoint" | "short" | "drop" | "void" | "blocked" | "cancel";
+
+/** Where a release right now would leave the player. */
+function previewLanding(state: RuntimeState): LandingPreview {
+  if (state.warp.isHoldCancelled()) return "cancel";
+  const point = state.warp.previewPoint();
+  if (!point) return "endpoint";
+  if (!warpIsClear(state, state.camera.position, point)) return "blocked";
+  const short = state.warp.selectionPercent() < 100;
+  let below = false;
+  for (const mesh of state.platformMeshes) {
+    const box = solidBounds.setFromObject(mesh);
+    if (point.x < box.min.x - 0.26 || point.x > box.max.x + 0.26 || point.z < box.min.z - 0.26 || point.z > box.max.z + 0.26) continue;
+    if (box.max.y > point.y + 0.05) continue;
+    // Mirrors warp arrival: within 0.72 of standing height (or anywhere between the
+    // surface and standing height) settles on this surface.
+    if (point.y - box.max.y <= 1.7 + 0.72) return short ? "short" : "endpoint";
+    below = true;
+  }
+  return below ? "drop" : "void";
+}
+
+const PREVIEW_TONE: Record<LandingPreview, number | null> = {
+  endpoint: null, short: null, drop: 0xffcf66, void: 0xff6a7d, blocked: 0xff6a7d, cancel: 0x5d7082
+};
+const PREVIEW_LABEL: Record<LandingPreview, string> = {
+  endpoint: "ENDPOINT", short: "STOP SHORT", drop: "DROP", void: "NO FLOOR", blocked: "BLOCKED", cancel: "CANCEL"
+};
+
 function installLiveWarpGrammar(state: RuntimeState, game: object): void {
-  const collisionRay = new THREE.Raycaster();
-  const solidBounds = new THREE.Box3();
   state.warp.setCommitValidator((from, to) => {
-    // A destination inside solid geometry would leave the player embedded in it
-    // (and able to fall through floors), so it is never a valid landing.
-    const embedded = state.platformMeshes.some((mesh) =>
-      solidBounds.setFromObject(mesh).expandByScalar(-0.05).containsPoint(to));
-    if (embedded) {
-      state.flashMessage("VECTOR BLOCKED // SOLID GEOMETRY", 1050);
-      return false;
-    }
-
-    const direction = to.clone().sub(from);
-    const distance = direction.length();
-    if (distance <= 0.5) return true;
-
-    collisionRay.set(from, direction.normalize());
-    // Contact at the destination platform is valid. Anything meaningfully before
-    // the selected landing is solid route geometry and blocks the warp.
-    collisionRay.far = Math.max(0, distance - 0.48);
-    const blocked = collisionRay.intersectObjects(state.platformMeshes, false).length > 0;
-    if (blocked) state.flashMessage("VECTOR BLOCKED // SOLID GEOMETRY", 1050);
-    return !blocked;
+    const clear = warpIsClear(state, from, to);
+    if (!clear) state.flashMessage("VECTOR BLOCKED // SOLID GEOMETRY", 1050);
+    return clear;
   });
 
   const originalUpdate = state.update.bind(game);
@@ -320,7 +358,13 @@ function updateStopShort(state: RuntimeState): void {
   const held = state.input.isWarpHeld();
   const percent = hasAnchor ? state.warp.selectionPercent() : 100;
   const visible = trainingStopShort || hasAnchor;
-  const landingState = percent < 100 ? "STOP SHORT" : "ENDPOINT";
+  const preview: LandingPreview = hasAnchor && held ? previewLanding(state) : percent < 100 ? "short" : "endpoint";
+  const landingState = PREVIEW_LABEL[preview];
+  state.warp.setPreviewTone(PREVIEW_TONE[preview]);
+  for (const key of Object.keys(PREVIEW_LABEL)) {
+    document.body.classList.toggle(`warp-preview-${key}`, hasAnchor && held && preview === key);
+  }
+  document.body.classList.toggle("warp-empty", held && !hasAnchor);
 
   if (touchHUD) {
     const mobilePanel = document.getElementById("mobile-landing-readout");

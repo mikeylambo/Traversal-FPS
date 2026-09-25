@@ -137,7 +137,7 @@ function applyHudProfile(state: RuntimeState): void {
   const warpHint = document.getElementById("warp-hint");
   const anchor = document.getElementById("anchor-status");
 
-  if (warpPercent) warpPercent.hidden = tier !== "assist";
+  if (warpPercent) warpPercent.hidden = tier !== "assist" && tier !== "standard";
 
   if (stopPanel && tier !== "assist" && tier !== "standard") {
     // The filling bar itself is a computed percentage answer, so Hard/Expert do
@@ -146,11 +146,9 @@ function applyHudProfile(state: RuntimeState): void {
   }
 
   if (stopPercent) {
-    stopPercent.textContent = tier === "assist"
+    stopPercent.textContent = tier === "assist" || tier === "standard"
       ? `${percent}%`
-      : tier === "standard"
-        ? "VECTOR"
-        : tier === "hard"
+      : tier === "hard"
           ? "READ"
           : "MANUAL";
   }
@@ -166,11 +164,9 @@ function applyHudProfile(state: RuntimeState): void {
   }
 
   if (anchor && hasAnchor && held) {
-    anchor.textContent = tier === "assist"
+    anchor.textContent = tier === "assist" || tier === "standard"
       ? `VECTOR SELECT // ${percent}%`
-      : tier === "standard"
-        ? "VECTOR SELECT"
-        : tier === "hard"
+      : tier === "hard"
           ? "VECTOR SELECT // EXTRAPOLATE"
           : "VECTOR SELECT // MANUAL";
   }

@@ -14,9 +14,17 @@ type EndpointFx = {
 
 type CommitValidator = (from: THREE.Vector3, to: THREE.Vector3) => boolean;
 
+/** Selectable Stop Short range; 0 is a detent below it that means "don't warp". */
+const MIN_FRACTION = 0.12;
+const STEP = 0.04;
+
 export class WarpSystem {
   private anchor: { origin: THREE.Vector3; target: THREE.Vector3 } | null = null;
   private fraction = 1;
+  /** Set by the cancel input during a hold: this release keeps the vector armed. */
+  private holdCancelled = false;
+  /** Marker colour override from the live landing probe (null = default). */
+  private previewTone: number | null = null;
   private transit: { from: THREE.Vector3; to: THREE.Vector3; elapsed: number; duration: number } | null = null;
   private commitValidator: CommitValidator | null = null;
   private readonly line: THREE.Line;
@@ -70,6 +78,7 @@ export class WarpSystem {
   write(origin: THREE.Vector3, target: THREE.Vector3): void {
     this.anchor = { origin: origin.clone(), target: target.clone() };
     this.fraction = 1;
+    this.holdCancelled = false;
     this.refreshLiveVector();
   }
 
@@ -99,19 +108,48 @@ export class WarpSystem {
 
   setSelectionFraction(fraction: number): void {
     if (!this.anchor) return;
-    this.fraction = THREE.MathUtils.clamp(fraction, 0.12, 1);
+    this.fraction = fraction <= 0 ? 0 : THREE.MathUtils.clamp(fraction, MIN_FRACTION, 1);
+  }
+
+  /** Cancel the current hold: releasing Warp will not commit, and the vector stays armed. */
+  cancelHold(): void {
+    if (!this.anchor || this.transit) return;
+    this.holdCancelled = true;
+  }
+
+  /** True when a release right now would keep the vector instead of warping. */
+  /** The point a release would warp to right now, or null without a vector. */
+  previewPoint(): THREE.Vector3 | null {
+    return this.anchor ? this.selectedPoint() : null;
+  }
+
+  setPreviewTone(tone: number | null): void {
+    this.previewTone = tone;
+  }
+
+  isHoldCancelled(): boolean {
+    return this.holdCancelled || this.fraction < MIN_FRACTION;
   }
 
   updateSelection(isHeld: boolean, wheelDelta: number, timeSeconds = 0): void {
     if (!this.anchor) return;
     if (isHeld && wheelDelta !== 0) {
-      this.fraction = THREE.MathUtils.clamp(this.fraction - wheelDelta * 0.04, 0.12, 1);
+      // One detent below the shortest landing reads as CANCEL; stepping longer
+      // from it returns to the shortest landing.
+      if (this.fraction < MIN_FRACTION) {
+        if (wheelDelta < 0) this.fraction = MIN_FRACTION;
+      } else if (wheelDelta > 0 && this.fraction <= MIN_FRACTION + 0.0001) {
+        this.fraction = 0;
+      } else {
+        this.fraction = THREE.MathUtils.clamp(this.fraction - wheelDelta * STEP, MIN_FRACTION, 1);
+      }
     }
 
     const selected = this.selectedPoint();
     const lineMaterial = this.line.material as THREE.LineBasicMaterial;
-    lineMaterial.opacity = isHeld ? 0.42 : 0.78;
-    this.beam.material.opacity = isHeld ? 0.36 : 0.1;
+    const cancelled = isHeld && this.isHoldCancelled();
+    lineMaterial.opacity = cancelled ? 0.2 : isHeld ? 0.42 : 0.78;
+    this.beam.material.opacity = cancelled ? 0.04 : isHeld ? 0.36 : 0.1;
 
     // The thin line is always the live player->target vector. While placing a
     // landing, the brighter beam terminates at the selected point.
@@ -121,7 +159,7 @@ export class WarpSystem {
       isHeld ? selected : this.anchor.target
     );
 
-    this.marker.visible = isHeld;
+    this.marker.visible = isHeld && !this.isHoldCancelled();
     if (isHeld) {
       this.marker.position.copy(selected);
       const pulse = 1 + Math.sin(timeSeconds * 11) * 0.1;
@@ -130,13 +168,20 @@ export class WarpSystem {
       this.markerRing.rotation.z = timeSeconds * 1.8;
 
       const ringMaterial = this.markerRing.material as THREE.MeshBasicMaterial;
-      ringMaterial.color.setHex(this.fraction < 0.995 ? 0xffffff : 0x78f7ff);
+      ringMaterial.color.setHex(this.previewTone ?? (this.fraction < 0.995 ? 0xffffff : 0x78f7ff));
       ringMaterial.opacity = this.fraction < 0.995 ? 1 : 0.9;
     }
   }
 
   commit(currentPosition: THREE.Vector3): boolean {
     if (!this.anchor || this.transit) return false;
+    if (this.isHoldCancelled()) {
+      // Released without warping: keep the destination. A detent cancel restores a
+      // full landing; a button cancel keeps the chosen Stop Short for next time.
+      this.holdCancelled = false;
+      if (this.fraction < MIN_FRACTION) this.fraction = 1;
+      return false;
+    }
     this.syncOrigin(currentPosition);
     const to = this.selectedPoint();
     if (this.commitValidator && !this.commitValidator(currentPosition, to)) return false;

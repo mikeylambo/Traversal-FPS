@@ -20,6 +20,7 @@ export interface ContentRuntime {
   setSelectedMap(id: string): void;
   /** Full suite run, or a single course/chamber when `index` is given. */
   setModeSuite(suite: ModeSuite, index?: number): void;
+  activeSuite(): { suite: ModeSuite; index: number | null };
   reloadSelected(): void;
   setTrainingPath(path: TrainingPath): void;
   enterGrammar(): void;
@@ -211,6 +212,7 @@ export function installContentRuntime(shell: any): ContentRuntime {
       selectedSuiteIndex = index ?? null;
       if (suite) telemetry.record("content.select", { contentId: `suite-${suite}`, kind: "mode-suite", index: index ?? "all" });
     },
+    activeSuite: () => ({ suite: selectedModeSuite, index: selectedSuiteIndex }),
     reloadSelected,
     setTrainingPath(path: TrainingPath) {
       selectedTrainingPath = path;

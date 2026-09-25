@@ -18,6 +18,10 @@ type FlowLike = {
  * confirm and back are independent of it.
  */
 export function installUISounds(flow: FlowLike, root: HTMLElement): void {
+  // The Shell polls "back" (B on a controller, where B is also Crouch) every frame,
+  // including during play. Menu cues must stay silent while a room is running.
+  const inPlay = () => document.body.classList.contains("playing");
+
   const originalActivate = flow.onActivate.bind(flow);
   flow.onActivate = (screenId: string, choiceId: string) => {
     emitTraversalAudio("ui.confirm");
@@ -26,7 +30,7 @@ export function installUISounds(flow: FlowLike, root: HTMLElement): void {
 
   const originalBack = flow.onBack.bind(flow);
   flow.onBack = (screenId: string) => {
-    emitTraversalAudio("ui.back");
+    if (!inPlay()) emitTraversalAudio("ui.back");
     originalBack(screenId);
   };
 
@@ -46,7 +50,7 @@ export function installUISounds(flow: FlowLike, root: HTMLElement): void {
       return;
     }
     focused = id;
-    emitTraversalAudio("ui.select");
+    if (!inPlay()) emitTraversalAudio("ui.select");
   });
   observer.observe(root, { childList: true, subtree: true, attributes: true, attributeFilter: ["data-focused"] });
 }

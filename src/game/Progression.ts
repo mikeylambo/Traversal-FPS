@@ -17,7 +17,20 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
   { id: "map-03-complete", label: "LINE OF SIGHT", description: "Complete Campaign Map 03." },
   { id: "clean-run", label: "CLEAN GEOMETRY", description: "Finish a run with no restarts and no wasted shots." },
   { id: "challenge-clear", label: "UNDER CONSTRAINT", description: "Complete a Challenge run." },
-  { id: "time-trial-clear", label: "ROUTE CLOCK", description: "Complete a Time Trial run." }
+  { id: "time-trial-clear", label: "ROUTE CLOCK", description: "Complete a Time Trial run." },
+  { id: "hairline", label: "HAIRLINE", description: "Commit a warp at 25% or less." },
+  { id: "hold-fire", label: "HOLD FIRE", description: "Cancel a warp and keep the vector." },
+  { id: "midair", label: "MIDAIR", description: "Destroy a Sphere while airborne." },
+  { id: "thread", label: "THREAD", description: "Destroy three Spheres before touching the ground." },
+  { id: "nothing-left", label: "NOTHING LEFT", description: "Clear a Campaign sector with every Sphere destroyed." },
+  { id: "act-1", label: "ACT I", description: "Clear Sector 08." },
+  { id: "act-2", label: "ACT II", description: "Clear Sector 18." },
+  { id: "act-3", label: "ACT III", description: "Clear Sector 30." },
+  { id: "campaign-complete", label: "THE CONSTRUCT", description: "Clear Sector 42." },
+  { id: "gold-line", label: "GOLD LINE", description: "Beat a Time Trial course's Gold time." },
+  { id: "all-gold", label: "ALL GOLD", description: "Beat Gold on all 16 Time Trial courses." },
+  { id: "exact-all", label: "EXACT", description: "Clear all 24 Challenge chambers." },
+  { id: "reverse-clear", label: "THE REVERSE", description: "Complete The Reverse." }
 ];
 
 export type CampaignCheckpoint = {

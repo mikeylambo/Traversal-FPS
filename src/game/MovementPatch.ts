@@ -155,8 +155,41 @@ function moveWithBodyCollision(
   platforms: PlatformSpec[],
   allowStep: boolean
 ): void {
+  depenetrate(position, position.y - eyeHeight, bodyHeight, platforms);
   moveAxis(position, "x", dx, eyeHeight, bodyHeight, platforms, allowStep);
   moveAxis(position, "z", dz, eyeHeight, bodyHeight, platforms, allowStep);
+}
+
+/**
+ * Moving platforms, crouch-to-stand transitions and warp arrivals can leave the
+ * body a few centimetres inside a wall. Push out along the shallowest side so the
+ * player is never frozen in place.
+ */
+function depenetrate(position: THREE.Vector3, footY: number, bodyHeight: number, platforms: PlatformSpec[]): void {
+  for (let pass = 0; pass < 3; pass += 1) {
+    // Anything within step height is floor, owned by step/floor resolution.
+    const hit = platforms.find((platform) =>
+      platform.center[1] + platform.size[1] * 0.5 - footY > AUTO_STEP_HEIGHT &&
+      penetration(position.x, position.z, footY, bodyHeight, platform) > 0.002);
+    if (!hit) return;
+    const [cx, , cz] = hit.center;
+    const [sx, , sz] = hit.size;
+    const exits = [
+      { axis: "x" as const, value: cx - sx * 0.5 - PLAYER_RADIUS - 0.004 },
+      { axis: "x" as const, value: cx + sx * 0.5 + PLAYER_RADIUS + 0.004 },
+      { axis: "z" as const, value: cz - sz * 0.5 - PLAYER_RADIUS - 0.004 },
+      { axis: "z" as const, value: cz + sz * 0.5 + PLAYER_RADIUS + 0.004 }
+    ].map((exit) => ({ ...exit, distance: Math.abs(exit.value - position[exit.axis]) }))
+      .filter((exit) => exit.distance <= 0.6)
+      .sort((a, b) => a.distance - b.distance);
+    const free = exits.find((exit) => {
+      const x = exit.axis === "x" ? exit.value : position.x;
+      const z = exit.axis === "z" ? exit.value : position.z;
+      return !platforms.some((platform) => platform !== hit && penetration(x, z, footY, bodyHeight, platform) > 0.002);
+    });
+    if (!free) return;
+    position[free.axis] = free.value;
+  }
 }
 
 function moveAxis(
@@ -170,50 +203,77 @@ function moveAxis(
 ): void {
   if (Math.abs(delta) < 0.000001) return;
 
-  const candidateX = axis === "x" ? position.x + delta : position.x;
-  const candidateZ = axis === "z" ? position.z + delta : position.z;
   const footY = position.y - eyeHeight;
+  const at = (fraction: number) => ({
+    x: axis === "x" ? position.x + delta * fraction : position.x,
+    z: axis === "z" ? position.z + delta * fraction : position.z
+  });
+  const full = at(1);
 
-  if (!bodyBlocked(candidateX, candidateZ, footY, bodyHeight, platforms)) {
+  if (!moveBlocked(position.x, position.z, full.x, full.z, footY, bodyHeight, platforms)) {
     position[axis] += delta;
     return;
   }
 
-  if (!allowStep) return;
-  const step = findStepHeight(candidateX, candidateZ, footY, bodyHeight, platforms);
-  if (step === null) return;
+  if (allowStep) {
+    const step = findStep(full.x, full.z, axis, Math.sign(delta), footY, bodyHeight, platforms);
+    if (step) {
+      position.y += step.rise;
+      position[axis] = step.settle;
+      return;
+    }
+  }
 
-  position.y += step;
-  position[axis] += delta;
+  // Close the gap to the wall instead of stopping a full frame short of it;
+  // a hovering gap is what makes corners feel sticky.
+  let lo = 0;
+  let hi = 1;
+  for (let i = 0; i < 5; i += 1) {
+    const mid = (lo + hi) / 2;
+    const probe = at(mid);
+    if (moveBlocked(position.x, position.z, probe.x, probe.z, footY, bodyHeight, platforms)) hi = mid;
+    else lo = mid;
+  }
+  position[axis] += delta * lo;
 }
 
-function findStepHeight(
+/**
+ * Auto-step: the lip is detected under the body's leading edge (the centre is
+ * still outside it when the capsule first touches), and the centre is then
+ * settled onto the step so floor resolution keeps the player up there.
+ */
+function findStep(
   x: number,
   z: number,
+  axis: "x" | "z",
+  sign: number,
   footY: number,
   bodyHeight: number,
   platforms: PlatformSpec[]
-): number | null {
-  const candidates = new Set<number>();
+): { rise: number; settle: number } | null {
+  const lead = { x, z };
+  lead[axis] += sign * PLAYER_RADIUS * 0.9;
+  const candidates: { rise: number; platform: PlatformSpec }[] = [];
 
   for (const platform of platforms) {
     const [cx, cy, cz] = platform.center;
     const [sx, sy, sz] = platform.size;
-    if (
-      Math.abs(x - cx) > sx * 0.5 + PLAYER_RADIUS ||
-      Math.abs(z - cz) > sz * 0.5 + PLAYER_RADIUS
-    ) continue;
-
-    const top = cy + sy * 0.5;
-    const rise = top - footY;
-    if (rise > 0.025 && rise <= AUTO_STEP_HEIGHT) candidates.add(Number(rise.toFixed(4)));
+    if (Math.abs(lead.x - cx) > sx * 0.5 || Math.abs(lead.z - cz) > sz * 0.5) continue;
+    const rise = cy + sy * 0.5 - footY;
+    if (rise > 0.025 && rise <= AUTO_STEP_HEIGHT) candidates.push({ rise, platform });
   }
 
-  for (const rise of [...candidates].sort((a, b) => a - b)) {
-    const raisedFoot = footY + rise;
-    if (bodyBlocked(x, z, raisedFoot, bodyHeight, platforms)) continue;
-    if (!supportedAt(x, z, raisedFoot, platforms)) continue;
-    return rise;
+  for (const { rise, platform } of candidates.sort((a, b) => a.rise - b.rise)) {
+    const centre = platform.center[axis === "x" ? 0 : 2];
+    const half = platform.size[axis === "x" ? 0 : 2] * 0.5;
+    const current = axis === "x" ? x : z;
+    const settle = THREE.MathUtils.clamp(current, centre - half + 0.02, centre + half - 0.02);
+    const sx = axis === "x" ? settle : x;
+    const sz = axis === "z" ? settle : z;
+    if (Math.abs(settle - current) > PLAYER_RADIUS + 0.05) continue;
+    if (bodyBlocked(sx, sz, footY + rise, bodyHeight, platforms)) continue;
+    if (!supportedAt(sx, sz, footY + rise, platforms)) continue;
+    return { rise, settle };
   }
 
   return null;
@@ -225,9 +285,25 @@ function supportedAt(x: number, z: number, footY: number, platforms: PlatformSpe
     const [sx, sy, sz] = platform.size;
     const top = cy + sy * 0.5;
     return Math.abs(top - footY) <= 0.035 &&
-      Math.abs(x - cx) <= sx * 0.5 - 0.03 &&
-      Math.abs(z - cz) <= sz * 0.5 - 0.03;
+      Math.abs(x - cx) <= sx * 0.5 + 0.01 &&
+      Math.abs(z - cz) <= sz * 0.5 + 0.01;
   });
+}
+
+/** Horizontal overlap depth of the body circle with a box, or 0 if clear. */
+function penetration(x: number, z: number, footY: number, bodyHeight: number, platform: PlatformSpec): number {
+  const [cx, cy, cz] = platform.center;
+  const [sx, sy, sz] = platform.size;
+  const playerBottom = footY + 0.045;
+  const playerTop = footY + bodyHeight;
+  const boxBottom = cy - sy * 0.5;
+  const boxTop = cy + sy * 0.5;
+  if (!(playerTop > boxBottom + 0.02 && playerBottom < boxTop - 0.02)) return 0;
+
+  const nearestX = THREE.MathUtils.clamp(x, cx - sx * 0.5, cx + sx * 0.5);
+  const nearestZ = THREE.MathUtils.clamp(z, cz - sz * 0.5, cz + sz * 0.5);
+  const distance = Math.hypot(x - nearestX, z - nearestZ);
+  return Math.max(0, PLAYER_RADIUS - distance);
 }
 
 function bodyBlocked(
@@ -237,22 +313,26 @@ function bodyBlocked(
   bodyHeight: number,
   platforms: PlatformSpec[]
 ): boolean {
-  const playerBottom = footY + 0.045;
-  const playerTop = footY + bodyHeight;
+  return platforms.some((platform) => penetration(x, z, footY, bodyHeight, platform) > 0);
+}
 
+/**
+ * A move is blocked only if it enters a box or goes deeper into one. Moving out
+ * of an existing overlap is always allowed, so the body can never be pinned.
+ */
+function moveBlocked(
+  fromX: number,
+  fromZ: number,
+  x: number,
+  z: number,
+  footY: number,
+  bodyHeight: number,
+  platforms: PlatformSpec[]
+): boolean {
   return platforms.some((platform) => {
-    const [cx, cy, cz] = platform.center;
-    const [sx, sy, sz] = platform.size;
-    const boxBottom = cy - sy * 0.5;
-    const boxTop = cy + sy * 0.5;
-    const verticalOverlap = playerTop > boxBottom + 0.02 && playerBottom < boxTop - 0.02;
-    if (!verticalOverlap) return false;
-
-    const nearestX = THREE.MathUtils.clamp(x, cx - sx * 0.5, cx + sx * 0.5);
-    const nearestZ = THREE.MathUtils.clamp(z, cz - sz * 0.5, cz + sz * 0.5);
-    const ddx = x - nearestX;
-    const ddz = z - nearestZ;
-    return ddx * ddx + ddz * ddz < PLAYER_RADIUS * PLAYER_RADIUS;
+    const next = penetration(x, z, footY, bodyHeight, platform);
+    if (next <= 0) return false;
+    return next > penetration(fromX, fromZ, footY, bodyHeight, platform) - 0.0001;
   });
 }
 
@@ -276,6 +356,9 @@ function hasHeadroom(
       Math.abs(z - cz) <= sz * 0.5 + PLAYER_RADIUS;
   });
 }
+
+/** Pure collision entry points, exported for the regression suite. */
+export const movementCollisionForTests = { moveWithBodyCollision, resolveFloor };
 
 function resolveWarpArrival(
   position: THREE.Vector3,

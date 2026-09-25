@@ -1,0 +1,39 @@
+/*
+ * Warp readability. The Stop Short readout and reticle say what a release will do
+ * right now, in colour and shape as well as words:
+ *   ENDPOINT / STOP SHORT (accent) · DROP (amber) · NO FLOOR, BLOCKED (red) · CANCEL (grey)
+ * Holding Warp with no vector armed dims and crosses the reticle.
+ */
+:root {
+  --warp-ok: var(--hud-accent, #69e7ff);
+  --warp-drop: #ffcf66;
+  --warp-bad: #ff6a7d;
+  --warp-off: #7d91a3;
+}
+
+body.warp-preview-drop #stop-short-readout { --hud-accent: var(--warp-drop); }
+body.warp-preview-void #stop-short-readout,
+body.warp-preview-blocked #stop-short-readout { --hud-accent: var(--warp-bad); }
+body.warp-preview-cancel #stop-short-readout { --hud-accent: var(--warp-off); }
+
+body.warp-preview-void #stop-short-readout em,
+body.warp-preview-blocked #stop-short-readout em,
+body.warp-preview-drop #stop-short-readout em,
+body.warp-preview-cancel #stop-short-readout em {
+  color: var(--hud-accent);
+}
+
+body.warp-preview-blocked #stop-short-readout::after,
+body.warp-preview-void #stop-short-readout::after {
+  background: repeating-linear-gradient(90deg, var(--warp-bad) 0 8px, transparent 8px 12px);
+}
+
+body.warp-preview-cancel #stop-short-readout::after { opacity: .25; }
+
+/* Reticle: ring when a vector is armed; state colour while placing. */
+body.anchor-ready #reticle { filter: drop-shadow(0 0 4px var(--warp-ok)); }
+body.warp-preview-drop #reticle { filter: drop-shadow(0 0 5px var(--warp-drop)); }
+body.warp-preview-void #reticle,
+body.warp-preview-blocked #reticle { filter: drop-shadow(0 0 6px var(--warp-bad)); }
+body.warp-preview-cancel #reticle { opacity: .5; }
+body.warp-empty #reticle { opacity: .35; transform: translate(-50%, -50%) scale(var(--reticle-scale)) rotate(45deg); }
