@@ -10,7 +10,7 @@ export const MAP_04_FIELD: RoomSpec[] = [
   {
     id: "sector-04-crosscurrent",
     title: "CROSSCURRENT",
-    lesson: "Read the whole line. A valid vector is not necessarily a safe one.",
+    lesson: "Read the whole line. A valid warp is not necessarily a safe one.",
     grammar: ["moving-endpoint", "stop-short", "reorientation", "airborne-chain", "origin-matters", "route-fork"],
     spawn: [0, 2.2, 25],
     goal: [0, 1.1, -169],

@@ -224,7 +224,7 @@ export const MAPS_33_TO_42: CampaignMapDefinition[] = [
   map(37, "CROSS ORDER", "A broad cardinal layout where branch order defines efficiency.", ["Cross", "Width", "Route Choice"], S37),
   map(38, "OVER / UNDER", "Stacked routes force repeated changes in elevation and profile.", ["Split Level", "Crouch", "Verticality"], S38),
   map(39, "LONGSPAN", "Sparse anchors stretch the Construct laterally instead of forward.", ["Width", "Long Distance", "Stop Short"], S39),
-  map(40, "PARALLAX", "The locked target stays fixed while the player's live vector origin moves.", ["Mobile Origin", "Solid Walls", "Reposition"], S40),
+  map(40, "PARALLAX", "The locked target stays fixed while the player's live warp origin moves.", ["Mobile Origin", "Solid Walls", "Reposition"], S40),
   map(41, "LOOP", "A closed route returns to the beginning from the opposite side.", ["Loop", "Return", "Route Choice"], S41),
   map(42, "CONVERGENCE", "Act IV finale: the expanded spatial grammar recomposed into one construct.", ["Finale", "Synthesis", "Verticality", "Crouch", "Mobile Origin"], S42)
 ];

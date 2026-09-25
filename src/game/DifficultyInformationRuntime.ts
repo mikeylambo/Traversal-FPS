@@ -159,16 +159,16 @@ function applyHudProfile(state: RuntimeState): void {
   }
 
   if (warpHint && hasAnchor) {
-    if (tier === "hard") warpHint.textContent = held ? "PLACE // EXTRAPOLATE VECTOR" : "HOLD WARP TO PLACE";
-    if (tier === "expert") warpHint.textContent = held ? "PLACE BY EYE // RELEASE TO COMMIT" : "HOLD WARP // READ THE VECTOR";
+    if (tier === "hard") warpHint.textContent = held ? "PLACE // EXTRAPOLATE" : "HOLD WARP TO PLACE";
+    if (tier === "expert") warpHint.textContent = held ? "PLACE BY EYE // RELEASE TO COMMIT" : "HOLD WARP // READ THE LINE";
   }
 
   if (anchor && hasAnchor && held) {
     anchor.textContent = tier === "assist" || tier === "standard"
-      ? `VECTOR SELECT // ${percent}%`
+      ? `WARP // ${percent}%`
       : tier === "hard"
-          ? "VECTOR SELECT // EXTRAPOLATE"
-          : "VECTOR SELECT // MANUAL";
+          ? "WARP // EXTRAPOLATE"
+          : "WARP // MANUAL";
   }
 }
 

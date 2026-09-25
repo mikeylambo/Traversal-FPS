@@ -37,3 +37,21 @@ body.warp-preview-void #reticle,
 body.warp-preview-blocked #reticle { filter: drop-shadow(0 0 6px var(--warp-bad)); }
 body.warp-preview-cancel #reticle { opacity: .5; }
 body.warp-empty #reticle { opacity: .35; transform: translate(-50%, -50%) scale(var(--reticle-scale)) rotate(45deg); }
+
+/* Which side to fire from, shown while aiming at a caged Sphere. */
+#target-hint {
+  position: fixed;
+  left: 50%;
+  top: calc(50% + 44px);
+  transform: translateX(-50%);
+  pointer-events: none;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: #ffc98f;
+  text-shadow: 0 0 10px rgba(255, 180, 107, 0.55);
+  opacity: 0;
+  transition: opacity 120ms ease;
+  z-index: 20;
+}
+body.playing.target-blocked #target-hint:not(:empty) { opacity: 1; }

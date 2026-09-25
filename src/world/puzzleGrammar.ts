@@ -46,14 +46,14 @@ export const PUZZLE_GRAMMAR_V1: PuzzleGrammarEntry[] = [
   {
     id: "origin-matters",
     label: "Origin Matters",
-    revelation: "Where you stand when you fire is half of the vector, so positioning before the kill changes the route.",
+    revelation: "Where you stand when you fire is half of the warp, so positioning before the kill changes the route.",
     execution: "low",
     combinesWith: ["low-profile", "route-fork", "reorientation"]
   },
   {
     id: "route-fork",
     label: "Route Fork",
-    revelation: "Multiple kills may work, but the cleanest sequence uses fewer vectors, shots, or detours.",
+    revelation: "Multiple kills may work, but the cleanest sequence uses fewer warps, shots, or detours.",
     execution: "medium",
     combinesWith: ["moving-endpoint", "origin-matters", "reorientation", "timing-chain"]
   },
@@ -67,7 +67,7 @@ export const PUZZLE_GRAMMAR_V1: PuzzleGrammarEntry[] = [
   {
     id: "moving-endpoint",
     label: "Moving Endpoint",
-    revelation: "A moving target is a moving destination; kill timing determines where the vector points.",
+    revelation: "A moving target is a moving destination; kill timing determines where the warp points.",
     execution: "medium",
     combinesWith: ["stop-short", "route-fork", "airborne-chain", "timing-chain"]
   },
@@ -81,7 +81,7 @@ export const PUZZLE_GRAMMAR_V1: PuzzleGrammarEntry[] = [
   {
     id: "timing-chain",
     label: "Timing Chain",
-    revelation: "A route can be spatially correct but temporally wrong; hazard phases and moving windows must align across successive vectors.",
+    revelation: "A route can be spatially correct but temporally wrong; hazard phases and moving windows must align across successive warps.",
     execution: "high",
     combinesWith: ["moving-endpoint", "airborne-chain", "stop-short", "reorientation"]
   }

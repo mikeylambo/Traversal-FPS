@@ -67,7 +67,7 @@ export const ROOMS: RoomSpec[] = [
   {
     id: "room-01",
     title: "WRITE THE LINE",
-    lesson: "Kill the sphere. Hold RMB, then release to spend its vector.",
+    lesson: "Kill the sphere. Hold RMB, then release to warp.",
     grammar: ["direct-anchor"],
     spawn: [0, 2.2, 6],
     goal: [0, 1.1, -24],
@@ -113,7 +113,7 @@ export const ROOMS: RoomSpec[] = [
   {
     id: "room-04",
     title: "ORIGIN MATTERS",
-    lesson: "The shield rejects frontal shots. Move right before the kill so the written vector starts there.",
+    lesson: "The shield rejects frontal shots. Move right before the kill so the warp starts there.",
     grammar: ["origin-matters"],
     spawn: [-5, 2.2, 6],
     goal: [7, 1.1, -28],
@@ -148,7 +148,7 @@ export const ROOMS: RoomSpec[] = [
   {
     id: "room-06",
     title: "LOW PROFILE",
-    lesson: "There is no jump. Hold Ctrl or C to lower your body, pass under the structure, then write the vector from the low route.",
+    lesson: "There is no jump. Hold Ctrl or C to lower your body, pass under the structure, then warp from the low route.",
     grammar: ["low-profile", "origin-matters"],
     spawn: [0, 2.2, 8],
     goal: [0, 1.1, -20],
@@ -181,7 +181,7 @@ export const ROOMS: RoomSpec[] = [
   {
     id: "room-08",
     title: "REORIENT",
-    lesson: "The first vector is valuable for the angle it gives you. Reach the side perch, then use the new line of sight to write the second.",
+    lesson: "The first warp is valuable for the angle it gives you. Reach the side perch, then use the new line of sight for the second.",
     grammar: ["reorientation", "airborne-chain"],
     spawn: [-6, 2.2, 6],
     goal: [8, 1.1, -30],

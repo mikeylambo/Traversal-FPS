@@ -18,7 +18,7 @@ const ACT_ENTRIES: Record<string, { kicker: string; title: string }> = {
   "map-31": { kicker: "ACT IV", title: "MASTERY WITHOUT A MAP" }
 };
 const ACT_FINALES: Record<string, { kicker: string; title: string }> = {
-  "map-08": { kicker: "ACT I // FINALE", title: "TERMINAL VECTOR" },
+  "map-08": { kicker: "ACT I // FINALE", title: "TERMINAL" },
   "map-18": { kicker: "ACT II // FINALE", title: "SWEEP" },
   "map-30": { kicker: "ACT III // FINALE", title: "KINETIC" },
   "map-42": { kicker: "ACT IV // FINALE", title: "CONVERGENCE" }
@@ -80,7 +80,7 @@ function showTransition(
     title.textContent = "CONTROLS";
   } else if (contentId === "training") {
     kicker.textContent = "TRAINING";
-    title.textContent = "VECTOR FUNDAMENTALS";
+    title.textContent = "WARP FUNDAMENTALS";
   } else if (campaign) {
     kicker.textContent = `SECTOR ${sectorNumber}`;
     title.textContent = mapTitle;

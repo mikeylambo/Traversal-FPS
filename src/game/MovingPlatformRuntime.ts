@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { roomTime } from "./RoomClock";
 import { emitTraversalAudioAt } from "../audio/TraversalAudio";
 import { mountRegisteredVisual, type ProceduralVisualKey } from "../art/procedural/ProceduralVisualRegistry";
 import { ROOMS, type PlatformSpec, type PuzzleEffect } from "../world/stages";
@@ -36,7 +37,7 @@ export function installMovingPlatformRuntime(game: object): void {
     for (const platform of moving) {
       if (!platform.spec.id || !effect.targetIds.includes(platform.spec.id)) continue;
       platform.active = true;
-      platform.startedAt = performance.now() * 0.001;
+      platform.startedAt = roomTime();
       platform.mesh.userData.motionActive = true;
       // Panned to the platform, not the player: a platform that starts moving
       // behind you is information you are entitled to without turning around.
@@ -60,7 +61,7 @@ export function installMovingPlatformRuntime(game: object): void {
 
       const edge = nearestEdgeAtPosition(state.roomRoot, mesh.position, mesh);
       const active = spec.motion.active ?? true;
-      const now = performance.now() * 0.001;
+      const now = roomTime();
       mesh.userData.motionActive = active;
       mesh.userData.traversalPlatformId = spec.id;
       moving.push({
@@ -77,7 +78,7 @@ export function installMovingPlatformRuntime(game: object): void {
 
   const originalUpdate = state.update.bind(game);
   state.update = (dt: number) => {
-    updateMovingPlatforms(state, moving, performance.now() * 0.001);
+    updateMovingPlatforms(state, moving, roomTime());
     originalUpdate(dt);
   };
 

@@ -5,7 +5,7 @@ export interface AchievementDefinition {
 }
 
 export const ACHIEVEMENTS: AchievementDefinition[] = [
-  { id: "first-vector", label: "FIRST VECTOR", description: "Write your first traversal vector." },
+  { id: "first-vector", label: "FIRST SPHERE", description: "Destroy your first Sphere." },
   { id: "stop-short", label: "STOP SHORT", description: "Commit a warp before 100% of the written line." },
   { id: "airborne-chain", label: "AIRBORNE CHAIN", description: "Clear the Training chamber that teaches airborne reacquisition." },
   { id: "low-profile", label: "LOW PROFILE", description: "Clear the Training crouch / low-clearance chamber." },

@@ -153,7 +153,7 @@ export function installSpatialActorRuntime(game: object): void {
     state.flashMessage(
       state.roomKills > room.requiredKills
         ? "EXTRA SPHERE // ROUTE EFFICIENCY DOWN"
-        : "WARP VECTOR WRITTEN",
+        : "WARP READY",
       state.roomKills > room.requiredKills ? 1800 : 1000
     );
   };
@@ -178,25 +178,37 @@ export function installSpatialActorRuntime(game: object): void {
 
     document.body.classList.toggle("target-hot", Boolean(enemy) && !blocked);
     document.body.classList.toggle("target-blocked", blocked);
+    // Say which side to fire from while aiming, before a shot is wasted.
+    targetHint().textContent = blocked ? originRule.message ?? "" : "";
     document.body.classList.toggle("target-utility", Boolean(enemy && UTILITY_KINDS.has(enemy.spec.kind)));
   };
 
   const originalLoadRoom = state.loadRoom.bind(game);
   state.loadRoom = (index: number) => {
     originalLoadRoom(index);
-    decorateActorVisuals(state.enemies);
+    decorateActorVisuals(state.enemies, state.camera);
   };
 
   installActorGeometryRuntime(game);
   installRoomAccentAccessibilityRuntime(game);
 }
 
-function decorateActorVisuals(enemies: ActiveEnemy[]): void {
+function targetHint(): HTMLElement {
+  let node = document.getElementById("target-hint");
+  if (!node) {
+    node = document.createElement("div");
+    node.id = "target-hint";
+    document.body.appendChild(node);
+  }
+  return node;
+}
+
+function decorateActorVisuals(enemies: ActiveEnemy[], camera: THREE.Camera): void {
   for (const enemy of enemies) {
     if (enemy.mesh.userData.traversalActorVisual) continue;
     enemy.mesh.userData.traversalActorVisual = true;
 
-    if (enemy.spec.originConstraint || enemy.spec.kind === "shield") decorateOriginGate(enemy);
+    if (enemy.spec.originConstraint || enemy.spec.kind === "shield") decorateOriginGate(enemy, camera);
     if (enemy.spec.kind === "drifter") decorateDrifter(enemy);
     if (enemy.spec.kind === "orbit") decorateOrbit(enemy);
   }
@@ -225,11 +237,12 @@ function decorateOrbit(enemy: ActiveEnemy): void {
 const GATE_COLORS = { x: 0xffb46b, y: 0xb99bff, z: 0xff7fb8 } as const;
 
 /**
- * Any origin-gated Sphere wears a half shell over the side it cannot be hit
- * from, arrowheads pointing where you must fire from, and a dashed tether to
- * the world-space line you have to cross. Colour encodes the axis.
+ * An origin-gated Sphere sits in a cage while you stand where its shots would
+ * bounce, and the cage opens the moment you cross into the firing zone. The
+ * boundary itself is drawn as a large ring in the world that lights up once you
+ * are over it. Moving is the explanation; no arrows, no reading required.
  */
-function decorateOriginGate(enemy: ActiveEnemy): void {
+function decorateOriginGate(enemy: ActiveEnemy, camera: THREE.Camera): void {
   const constraint = resolveOriginConstraint(enemy.spec.kind, enemy.spec.originConstraint);
   if (!constraint) return;
   const radius = enemy.spec.radius ?? 0.72;
@@ -241,59 +254,46 @@ function decorateOriginGate(enemy: ActiveEnemy): void {
   const additive = (opacity: number, extra: THREE.MeshBasicMaterialParameters = {}) => new THREE.MeshBasicMaterial({
     color, transparent: true, opacity, blending: THREE.AdditiveBlending, depthWrite: false, ...extra
   });
-  const up = new THREE.Vector3(0, 1, 0);
 
-  const shell = new THREE.Mesh(
-    new THREE.SphereGeometry(radius * 1.24, 32, 12, 0, Math.PI * 2, 0, Math.PI * 0.5),
+  const cageFill = new THREE.Mesh(new THREE.IcosahedronGeometry(radius * 1.32, 1), additive(0.22, { side: THREE.DoubleSide }));
+  const cageWire = new THREE.Mesh(new THREE.IcosahedronGeometry(radius * 1.36, 1), additive(0.85, { wireframe: true }));
+  const cage = new THREE.Group();
+  cage.add(cageFill, cageWire);
+  enemy.mesh.add(cage);
+
+  const boundary = threshold === undefined ? null : new THREE.Mesh(
+    new THREE.RingGeometry(1.35, 1.6, 48),
     additive(0.3, { side: THREE.DoubleSide })
   );
-  shell.quaternion.setFromUnitVectors(up, allowed.clone().negate());
-
-  const rim = new THREE.Mesh(new THREE.TorusGeometry(radius * 1.26, radius * 0.05, 8, 48), additive(0.9));
-  rim.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), allowed);
-
-  const arrows = new THREE.Group();
-  for (let i = 0; i < 2; i += 1) {
-    const head = new THREE.Mesh(new THREE.ConeGeometry(radius * 0.26, radius * 0.42, 4), additive(0.85 - i * 0.3));
-    head.quaternion.setFromUnitVectors(up, allowed);
-    head.position.copy(allowed).multiplyScalar(radius * (1.75 + i * 0.5));
-    arrows.add(head);
+  if (boundary && threshold !== undefined) {
+    // Lives in the room, not on the (spinning) Sphere, so it stays flat on the line.
+    boundary.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), allowed);
+    enemy.mesh.parent?.add(boundary);
+    boundary.onBeforeRender = () => {
+      boundary.position.copy(enemy.mesh.position);
+      boundary.position[axis] = threshold;
+      const offset = Math.abs(threshold - enemy.mesh.position[axis]);
+      const inside = evaluateActorOrigin(enemy.spec.kind, enemy.spec.originConstraint, vectorTuple(camera.position)).allowed;
+      // Hidden via opacity: an invisible object never gets this callback again.
+      const shown = enemy.mesh.visible && offset > radius * 1.6 && offset < 40;
+      (boundary.material as THREE.MeshBasicMaterial).opacity = shown ? (inside ? 0.75 : 0.3) : 0;
+    };
   }
-  const started = performance.now();
-  (arrows.children[0] as THREE.Mesh).onBeforeRender = () => {
-    const t = ((performance.now() - started) / 900) % 1;
-    arrows.position.copy(allowed).multiplyScalar(radius * 0.35 * Math.sin(t * Math.PI));
-  };
 
-  enemy.mesh.add(shell, rim, arrows);
-
-  if (threshold === undefined) return;
-  const marker = new THREE.Mesh(new THREE.RingGeometry(radius * 0.5, radius * 0.62, 32), additive(0.75, { side: THREE.DoubleSide }));
-  marker.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), allowed);
-  const tetherGeometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]);
-  const tether = new THREE.Line(tetherGeometry, new THREE.LineDashedMaterial({
-    color, dashSize: 0.28, gapSize: 0.22, transparent: true, opacity: 0.6, depthWrite: false
-  }));
-  tether.frustumCulled = false;
-  let lastOffset = Number.NaN;
-  // Drifters move, so the world-space line is re-projected every frame.
-  tether.onBeforeRender = () => {
-    const offset = threshold - enemy.mesh.position[axis];
-    if (Math.abs(offset - lastOffset) < 0.01) return;
-    lastOffset = offset;
-    const show = Math.abs(offset) > radius * 1.3 && Math.abs(offset) < 30;
-    marker.visible = show;
-    setAxisPosition(marker.position, axis, offset);
-    const end = tetherGeometry.attributes.position as THREE.BufferAttribute;
-    const start = axisVector(axis).multiplyScalar(radius * 1.26 * Math.sign(offset));
-    end.setXYZ(0, start.x, start.y, start.z);
-    end.setXYZ(1, marker.position.x, marker.position.y, marker.position.z);
-    end.needsUpdate = true;
-    tetherGeometry.computeBoundingSphere();
-    tether.computeLineDistances();
-    tether.material.opacity = show ? 0.6 : 0;
+  let open = 0;
+  let last = performance.now();
+  cageWire.onBeforeRender = () => {
+    const now = performance.now();
+    const dt = Math.min(0.1, (now - last) / 1000);
+    last = now;
+    const inside = evaluateActorOrigin(enemy.spec.kind, enemy.spec.originConstraint, vectorTuple(camera.position)).allowed;
+    open = THREE.MathUtils.clamp(open + (inside ? dt : -dt) * 5, 0, 1);
+    // The cage swells and fades as it opens, like it is being released.
+    cage.scale.setScalar(1 + open * 0.45);
+    (cageFill.material as THREE.MeshBasicMaterial).opacity = 0.22 * (1 - open);
+    (cageWire.material as THREE.MeshBasicMaterial).opacity = 0.85 * (1 - open) + 0.02;
+    cage.rotation.y += dt * (0.4 + open * 2);
   };
-  enemy.mesh.add(marker, tether);
 }
 
 function decorateDrifter(enemy: ActiveEnemy): void {
@@ -331,16 +331,6 @@ function utilityImpactColor(kind: EnemySpec["kind"]): number {
   if (kind === "diamond") return 0xc8fff0;
   if (kind === "prism") return 0xffe8b2;
   return 0xd9feff;
-}
-
-function orientDisc(object: THREE.Object3D, axis: "x" | "y" | "z"): void {
-  if (axis === "x") object.rotation.y = Math.PI * 0.5;
-  if (axis === "y") object.rotation.x = Math.PI * 0.5;
-}
-
-function setAxisPosition(position: THREE.Vector3, axis: "x" | "y" | "z", value: number): void {
-  position.set(0, 0, 0);
-  position[axis] = value;
 }
 
 function axisVector(axis: "x" | "y" | "z"): THREE.Vector3 {

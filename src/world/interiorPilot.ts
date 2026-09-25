@@ -20,7 +20,7 @@ const TOP = 5.6;
 export const INTERIOR_PILOT: RoomSpec = {
   id: "interior-vault",
   title: "VAULT",
-  lesson: "The ceiling decides which vectors exist. Find the one that clears the slab.",
+  lesson: "The ceiling decides which warps exist. Find the one that clears the slab.",
   grammar: ["origin-matters", "route-fork", "low-profile", "stop-short"],
   spawn: eye(0, 0, 4),
   goal: ring(7, TOP, -37),

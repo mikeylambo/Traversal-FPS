@@ -168,7 +168,7 @@ const ringTop = (k: number) => 28 - k * 4;
 const S23: RoomSpec = {
   id: "sector-23-pursuit",
   title: "PURSUIT",
-  lesson: "Routes expire. Choose the moving Sphere that leaves the next useful vector available.",
+  lesson: "Routes expire. Choose the moving Sphere that leaves the next useful warp available.",
   grammar: ["moving-endpoint", "route-fork", "timing-chain", "stop-short"],
   spawn: eye(0, 28, -2.5),
   goal: ring(ringAt(7)[0], 0, ringAt(7)[1]),

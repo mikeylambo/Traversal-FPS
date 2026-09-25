@@ -92,7 +92,7 @@ export const MAP_09_COURSE: RoomSpec[] = [
   {
     id: "map-09-01",
     title: "CUBE",
-    lesson: "A Cube changes world state. It never writes a vector.",
+    lesson: "A Cube changes world state. It never moves you.",
     grammar: ["direct-anchor"],
     spawn: [0, 2.2, 7],
     goal: [0, 1.1, -24],

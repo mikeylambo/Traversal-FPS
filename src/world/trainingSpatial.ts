@@ -8,7 +8,7 @@ export const SPATIAL_ACTOR_TRAINING: RoomSpec[] = [
   {
     id: "training-cube-state",
     title: "CUBE // STATE",
-    lesson: "Cube changes world state. Shoot it to remove the barrier. It never writes a Warp vector.",
+    lesson: "Cube changes world state. Shoot it to remove the barrier. It never moves you.",
     grammar: ["direct-anchor", "reorientation"],
     spawn: [0, 2.2, 8],
     goal: [0, 1.1, -30],

@@ -154,7 +154,7 @@ const PREVIEW_LABEL: Record<LandingPreview, string> = {
 function installLiveWarpGrammar(state: RuntimeState, game: object): void {
   state.warp.setCommitValidator((from, to) => {
     const clear = warpIsClear(state, from, to);
-    if (!clear) state.flashMessage("VECTOR BLOCKED // SOLID GEOMETRY", 1050);
+    if (!clear) state.flashMessage("WARP BLOCKED // SOLID GEOMETRY", 1050);
     return clear;
   });
 

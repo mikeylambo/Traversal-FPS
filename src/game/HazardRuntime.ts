@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { roomTime } from "./RoomClock";
 import {
   emitTraversalAudio,
   emitTraversalAudioAt,
@@ -110,7 +111,7 @@ export function installHazardRuntime(game: object): void {
   state.update = (dt: number) => {
     const now = performance.now();
     const before = state.camera.position.clone();
-    updateHazards(hazards, now * 0.001);
+    updateHazards(hazards, roomTime(now));
     originalUpdate(dt);
 
     if (

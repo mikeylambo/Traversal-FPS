@@ -421,7 +421,7 @@ export function installTraversalEditor(game: object, content: ContentRuntime): v
       const origin = rawTuple(state.camera.position);
       const landings = analyzeVectorLandings(origin, selected.position, current.platforms);
       lines.push("");
-      lines.push(`LIVE VECTOR // ${landings.length} SAFE LANDING${landings.length === 1 ? "" : "S"}`);
+      lines.push(`LIVE WARP // ${landings.length} SAFE LANDING${landings.length === 1 ? "" : "S"}`);
       for (const landing of landings.slice(0, 5)) {
         lines.push(`  ${Math.round(landing.fraction * 100)}% → PLATFORM ${landing.platformIndex + 1}`);
       }

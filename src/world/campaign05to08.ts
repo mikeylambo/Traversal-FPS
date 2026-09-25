@@ -57,14 +57,14 @@ export const MAP_06_FIELD: RoomSpec[] = [
 ];
 
 export const MAP_06_COURSE: RoomSpec[] = [
-  { id:"map-06-01", title:"TWO OF FOUR", lesson:"Four anchors are available. Find the two-vector clear.", grammar:["route-fork","reorientation"], spawn:[0,2.2,7], goal:[0,1.1,-38], requiredKills:2, platforms:[{center:[0,0,6],size:[12,1,10]},{center:[-9,2,-13],size:[7,1,7]},{center:[9,2,-13],size:[7,1,7]},{center:[-6,3,-25],size:[6,1,6]},{center:[6,3,-25],size:[6,1,6]},{center:[0,0,-38],size:[11,1,9]}], enemies:[{id:"m6-a",kind:"sentry",position:[-9,4.2,-13]},{id:"m6-b",kind:"sentry",position:[9,4.2,-13]},{id:"m6-c",kind:"sentry",position:[-6,5.2,-25]},{id:"m6-d",kind:"sentry",position:[6,5.2,-25]},{id:"m6-e",kind:"sentry",position:[0,2.8,-43]}] },
+  { id:"map-06-01", title:"TWO OF FOUR", lesson:"Four anchors are available. Find the two-warp clear.", grammar:["route-fork","reorientation"], spawn:[0,2.2,7], goal:[0,1.1,-38], requiredKills:2, platforms:[{center:[0,0,6],size:[12,1,10]},{center:[-9,2,-13],size:[7,1,7]},{center:[9,2,-13],size:[7,1,7]},{center:[-6,3,-25],size:[6,1,6]},{center:[6,3,-25],size:[6,1,6]},{center:[0,0,-38],size:[11,1,9]}], enemies:[{id:"m6-a",kind:"sentry",position:[-9,4.2,-13]},{id:"m6-b",kind:"sentry",position:[9,4.2,-13]},{id:"m6-c",kind:"sentry",position:[-6,5.2,-25]},{id:"m6-d",kind:"sentry",position:[6,5.2,-25]},{id:"m6-e",kind:"sentry",position:[0,2.8,-43]}] },
   { id:"map-06-02", title:"CUT THE CORNER", lesson:"The target is farther than the useful landing. Spend only the distance you need.", grammar:["stop-short","route-fork"], spawn:[-6,2.2,7], goal:[8,1.1,-30], requiredKills:2, platforms:[{center:[-6,0,6],size:[10,1,10]},{center:[8,0,-30],size:[10,1,10]},{center:[0,2,-12],size:[5,1,5]}], enemies:[{id:"m6-2-a",kind:"sentry",position:[0,4.2,-21]},{id:"m6-2-b",kind:"sentry",position:[8,3,-36]}] },
   { id:"map-06-03", title:"NO WASTE", lesson:"Every extra kill is a confession that you did not read the room first.", grammar:["route-fork","moving-endpoint","origin-matters"], spawn:[0,2.2,7], goal:[0,1.1,-43], requiredKills:2, platforms:[{center:[0,0,6],size:[12,1,10]},{center:[-9,2,-14],size:[7,1,7]},{center:[9,2,-24],size:[7,1,7]},{center:[0,0,-43],size:[12,1,10]}], enemies:[{id:"m6-3-a",kind:"drifter",position:[-9,5,-14],drift:{axis:"y",amplitude:2,speed:0.62}},{id:"m6-3-b",kind:"sentry",position:[9,4.2,-24]},{id:"m6-3-c",kind:"drifter",position:[0,4,-34],drift:{axis:"x",amplitude:6,speed:0.7}},{id:"m6-3-d",kind:"sentry",position:[0,2.8,-49]}] }
 ];
 
 export const MAP_07_FIELD: RoomSpec[] = [
   {
-    id:"sector-07-vector-foundry", title:"VECTOR FOUNDRY", lesson:"Do not merely hit the moving endpoint. Manufacture the coordinate you want, then kill it there.",
+    id:"sector-07-vector-foundry", title:"FOUNDRY", lesson:"Do not merely hit the moving endpoint. Manufacture the coordinate you want, then kill it there.",
     grammar:["moving-endpoint","stop-short","origin-matters","route-fork","airborne-chain","reorientation"], spawn:[0,2.2,24], goal:[0,1.1,-158], requiredKills:6,
     platforms:[
       {center:[0,0,22],size:[16,1,14]}, {center:[10,1,-11],size:[6,1,12]}, {center:[-11,4,-32],size:[7,1,7]}, {center:[12,6,-55],size:[6,1,6]},
@@ -91,13 +91,13 @@ export const MAP_07_FIELD: RoomSpec[] = [
 
 export const MAP_07_COURSE: RoomSpec[] = [
   { id:"map-07-01", title:"PLACE X", lesson:"Kill the drifter only when its endpoint sits above the narrow landing.", grammar:["moving-endpoint"], spawn:[0,2.2,7], goal:[8,1.1,-22], requiredKills:1, platforms:[{center:[0,0,6],size:[10,1,10]},{center:[8,0,-22],size:[4,1,8]}], enemies:[{id:"m7-1",kind:"drifter",position:[0,2.2,-22],drift:{axis:"x",amplitude:12,speed:0.58}}] },
-  { id:"map-07-02", title:"PLACE Y", lesson:"Altitude is part of the endpoint. Manufacture a high vector, then cut it to the perch.", grammar:["moving-endpoint","stop-short"], spawn:[0,2.2,7], goal:[0,4.1,-23], requiredKills:1, platforms:[{center:[0,0,6],size:[10,1,10]},{center:[0,3,-23],size:[5,1,5]}], enemies:[{id:"m7-2",kind:"drifter",position:[0,5,-30],drift:{axis:"y",amplitude:5,speed:0.55}}] },
+  { id:"map-07-02", title:"PLACE Y", lesson:"Altitude is part of the endpoint. Warp high, then cut it short onto the perch.", grammar:["moving-endpoint","stop-short"], spawn:[0,2.2,7], goal:[0,4.1,-23], requiredKills:1, platforms:[{center:[0,0,6],size:[10,1,10]},{center:[0,3,-23],size:[5,1,5]}], enemies:[{id:"m7-2",kind:"drifter",position:[0,5,-30],drift:{axis:"y",amplitude:5,speed:0.55}}] },
   { id:"map-07-03", title:"FORGE CHAIN", lesson:"Place the first death coordinate so it creates the firing origin for the second.", grammar:["moving-endpoint","airborne-chain","reorientation"], spawn:[-7,2.2,7], goal:[8,1.1,-39], requiredKills:2, platforms:[{center:[-7,0,6],size:[10,1,10]},{center:[8,0,-39],size:[11,1,10]}], enemies:[{id:"m7-3-a",kind:"drifter",position:[0,6,-16],drift:{axis:"x",amplitude:8,speed:0.58}},{id:"m7-3-b",kind:"orbit",position:[5,7,-34],orbit:{plane:"xy",radiusA:5,radiusB:3,speed:0.56,phase:0.9}}] }
 ];
 
 export const MAP_08_FIELD: RoomSpec[] = [
   {
-    id:"sector-08-terminal-vector", title:"TERMINAL VECTOR", lesson:"Nothing new remains. Read, place, chain, cut short, reorient, and survive the whole sentence.",
+    id:"sector-08-terminal-vector", title:"TERMINAL", lesson:"Nothing new remains. Read, place, chain, cut short, reorient, and survive the whole sentence.",
     grammar:["direct-anchor","stop-short","airborne-chain","origin-matters","route-fork","low-profile","moving-endpoint","reorientation"], spawn:[0,2.2,27], goal:[0,1.1,-202], requiredKills:8,
     platforms:[
       {center:[0,0,25],size:[18,1,16]}, {center:[-12,1,-8],size:[8,1,8]}, {center:[11,5,-29],size:[7,1,7]}, {center:[-9,7,-51],size:[6,1,6]},

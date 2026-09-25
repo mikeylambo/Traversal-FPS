@@ -216,7 +216,7 @@ export const REVERSAL_LABYRINTH_ROOMS: RoomSpec[] = [
   {
     id: "reverse-08-first-line",
     title: "THE FIRST LINE",
-    lesson: "Return to the beginning from the side that was never visible. One last vector. No explanation.",
+    lesson: "Return to the beginning from the side that was never visible. One last warp. No explanation.",
     grammar: ["direct-anchor", "stop-short", "airborne-chain", "reorientation"],
     spawn: [0, 2.2, 18],
     goal: [0, 1.1, -166],

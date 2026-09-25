@@ -69,8 +69,8 @@ const MAP_01_FIELD: RoomSpec[] = [
 const MAP_01_COURSE: RoomSpec[] = [
   {
     id: "map-01-01",
-    title: "VECTOR ENTRY",
-    lesson: "Write one clean vector and place the landing before the target.",
+    title: "FIRST LINE",
+    lesson: "Make one clean warp and place the landing before the target.",
     grammar: ["direct-anchor", "stop-short"],
     spawn: [0, 2.2, 7],
     goal: [0, 1.1, -15],
@@ -102,7 +102,7 @@ const MAP_01_COURSE: RoomSpec[] = [
   {
     id: "map-01-03",
     title: "SIDE SOLUTION",
-    lesson: "The first kill is useful because of where it lets you aim next. Reorient, then write the exit vector.",
+    lesson: "The first kill is useful because of where it lets you aim next. Reorient, then warp out.",
     grammar: ["reorientation", "origin-matters", "airborne-chain"],
     spawn: [-7, 2.2, 6],
     goal: [8, 1.1, -31],
@@ -121,7 +121,7 @@ const MAP_01_COURSE: RoomSpec[] = [
   {
     id: "map-01-04",
     title: "DRIFT CUT",
-    lesson: "Wait for the destination you want, then cut the vector short onto the landing.",
+    lesson: "Wait for the destination you want, then cut the warp short onto the landing.",
     grammar: ["moving-endpoint", "stop-short"],
     spawn: [0, 2.2, 7],
     goal: [8, 1.1, -20],
@@ -136,7 +136,7 @@ const MAP_01_COURSE: RoomSpec[] = [
   },
   {
     id: "map-01-05",
-    title: "CLEAN VECTOR",
+    title: "CLEAN LINE",
     lesson: "There are several workable anchors. Find the clean two-kill route and commit to it.",
     grammar: ["route-fork", "stop-short", "reorientation"],
     spawn: [0, 2.2, 8],
@@ -215,8 +215,8 @@ export const CAMPAIGN_MAPS: CampaignMapDefinition[] = [
   },
   {
     id: "map-07",
-    label: "SECTOR 07 // VECTOR FOUNDRY",
-    subtitle: "Place the endpoint before writing the vector.",
+    label: "SECTOR 07 // FOUNDRY",
+    subtitle: "Place the endpoint before you warp.",
     focus: ["Placed Endpoint", "Authored Routes", "Synthesis"],
     implemented: false,
     campaignRooms: [],
@@ -224,7 +224,7 @@ export const CAMPAIGN_MAPS: CampaignMapDefinition[] = [
   },
   {
     id: "map-08",
-    label: "SECTOR 08 // TERMINAL VECTOR",
+    label: "SECTOR 08 // TERMINAL",
     subtitle: "The full traversal language under pressure.",
     focus: ["Synthesis", "Long Chains", "Mastery"],
     implemented: false,

@@ -68,7 +68,7 @@ const S32_SLIT_GATE: HazardSpec = {
 
 const S32: RoomSpec = {
   id: "sector-32-vector",
-  title: "VECTOR",
+  title: "GREAT WALL",
   lesson: "The construct is the boss. Transform it, cross it, then write one final clean line.",
   grammar: ["stop-short", "low-profile", "reorientation", "origin-matters"],
   spawn: eye(0, 0, 4),

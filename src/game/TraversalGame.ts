@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { pauseRoomClock, resetRoomClock, resumeRoomClock, roomTime } from "./RoomClock";
 import {
   emitTraversalAudio,
   emitTraversalAudioAt,
@@ -204,6 +205,8 @@ export class TraversalGame {
   private syncPhase(phase: string): void {
     this.lastPhase = phase;
     const playing = phase === "playing";
+    if (playing) resumeRoomClock();
+    else pauseRoomClock();
     document.body.classList.toggle("playing", playing);
     this.input.setEnabled(playing);
 
@@ -257,7 +260,7 @@ export class TraversalGame {
     this.camera.rotation.order = "YXZ";
     this.camera.rotation.set(this.pitch, this.yaw, 0);
 
-    this.updateEnemies(now * 0.001);
+    this.updateEnemies(roomTime(now));
     this.updateTargetReticle();
 
     if (this.input.consumeFire()) this.shoot();
@@ -430,7 +433,7 @@ export class TraversalGame {
     this.flashMessage(
       this.roomKills > room.requiredKills
         ? "EXTRA KILL // ROUTE EFFICIENCY DOWN"
-        : "WARP VECTOR WRITTEN",
+        : "WARP READY",
       this.roomKills > room.requiredKills ? 1800 : 1000
     );
   }
@@ -736,6 +739,7 @@ export class TraversalGame {
   }
 
   private loadRoom(index: number): void {
+    resetRoomClock();
     const room = ROOMS[index];
 
     this.clearEffects();
@@ -923,12 +927,12 @@ export class TraversalGame {
       anchor.textContent = "PHASE HANG // REACQUIRE TARGET TWO";
     } else if (this.warp.hasAnchor()) {
       anchor.textContent = this.input.isWarpHeld()
-        ? `VECTOR SELECT // ${selectedPercent}%`
-        : "VECTOR LOADED // HOLD RMB";
+        ? `WARP // ${selectedPercent}%`
+        : "WARP READY // HOLD RMB";
     } else if (this.modeId === "challenge") {
       anchor.textContent = "CLEAN ROUTE // EXACT KILLS // ONE MISS MAX";
     } else {
-      anchor.textContent = "NO VECTOR // KILL A TARGET TO WRITE";
+      anchor.textContent = "NO WARP // DESTROY A SPHERE";
     }
   }
 

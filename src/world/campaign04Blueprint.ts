@@ -101,7 +101,7 @@ export const CLEAN_GEOMETRY_BLUEPRINT = {
   secrets: [
     {
       id: "cg-secret-short",
-      rule: "A narrow non-critical landing is reachable only through an intentional mid-vector Stop Short window.",
+      rule: "A narrow non-critical landing is reachable only through an intentional mid-warp Stop Short window.",
       rewardIntent: "Discovery/achievement hook; never required for the clean route."
     },
     {
@@ -160,7 +160,7 @@ export const CLEAN_GEOMETRY_BLUEPRINT = {
     {
       id: "map-06-05",
       title: "CLEAN GEOMETRY",
-      question: "Can you read the whole route before spending the first vector?",
+      question: "Can you read the whole route before spending the first warp?",
       grammar: ["route-fork", "stop-short", "origin-matters", "moving-endpoint", "reorientation"],
       parKills: 4,
       notes: [

@@ -59,7 +59,7 @@ export const MAP_03_COURSE: RoomSpec[] = [
   {
     id: "map-03-01",
     title: "ANGLE",
-    lesson: "The target rejects this origin. Move right, then write the vector from the valid line.",
+    lesson: "The target rejects this origin. Move right, then warp from the valid line.",
     grammar: ["origin-matters"],
     spawn: [-5, 2.2, 7],
     goal: [7, 1.1, -24],
@@ -106,7 +106,7 @@ export const MAP_03_COURSE: RoomSpec[] = [
   {
     id: "map-03-04",
     title: "BACK ANGLE",
-    lesson: "The first vector gives you the only useful angle on the second target.",
+    lesson: "The first warp gives you the only useful angle on the second target.",
     grammar: ["reorientation", "airborne-chain"],
     spawn: [-7, 2.2, 7],
     goal: [-8, 1.1, -35],

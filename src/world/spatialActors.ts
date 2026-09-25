@@ -37,21 +37,21 @@ export const SPATIAL_ACTORS: readonly SpatialActorDefinition[] = [
     id: "sentry",
     label: "Sphere // Fixed",
     implemented: true,
-    spatialRole: "Fixed vector endpoint",
+    spatialRole: "Fixed warp endpoint",
     capabilities: ["sphere", "fixed-position", "vector-endpoint"]
   },
   {
     id: "drifter",
     label: "Sphere // Drift",
     implemented: true,
-    spatialRole: "Moving vector endpoint",
+    spatialRole: "Moving warp endpoint",
     capabilities: ["sphere", "moving-position", "vector-endpoint", "timing-window"]
   },
   {
     id: "shield",
     label: "Sphere // Origin Gate",
     implemented: true,
-    spatialRole: "Origin-gated vector endpoint",
+    spatialRole: "Origin-gated warp endpoint",
     capabilities: ["sphere", "fixed-position", "vector-endpoint", "origin-gate"],
     defaultOriginConstraint: {
       axis: "x",
@@ -150,8 +150,8 @@ function directionalOriginHint(
     if (aboveMax) return "FIRE FROM BELOW";
   }
   if (constraint.axis === "z") {
-    if (belowMin) return "FIRE FROM THE FAR SIDE";
-    if (aboveMax) return "FIRE FROM THE NEAR SIDE";
+    if (belowMin) return "FIRE FROM FURTHER BACK";
+    if (aboveMax) return "FIRE FROM FURTHER AHEAD";
   }
   return constraint.rejectMessage ?? "FIRE FROM ANOTHER SIDE";
 }

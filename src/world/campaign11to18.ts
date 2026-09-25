@@ -16,7 +16,7 @@ import {
 const S11: RoomSpec = {
   id: "sector-11-relay",
   title: "RELAY",
-  lesson: "The next vector becomes useful before the current one ends. Stay airborne and keep reading.",
+  lesson: "The next warp becomes useful before the current one ends. Stay airborne and keep reading.",
   grammar: ["airborne-chain", "moving-endpoint", "reorientation"],
   spawn: eye(0, 24, 12),
   goal: ring(-10, 0, -72),
@@ -251,7 +251,7 @@ const S16: RoomSpec = {
 const S17: RoomSpec = {
   id: "sector-17-pulse",
   title: "PULSE",
-  lesson: "The field is part of the timing equation. A correct vector fired at the wrong phase is still wrong.",
+  lesson: "The field is part of the timing equation. A correct warp at the wrong phase is still wrong.",
   grammar: ["moving-endpoint", "stop-short", "timing-chain", "low-profile"],
   spawn: eye(-17, 12, -2),
   goal: ring(6, 0.5, -4),

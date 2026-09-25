@@ -86,7 +86,7 @@ export function installGamepadGameplay(game: object, settings: TraversalSettings
       return height > 2.4;
     });
     const blocked = blockerRay.intersectObjects(hardWalls, false).length > 0;
-    if (blocked) state.flashMessage("VECTOR BLOCKED // FIND A CLEAR LINE", 900);
+    if (blocked) state.flashMessage("WARP BLOCKED // FIND A CLEAR LINE", 900);
     return !blocked;
   });
 

@@ -271,7 +271,7 @@ app.ui.updateScreen("loadout", {
     {
       id: "continue",
       label: "Continue",
-      description: "Run. Crouch. Write a vector. Choose where it ends."
+      description: "Run. Crouch. Warp. Choose where it ends."
     }
   ]
 });
