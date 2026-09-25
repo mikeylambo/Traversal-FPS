@@ -2,7 +2,6 @@ import * as THREE from "three";
 import { mountRegisteredVisual, type ProceduralVisualKey } from "../art/procedural/ProceduralVisualRegistry";
 import type { EnemySpec } from "../world/stages";
 import { installActorLinkRuntime } from "./ActorLinkRuntime";
-import { UTILITY_ROLE_COLORS } from "./TraversalAccessibility";
 
 type ActiveEnemy = {
   spec: EnemySpec;
@@ -38,34 +37,15 @@ function applyGeometry(enemy: ActiveEnemy): void {
 
   const kind = enemy.spec.kind;
   if (kind === "cube" || kind === "diamond" || kind === "prism") {
-    // Utilities are hard-edged and ringless; Spheres stay round and haloed.
-    // Silhouette carries the role even in greyscale: box, tall gem, lens bar.
-    const body = kind === "cube"
-      ? new THREE.BoxGeometry(radius * 1.7, radius * 1.7, radius * 1.7)
+    // Same energy glow, wire shell and rings as a Sphere, so every actor reads as
+    // one family; the body and shell take the utility's own silhouette.
+    const shape = (scale: number) => kind === "cube"
+      ? new THREE.BoxGeometry(radius * 1.6 * scale, radius * 1.6 * scale, radius * 1.6 * scale)
       : kind === "diamond"
-        ? new THREE.OctahedronGeometry(radius * 1.1, 0).scale(0.8, 1.7, 0.8)
-        : new THREE.CylinderGeometry(radius * 0.72, radius * 0.72, radius * 3.1, 3, 1, false);
-    replaceGeometry(enemy, body);
-    stripHalo(enemy);
-    // Own material, outside the shared energy shader: dim faces, bright edges,
-    // so bloom draws the silhouette instead of a glowing blob.
-    const role = new THREE.Color(UTILITY_ROLE_COLORS[kind]);
-    const faces = new THREE.MeshStandardMaterial({
-      color: role.clone().multiplyScalar(0.32),
-      emissive: role,
-      emissiveIntensity: 0.22,
-      metalness: 0.55,
-      roughness: 0.32,
-      flatShading: true
-    });
-    enemy.mesh.material = faces;
-    const edges = new THREE.LineSegments(
-      new THREE.EdgesGeometry(body),
-      new THREE.LineBasicMaterial({ color: UTILITY_ROLE_COLORS[kind], transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false })
-    );
-    edges.scale.setScalar(1.015);
-    edges.name = "utility-edges";
-    enemy.mesh.add(edges);
+        ? new THREE.OctahedronGeometry(radius * 1.05 * scale, 0).scale(0.82, 1.55, 0.82)
+        : new THREE.CylinderGeometry(radius * 0.7 * scale, radius * 0.7 * scale, radius * 2.8 * scale, 3, 1, false);
+    replaceGeometry(enemy, shape(1));
+    replaceWireShell(enemy, shape(1.18));
     if (kind === "cube") enemy.mesh.rotation.set(0.22, 0.35, 0.12);
     if (kind === "diamond") enemy.mesh.rotation.set(0, 0, 0);
     if (kind === "prism") enemy.mesh.rotation.set(Math.PI * 0.5, 0, 0);
@@ -84,6 +64,17 @@ function replaceGeometry(enemy: ActiveEnemy, geometry: THREE.BufferGeometry): vo
   enemy.mesh.geometry = geometry;
 }
 
+function replaceWireShell(enemy: ActiveEnemy, geometry: THREE.BufferGeometry): void {
+  const shell = enemy.mesh.children.find((child) =>
+    child instanceof THREE.Mesh && child.material instanceof THREE.MeshBasicMaterial && child.material.wireframe);
+  if (!(shell instanceof THREE.Mesh)) {
+    geometry.dispose();
+    return;
+  }
+  shell.geometry.dispose();
+  shell.geometry = geometry;
+}
+
 function setMaterialColor(material: THREE.Material | THREE.Material[], color: number, emissiveIntensity?: number): void {
   const materials = Array.isArray(material) ? material : [material];
   for (const entry of materials) {
@@ -93,19 +84,6 @@ function setMaterialColor(material: THREE.Material | THREE.Material[], color: nu
         entry.emissive.setHex(color);
         if (emissiveIntensity !== undefined) entry.emissiveIntensity = emissiveIntensity;
       }
-    }
-  }
-}
-
-/** Removes the Sphere halo (wire shell + orbit rings) so utilities never read round. */
-function stripHalo(enemy: ActiveEnemy): void {
-  for (const child of [...enemy.mesh.children]) {
-    if (!(child instanceof THREE.Mesh)) continue;
-    const geometry = child.geometry;
-    const wire = child.material instanceof THREE.MeshBasicMaterial && child.material.wireframe;
-    if (wire || geometry instanceof THREE.TorusGeometry || geometry instanceof THREE.IcosahedronGeometry) {
-      enemy.mesh.remove(child);
-      geometry.dispose();
     }
   }
 }

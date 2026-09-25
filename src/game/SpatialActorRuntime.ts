@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { emitTraversalAudio } from "../audio/TraversalAudio";
-import { actorColor, UTILITY_ROLE_COLORS } from "./TraversalAccessibility";
+import { actorColor } from "./TraversalAccessibility";
 import { evaluateActorOrigin, resolveOriginConstraint } from "../world/spatialActors";
 import { ROOMS, type EnemySpec } from "../world/stages";
 import { installActorGeometryRuntime } from "./ActorGeometryRuntime";

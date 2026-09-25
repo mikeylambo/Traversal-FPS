@@ -1,8 +1,6 @@
 import * as THREE from "three";
 import { ROOMS, type EnemySpec, type HazardSpec } from "../world/stages";
-import { UTILITY_ROLE_COLORS } from "./TraversalAccessibility";
-
-type UtilityKind = keyof typeof UTILITY_ROLE_COLORS;
+import { UTILITY_KINDS, utilityRoleColor, type UtilityKind } from "./TraversalAccessibility";
 
 type ActiveEnemy = { spec: EnemySpec; mesh: THREE.Mesh; alive: boolean };
 
@@ -65,7 +63,7 @@ export function installActorLinkRuntime(game: object): void {
 
     for (const enemy of state.enemies) {
       const kind = enemy.spec.kind as UtilityKind;
-      if (!(kind in UTILITY_ROLE_COLORS)) continue;
+      if (!UTILITY_KINDS.includes(kind)) continue;
       idles.push({ mesh: enemy.mesh, kind, baseY: enemy.mesh.position.y, seed: idles.length * 1.7 });
       for (const targetId of enemy.spec.effect?.targetIds ?? []) {
         const locate = locateTarget(state, room.platforms, room.hazards ?? [], targetId);
@@ -179,7 +177,7 @@ function locateTarget(
 }
 
 function buildLink(group: THREE.Group, enemy: ActiveEnemy, kind: UtilityKind, target: () => THREE.Vector3, size: THREE.Vector3): Link {
-  const color = UTILITY_ROLE_COLORS[kind];
+  const color = utilityRoleColor(kind);
   const start = enemy.mesh.position.clone();
   const curve = new THREE.QuadraticBezierCurve3(start, start.clone(), target().clone());
   const line = new THREE.Line(

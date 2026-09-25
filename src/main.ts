@@ -37,7 +37,6 @@ import { installPlatformMotionAudioRuntime } from "./game/PlatformMotionAudioRun
 import { installConstructAmbienceRuntime } from "./game/ConstructAmbienceRuntime";
 import { installGameplayClarity } from "./game/GameplayClarityRuntime";
 import { installWarpCancelRuntime } from "./game/WarpCancelRuntime";
-import { installGhostRuntime } from "./game/GhostRuntime";
 import { installInstantRestart } from "./game/InstantRestartRuntime";
 import { installExitGateRuntime } from "./game/ExitGateRuntime";
 import { installLandingReadabilityRuntime } from "./game/LandingReadabilityRuntime";
@@ -426,7 +425,6 @@ installCombatFeel(game);
 installScopeRuntime(game, traversalSettings);
 installGameplayClarity(game);
 installWarpCancelRuntime(game);
-installGhostRuntime(game);
 installInstantRestart(game, contentRuntime);
 installExitGateRuntime(game);
 installLandingReadabilityRuntime(game);

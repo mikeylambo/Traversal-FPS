@@ -92,18 +92,31 @@ export function hazardCue(kind: HazardKind, profile = traversalAccessibility().c
   return HAZARD_PALETTE[profile][kind];
 }
 
+export type UtilityKind = "cube" | "diamond" | "prism";
+
 /**
- * One hue per utility role, so a shape reads before its silhouette resolves:
- * Cube (state) white, Diamond (motion) green, Prism (energy) gold. Deliberately
- * never the Sphere cyan: only Spheres move the player.
+ * Utility hues per colour profile. Shape and idle motion carry the role
+ * (tumbling box, bobbing gem, turning bar); colour is only the second signal,
+ * chosen per profile so no two actors lean on a pair that profile can't split.
  */
-export const UTILITY_ROLE_COLORS = { cube: 0xf2f5ff, diamond: 0x4dffa6, prism: 0xffc93c } as const;
+const UTILITY_PALETTE: Record<ColorProfile, Record<UtilityKind, number>> = {
+  standard: { cube: 0x9d8bff, diamond: 0x5dff9e, prism: 0xffe45c },
+  deuteranopia: { cube: 0x5b8cff, diamond: 0xffffff, prism: 0xff9f1a },
+  protanopia: { cube: 0x5b8cff, diamond: 0xffffff, prism: 0xffa640 },
+  tritanopia: { cube: 0xff5fbf, diamond: 0x3aa6ff, prism: 0xff9b5a }
+};
+
+export const UTILITY_KINDS: readonly UtilityKind[] = ["cube", "diamond", "prism"];
+
+export function utilityRoleColor(kind: UtilityKind, profile = traversalAccessibility().colorProfile): number {
+  return UTILITY_PALETTE[profile][kind];
+}
 
 export function actorColor(kind: EnemyKind, profile = traversalAccessibility().colorProfile): number {
   const palette = ACTOR_PALETTE[profile];
   if (kind === "shield") return palette.shield;
   if (kind === "drifter") return palette.drifter;
-  if (kind === "cube" || kind === "diamond" || kind === "prism") return UTILITY_ROLE_COLORS[kind];
+  if (kind === "cube" || kind === "diamond" || kind === "prism") return utilityRoleColor(kind, profile);
   return palette.sphere;
 }
 
