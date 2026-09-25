@@ -73,6 +73,27 @@ export function validateRoom(room: RoomSpec): RoomValidationReport {
     ids.add(hazard.id);
   }
 
+  if (isFiniteVec3(room.spawn)) {
+    const blocked = room.platforms.findIndex((platform) => bodyOverlaps(room.spawn, platform));
+    if (blocked >= 0) {
+      push("error", "geometry.spawn-clearance", `Spawn body is inside platform ${blocked + 1}; the player cannot move until they warp.`);
+    }
+  }
+
+  for (const enemy of room.enemies) {
+    if (!isFiniteVec3(enemy.position) || enemy.drift || enemy.orbit) continue;
+    const inside = room.platforms.findIndex((platform) => pointInside(enemy.position, platform, 0.05));
+    if (inside >= 0) {
+      push("error", "geometry.actor-embedded", `Actor centre is inside platform ${inside + 1}; it cannot be seen or reached.`, enemy.id);
+      continue;
+    }
+    const radius = enemy.radius ?? 0.72;
+    const clipping = room.platforms.findIndex((platform) => sphereOverlaps(enemy.position, radius * 0.9, platform));
+    if (clipping >= 0) {
+      push("warning", "geometry.actor-clipping", `Actor overlaps platform ${clipping + 1}.`, enemy.id);
+    }
+  }
+
   if (isFiniteVec3(room.spawn) && !pointHasStandingSurface(room.spawn, room.platforms, 0.82)) {
     push("warning", "geometry.spawn-support", "Spawn has no obvious standing surface beneath it.");
   }
@@ -325,6 +346,30 @@ function validateHazard(
 
 function isVectorEndpoint(enemy: EnemySpec): boolean {
   return Boolean(spatialActorDefinition(enemy.kind)?.capabilities.includes("vector-endpoint"));
+}
+
+/** Crouched body (radius 0.3, 1.2m tall below the eye) intersecting a platform box. */
+function bodyOverlaps(eye: Vec3Tuple, platform: PlatformSpec): boolean {
+  const [cx, cy, cz] = platform.center;
+  const [sx, sy, sz] = platform.size;
+  const feet = eye[1] - PLAYER_EYE_HEIGHT + 0.05;
+  const head = eye[1] - 0.1;
+  if (head <= cy - sy / 2 + 0.02 || feet >= cy + sy / 2 - 0.02) return false;
+  return Math.abs(eye[0] - cx) < sx / 2 + 0.3 - 0.02 && Math.abs(eye[2] - cz) < sz / 2 + 0.3 - 0.02;
+}
+
+function pointInside(point: Vec3Tuple, platform: PlatformSpec, inset: number): boolean {
+  return point.every((value, i) => Math.abs(value - platform.center[i]!) < platform.size[i]! / 2 - inset);
+}
+
+function sphereOverlaps(point: Vec3Tuple, radius: number, platform: PlatformSpec): boolean {
+  let distance = 0;
+  for (let i = 0; i < 3; i++) {
+    const half = platform.size[i]! / 2;
+    const d = Math.max(0, Math.abs(point[i]! - platform.center[i]!) - half);
+    distance += d * d;
+  }
+  return distance < radius * radius;
 }
 
 function goalHasSurface(goal: Vec3Tuple, platforms: readonly PlatformSpec[]): boolean {

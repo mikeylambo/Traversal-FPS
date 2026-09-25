@@ -1,7 +1,7 @@
 import type { CampaignMapDefinition } from "./campaign";
 import type { RoomSpec } from "./stages";
 import {
-  apertureX, crawl, cube, diamond, drifter, eye, field, floor, gated, lockedGate, low, moving, orbit,
+  apertureX, crawl, crouchSentry, cube, diamond, drifter, eye, field, floor, gated, lockedGate, low, moving, orbit,
   prism, ring, sentry, shield, slabWithHole, slitWallX, slitWallZ, solid, sweep
 } from "./authoring";
 
@@ -267,11 +267,11 @@ const S24: RoomSpec = {
     moving(floor(0, 10, -10.5, 4, 3), "press-lift", "y", 10, 0.06, true)
   ],
   enemies: [
-    sentry("press-01", low(0, 0, -4)),
+    crouchSentry("press-01", 0, 0, -4),
     sentry("press-02", eye(-17, 8, -8)),
     prism("press-prism", [10, 4, -20], ["press-door"], -40),
     shield("press-03", eye(17, 8, -30), { axis: "y", min: 8 }),
-    sentry("press-04", low(-10, 0, -36)),
+    crouchSentry("press-04", -10, 0, -36),
     diamond("press-diamond", [-17, 0.9, -38], ["press-lift"]),
     drifter("press-05", [0, 6, -35], "x", 6, 0.5),
     orbit("press-06", [0, 23, -18], "xz", 9, 8, 0.08),

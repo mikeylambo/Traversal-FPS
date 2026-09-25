@@ -55,6 +55,14 @@ export const low = (x: number, top: number, z: number): Vec3Tuple => [x, top + C
 /** Gravity Ring resting on a floor top. */
 export const ring = (x: number, top: number, z: number): Vec3Tuple => [x, top + 0.6, z];
 
+/**
+ * A Sphere that fits a crawl lane: centred 0.8m above the floor (inside the
+ * crouched-arrival snap window) with a 0.45 radius so it clears a 1.3m roof.
+ */
+export function crouchSentry(id: string, x: number, top: number, z: number, originConstraint?: OriginConstraint): EnemySpec {
+  return sentry(id, [x, top + 0.8, z], 0.45, originConstraint);
+}
+
 export function sentry(id: string, position: Vec3Tuple, radius?: number, originConstraint?: OriginConstraint): EnemySpec {
   return { id, kind: "sentry", position, ...(radius ? { radius } : {}), ...(originConstraint ? { originConstraint } : {}) };
 }

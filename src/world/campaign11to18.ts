@@ -1,7 +1,7 @@
 import type { CampaignMapDefinition } from "./campaign";
 import type { HazardSpec, RoomSpec } from "./stages";
 import {
-  apertureX, crawl, cube, diamond, drifter, eye, field, floor, gated, low, moving, orbit, prism,
+  apertureX, crawl, crouchSentry, cube, diamond, drifter, eye, field, floor, gated, low, moving, orbit, prism,
   ring, sentry, shield, slabWithHole, slitWallX, solid, sweep
 } from "./authoring";
 
@@ -103,7 +103,7 @@ const S13: RoomSpec = {
   ],
   enemies: [
     sentry("fork-anchor", eye(0, 12, 24)),
-    sentry("fork-low", low(-14, 0, -4)),
+    crouchSentry("fork-low", -14, 0, -4),
     sentry("fork-perch-left", eye(-14, 9, -32), undefined, { axis: "x", max: -10 }),
     sentry("fork-float-right", [18, 11, 4]),
     sentry("fork-perch-right", eye(15, 11, -10)),
@@ -228,14 +228,14 @@ const S16: RoomSpec = {
   ],
   enemies: [
     cube("comp-cube", [-4, 17.5, -8], ["comp-hole-3"]),
-    sentry("comp-01", low(-7, 16, -7)),
+    crouchSentry("comp-01", -7, 16, -7),
     drifter("comp-02", [-4, 12, -2], "x", 3, 0.7),
     prism("comp-prism", [8, 11, -10], ["comp-door"], -26),
     shield("comp-03", eye(-7, 8, 8), { axis: "x", min: 2 }),
     orbit("comp-04", [6, 4.5, 6], "xz", 2.5, 2, 0.12),
     diamond("comp-diamond", [-8, 2, 11], ["comp-pod"]),
     sentry("comp-05", eye(8, 0, 9)),
-    sentry("comp-06", low(-9, 0, -9)),
+    crouchSentry("comp-06", -9, 0, -9),
     sentry("comp-07", eye(-6, 0, -2))
   ],
   hazards: [
@@ -267,7 +267,7 @@ const S17: RoomSpec = {
     sentry("pulse-01", eye(5, 8, -4)),
     drifter("pulse-02", [-5, 10, 4], "y", 2, 0.8),
     sentry("pulse-03", eye(-18, 4, -6)),
-    sentry("pulse-04", low(-12, 4, -6)),
+    crouchSentry("pulse-04", -12, 4, -6),
     sentry("pulse-05", eye(5, 0.5, -8), undefined, { axis: "y", max: 7 })
   ],
   hazards: [

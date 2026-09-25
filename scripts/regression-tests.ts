@@ -7,6 +7,9 @@ import { registerCampaign04 } from "../src/world/registerCampaign04";
 import { evaluateActorOrigin } from "../src/world/spatialActors";
 import { ROOMS, type RoomSpec } from "../src/world/stages";
 import { validateRoom, validateRoomCatalog } from "../src/world/contentValidation";
+import { solveRoom } from "../src/world/routeSolver";
+import { describeLayout, layoutSimilarity } from "../src/world/layoutAudit";
+import { buildChallengeSuite, buildTimeTrialSuite } from "../src/world/modeSuites";
 
 let checks = 0;
 
@@ -48,6 +51,7 @@ async function run(): Promise<void> {
   await testProgression();
   testSpatialActors();
   testContentValidation();
+  testRouteSolverAndSuites();
   console.info(`Traversal regression suite PASS // ${checks} checks`);
 }
 
@@ -184,6 +188,48 @@ function testContentValidation(): void {
   };
   const report = validateRoom(invalidActorRoom);
   assert(report.issues.some((issue) => issue.code === "enemy.origin.order"), "Content Doctor rejects inverted actor origin ranges");
+}
+
+function testRouteSolverAndSuites(): void {
+  const base: RoomSpec = {
+    id: "regression-solver",
+    title: "SOLVER",
+    lesson: "Test fixture",
+    grammar: [],
+    spawn: [0, 2.2, 0],
+    goal: [0, 1.1, -24],
+    requiredKills: 1,
+    platforms: [{ center: [0, 0, 0], size: [8, 1, 8] }, { center: [0, 0, -24], size: [8, 1, 8] }],
+    enemies: [{ id: "anchor", kind: "sentry", position: [0, 2.2, -22] }]
+  };
+  equal(solveRoom(base).solved, true, "solver clears a one-vector room");
+
+  const walled: RoomSpec = { ...base, platforms: [...base.platforms, { center: [0, 5, -12], size: [20, 10, 1.5] }] };
+  equal(solveRoom(walled).solved, false, "solver respects solid walls for sight and warp");
+
+  // A spawn buried in geometry (the original Sector 33 defect) is a hard error.
+  const buried: RoomSpec = { ...base, platforms: [...base.platforms, { center: [0, 18, 0], size: [1.2, 34, 13] }] };
+  assert(validateRoom(buried).issues.some((issue) => issue.code === "geometry.spawn-clearance"), "Content Doctor rejects a spawn inside geometry");
+
+  // Dropping is one-way: a Sphere only visible from below cannot be spent from above.
+  const ledge: RoomSpec = {
+    ...base,
+    spawn: [0, 8.2, 0],
+    goal: [0, 7.1, 0],
+    platforms: [{ center: [0, 6, 0], size: [6, 1, 6] }, { center: [0, 0, 0], size: [30, 1, 30] }],
+    enemies: [{ id: "low", kind: "sentry", position: [0, 2.2, -12], originConstraint: { axis: "y", max: 4 } }]
+  };
+  equal(solveRoom(ledge).solved, false, "solver treats drops as one-way");
+
+  const suites = [...buildTimeTrialSuite(), ...buildChallengeSuite()];
+  equal(suites.length, 40, "Time Trial and Challenge ship 16 + 24 rooms");
+  const campaignRooms = CAMPAIGN_MAPS.flatMap((map) => map.campaignRooms);
+  const campaignHashes = new Set(campaignRooms.map((room) => describeLayout(room).geometryHash));
+  assert(suites.every((room) => !campaignHashes.has(describeLayout(room).geometryHash)), "no Time Trial or Challenge room clones a Campaign room");
+  const suiteDescriptors = suites.map(describeLayout);
+  const worst = suiteDescriptors.flatMap((a, i) => suiteDescriptors.slice(i + 1).map((b) => layoutSimilarity(a, b)))
+    .reduce((max, score) => Math.max(max, score), 0);
+  assert(worst < 0.88, `no two mode rooms are near-duplicates (worst ${worst.toFixed(2)})`);
 }
 
 void run().catch((error) => {

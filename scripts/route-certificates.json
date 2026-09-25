@@ -1,0 +1,500 @@
+{
+  "campaign:map-01": {
+    "hash": "39228bcc57defec7",
+    "solved": true,
+    "warps": 6,
+    "ms": 2759
+  },
+  "campaign:map-02": {
+    "hash": "a66c882638f14291",
+    "solved": true,
+    "warps": 6,
+    "ms": 1946
+  },
+  "campaign:map-03": {
+    "hash": "2331cb98409846ce",
+    "solved": true,
+    "warps": 6,
+    "ms": 409
+  },
+  "campaign:map-04": {
+    "hash": "367a3bebc5bea5c5",
+    "solved": false,
+    "warps": 0,
+    "ms": 18211,
+    "reason": "search budget exhausted"
+  },
+  "campaign:map-05": {
+    "hash": "60bd2b42dc65c14f",
+    "solved": false,
+    "warps": 0,
+    "ms": 9260,
+    "reason": "search budget exhausted"
+  },
+  "campaign:map-06": {
+    "hash": "c1ca01e96c62cf7f",
+    "solved": false,
+    "warps": 0,
+    "ms": 11576,
+    "reason": "search budget exhausted"
+  },
+  "campaign:map-07": {
+    "hash": "aaf0f82a2306726c",
+    "solved": false,
+    "warps": 0,
+    "ms": 12898,
+    "reason": "search budget exhausted"
+  },
+  "campaign:map-08": {
+    "hash": "e538424cfc8780ce",
+    "solved": false,
+    "warps": 0,
+    "ms": 24829,
+    "reason": "search budget exhausted"
+  },
+  "campaign:map-09": {
+    "hash": "ef86fe0543b9314e",
+    "solved": false,
+    "warps": 0,
+    "ms": 8033,
+    "reason": "search budget exhausted"
+  },
+  "campaign:map-10": {
+    "hash": "a7e2c4ab64440d1e",
+    "solved": true,
+    "warps": 10,
+    "ms": 5085
+  },
+  "campaign:map-11": {
+    "hash": "6a4708e6dcc5b0fe",
+    "solved": true,
+    "warps": 6,
+    "ms": 2628
+  },
+  "campaign:map-12": {
+    "hash": "be5ea8f84203683c",
+    "solved": true,
+    "warps": 4,
+    "ms": 565
+  },
+  "campaign:map-13": {
+    "hash": "0bab37fd4ccc6c68",
+    "solved": true,
+    "warps": 5,
+    "ms": 1202
+  },
+  "campaign:map-14": {
+    "hash": "e8341133801af117",
+    "solved": true,
+    "warps": 3,
+    "ms": 617
+  },
+  "campaign:map-15": {
+    "hash": "1348175b8076aa68",
+    "solved": true,
+    "warps": 3,
+    "ms": 6523
+  },
+  "campaign:map-16": {
+    "hash": "ac84ed0fc5d31f2a",
+    "solved": true,
+    "warps": 4,
+    "ms": 1845
+  },
+  "campaign:map-17": {
+    "hash": "1d7bc6b3354bcc05",
+    "solved": true,
+    "warps": 5,
+    "ms": 151
+  },
+  "campaign:map-18": {
+    "hash": "6a9c449a081c726d",
+    "solved": true,
+    "warps": 4,
+    "ms": 11976
+  },
+  "campaign:map-19": {
+    "hash": "985a5984b85cf8a5",
+    "solved": true,
+    "warps": 5,
+    "ms": 126
+  },
+  "campaign:map-20": {
+    "hash": "6473ef1ae0680121",
+    "solved": true,
+    "warps": 6,
+    "ms": 439
+  },
+  "campaign:map-21": {
+    "hash": "95d9e981014162b6",
+    "solved": true,
+    "warps": 4,
+    "ms": 1132
+  },
+  "campaign:map-22": {
+    "hash": "a908af4ed39980cf",
+    "solved": true,
+    "warps": 5,
+    "ms": 430
+  },
+  "campaign:map-23": {
+    "hash": "c98ac9fe3054c8e7",
+    "solved": true,
+    "warps": 7,
+    "ms": 3787
+  },
+  "campaign:map-24": {
+    "hash": "8a51c2f364638363",
+    "solved": true,
+    "warps": 6,
+    "ms": 3531
+  },
+  "campaign:map-25": {
+    "hash": "23aa544411ac10e6",
+    "solved": true,
+    "warps": 3,
+    "ms": 8
+  },
+  "campaign:map-26": {
+    "hash": "4f31228b3ad6e97c",
+    "solved": true,
+    "warps": 4,
+    "ms": 1449
+  },
+  "campaign:map-27": {
+    "hash": "b6e8e37e10c9305e",
+    "solved": true,
+    "warps": 4,
+    "ms": 240
+  },
+  "campaign:map-28": {
+    "hash": "dfc606769a2a81e8",
+    "solved": true,
+    "warps": 4,
+    "ms": 165
+  },
+  "campaign:map-29": {
+    "hash": "f6ad50198203283c",
+    "solved": true,
+    "warps": 6,
+    "ms": 1553
+  },
+  "campaign:map-30": {
+    "hash": "b47405edd73f6d2a",
+    "solved": true,
+    "warps": 6,
+    "ms": 1652
+  },
+  "campaign:map-31": {
+    "hash": "8abc6d2db7ac290d",
+    "solved": true,
+    "warps": 5,
+    "ms": 2100
+  },
+  "campaign:map-32": {
+    "hash": "61f7c9337674e5ac",
+    "solved": true,
+    "warps": 5,
+    "ms": 1532
+  },
+  "campaign:map-33": {
+    "hash": "a8183bdae894cdb6",
+    "solved": true,
+    "warps": 5,
+    "ms": 307
+  },
+  "campaign:map-34": {
+    "hash": "a86d69a88d2214fa",
+    "solved": true,
+    "warps": 4,
+    "ms": 113
+  },
+  "campaign:map-35": {
+    "hash": "a9e9ce507287ba8b",
+    "solved": true,
+    "warps": 8,
+    "ms": 3621
+  },
+  "campaign:map-36": {
+    "hash": "dbfeb5ccb50f4797",
+    "solved": true,
+    "warps": 7,
+    "ms": 1103
+  },
+  "campaign:map-37": {
+    "hash": "7e41a95c40c15f1a",
+    "solved": true,
+    "warps": 6,
+    "ms": 3529
+  },
+  "campaign:map-38": {
+    "hash": "9551d2570f4b71c7",
+    "solved": true,
+    "warps": 6,
+    "ms": 503
+  },
+  "campaign:map-39": {
+    "hash": "762c19d895b176e7",
+    "solved": true,
+    "warps": 7,
+    "ms": 2677
+  },
+  "campaign:map-40": {
+    "hash": "4a35bedb0bbfff30",
+    "solved": true,
+    "warps": 5,
+    "ms": 330
+  },
+  "campaign:map-41": {
+    "hash": "42f2fa0db4419ab2",
+    "solved": true,
+    "warps": 6,
+    "ms": 2353
+  },
+  "campaign:map-42": {
+    "hash": "c220bde56ae9119d",
+    "solved": true,
+    "warps": 10,
+    "ms": 22869
+  },
+  "time-trial:tt-01": {
+    "hash": "498d7f8a55016da0",
+    "solved": true,
+    "warps": 4,
+    "ms": 243
+  },
+  "time-trial:tt-02": {
+    "hash": "003fec44cd63315a",
+    "solved": true,
+    "warps": 3,
+    "ms": 195
+  },
+  "time-trial:tt-03": {
+    "hash": "9c5ec1d7848e5b92",
+    "solved": true,
+    "warps": 3,
+    "ms": 9
+  },
+  "time-trial:tt-04": {
+    "hash": "84503c3989875a14",
+    "solved": true,
+    "warps": 4,
+    "ms": 120
+  },
+  "time-trial:tt-05": {
+    "hash": "7656bf1c949113da",
+    "solved": true,
+    "warps": 2,
+    "ms": 42
+  },
+  "time-trial:tt-06": {
+    "hash": "f81618af8f7254fe",
+    "solved": true,
+    "warps": 3,
+    "ms": 18
+  },
+  "time-trial:tt-07": {
+    "hash": "de1979634fb418cb",
+    "solved": true,
+    "warps": 3,
+    "ms": 49
+  },
+  "time-trial:tt-08": {
+    "hash": "b2b1ec452f24003c",
+    "solved": true,
+    "warps": 4,
+    "ms": 83
+  },
+  "time-trial:tt-09": {
+    "hash": "4c50b3e3606730ec",
+    "solved": true,
+    "warps": 4,
+    "ms": 162
+  },
+  "time-trial:tt-10": {
+    "hash": "3efb02d9e6ffabd4",
+    "solved": true,
+    "warps": 4,
+    "ms": 59
+  },
+  "time-trial:tt-11": {
+    "hash": "b259e49e0b695508",
+    "solved": true,
+    "warps": 3,
+    "ms": 4
+  },
+  "time-trial:tt-12": {
+    "hash": "1fe366f851f78e7e",
+    "solved": true,
+    "warps": 4,
+    "ms": 227
+  },
+  "time-trial:tt-13": {
+    "hash": "a51ac4b28d1344d3",
+    "solved": true,
+    "warps": 1,
+    "ms": 85
+  },
+  "time-trial:tt-14": {
+    "hash": "3a5901622d00ed71",
+    "solved": true,
+    "warps": 3,
+    "ms": 6
+  },
+  "time-trial:tt-15": {
+    "hash": "37b07ec31b0a3faa",
+    "solved": true,
+    "warps": 3,
+    "ms": 85
+  },
+  "time-trial:tt-16": {
+    "hash": "9a067d7bfaafa505",
+    "solved": true,
+    "warps": 6,
+    "ms": 83
+  },
+  "challenge:challenge-01": {
+    "hash": "9d17867de1cacc45",
+    "solved": true,
+    "warps": 1,
+    "ms": 1
+  },
+  "challenge:challenge-02": {
+    "hash": "6434147ac12c6272",
+    "solved": true,
+    "warps": 1,
+    "ms": 8
+  },
+  "challenge:challenge-03": {
+    "hash": "1e57f26491b2aafc",
+    "solved": true,
+    "warps": 2,
+    "ms": 42
+  },
+  "challenge:challenge-04": {
+    "hash": "58644eb3739b8718",
+    "solved": true,
+    "warps": 3,
+    "ms": 120
+  },
+  "challenge:challenge-05": {
+    "hash": "5e03916630201fd3",
+    "solved": true,
+    "warps": 1,
+    "ms": 53
+  },
+  "challenge:challenge-06": {
+    "hash": "112f2e37cde66628",
+    "solved": true,
+    "warps": 1,
+    "ms": 38
+  },
+  "challenge:challenge-07": {
+    "hash": "abe42a7d70138262",
+    "solved": true,
+    "warps": 3,
+    "ms": 4
+  },
+  "challenge:challenge-08": {
+    "hash": "0d49617da4f9659b",
+    "solved": true,
+    "warps": 2,
+    "ms": 104
+  },
+  "challenge:challenge-09": {
+    "hash": "317d3c68ef282525",
+    "solved": true,
+    "warps": 2,
+    "ms": 67
+  },
+  "challenge:challenge-10": {
+    "hash": "2865c4d4eb534308",
+    "solved": true,
+    "warps": 2,
+    "ms": 40
+  },
+  "challenge:challenge-11": {
+    "hash": "bab01c42ca94f61c",
+    "solved": true,
+    "warps": 2,
+    "ms": 15
+  },
+  "challenge:challenge-12": {
+    "hash": "1028f4261f21a7b9",
+    "solved": true,
+    "warps": 2,
+    "ms": 26
+  },
+  "challenge:challenge-13": {
+    "hash": "9f4e25127616366c",
+    "solved": true,
+    "warps": 2,
+    "ms": 12
+  },
+  "challenge:challenge-14": {
+    "hash": "4b821393957e8f76",
+    "solved": true,
+    "warps": 2,
+    "ms": 3
+  },
+  "challenge:challenge-15": {
+    "hash": "b5c2cdec4ab49e51",
+    "solved": true,
+    "warps": 2,
+    "ms": 2
+  },
+  "challenge:challenge-16": {
+    "hash": "0618236691d1615c",
+    "solved": true,
+    "warps": 3,
+    "ms": 6
+  },
+  "challenge:challenge-17": {
+    "hash": "f0baf16223a02dd7",
+    "solved": true,
+    "warps": 2,
+    "ms": 48
+  },
+  "challenge:challenge-18": {
+    "hash": "cd89c44671443690",
+    "solved": true,
+    "warps": 2,
+    "ms": 16
+  },
+  "challenge:challenge-19": {
+    "hash": "7571759f3ac5d83d",
+    "solved": true,
+    "warps": 1,
+    "ms": 188
+  },
+  "challenge:challenge-20": {
+    "hash": "91bc0f057aa28c7f",
+    "solved": true,
+    "warps": 2,
+    "ms": 55
+  },
+  "challenge:challenge-21": {
+    "hash": "e7eee0bfec21182d",
+    "solved": true,
+    "warps": 4,
+    "ms": 105
+  },
+  "challenge:challenge-22": {
+    "hash": "b8dd180d48f751cd",
+    "solved": true,
+    "warps": 3,
+    "ms": 29
+  },
+  "challenge:challenge-23": {
+    "hash": "6136e5108415e907",
+    "solved": true,
+    "warps": 4,
+    "ms": 161
+  },
+  "challenge:challenge-24": {
+    "hash": "b0d9f1371fa3d5a1",
+    "solved": true,
+    "warps": 2,
+    "ms": 411
+  }
+}

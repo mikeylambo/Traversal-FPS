@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { describeLayout, layoutSimilarity, type LayoutDescriptor } from "../world/layoutAudit";
 import { CAMPAIGN_MAPS } from "../world/campaign";
 import {
   buildChallengeSuite,
@@ -864,25 +865,16 @@ function buildSimilarity(descriptors: RoomDescriptor[]): Map<string, { key: stri
   return result;
 }
 
+// Same metric the build gate uses (src/world/layoutAudit), so the Lab and
+// route-certify never disagree about which rooms are near-duplicates.
+const layoutCache = new WeakMap<RoomSpec, LayoutDescriptor>();
 function similarityScore(a: RoomSpec, b: RoomSpec): number {
-  const av = signature(a), bv = signature(b);
-  let distance = 0;
-  for (let i = 0; i < av.length; i++) distance += Math.abs(av[i]! - bv[i]!);
-  return THREE.MathUtils.clamp(1 - distance / av.length, 0, 1);
-}
-
-function signature(room: RoomSpec): number[] {
-  const s = roomStats(room);
-  const actorKinds = ["sentry","drifter","shield","orbit","cube","diamond","prism"];
-  const hazardKinds = ["lethal-field","sweep","sightline-gate","aperture-wall"];
-  return [
-    norm(s.platforms, 16), norm(s.actors, 12), norm(s.hazards, 6), norm(room.requiredKills, 10),
-    norm(s.spanX, 50), norm(s.spanZ, 170), norm(s.height, 25),
-    ...actorKinds.map((kind) => norm(room.enemies.filter((e) => e.kind === kind).length, 6)),
-    ...hazardKinds.map((kind) => norm((room.hazards ?? []).filter((h) => h.kind === kind).length, 4)),
-    norm(room.platforms.filter((p) => p.size[1] > 2.4).length, 8),
-    norm(room.platforms.filter((p) => Boolean(p.motion)).length, 4)
-  ];
+  const describe = (room: RoomSpec) => {
+    let descriptor = layoutCache.get(room);
+    if (!descriptor) { descriptor = describeLayout(room); layoutCache.set(room, descriptor); }
+    return descriptor;
+  };
+  return layoutSimilarity(describe(a), describe(b));
 }
 
 function norm(value: number, max: number): number { return THREE.MathUtils.clamp(value / max, 0, 1); }

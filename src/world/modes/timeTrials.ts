@@ -1,6 +1,6 @@
 import type { RoomSpec } from "../stages";
 import {
-  crawl, cube, diamond, drifter, eye, floor, lockedGate, low, moving, orbit, ring, sentry,
+  crawl, crouchSentry, cube, diamond, drifter, eye, floor, lockedGate, low, moving, orbit, ring, sentry,
   shield, solid
 } from "../authoring";
 
@@ -164,7 +164,7 @@ export const TIME_TRIAL_COURSES: TimeTrialCourse[] = [
         floor(0, 6, -16, 10, 28),
         floor(0, 6, -32, 10, 4)
       ],
-      enemies: [sentry("cw-1", low(0, 0, -12)), sentry("cw-2", low(2, 0, -27)), sentry("cw-3", eye(0, 6, -33))]
+      enemies: [crouchSentry("cw-1", 0, 0, -12), crouchSentry("cw-2", 2, 0, -27), sentry("cw-3", eye(0, 6, -33))]
     }
   },
 
@@ -211,7 +211,7 @@ export const TIME_TRIAL_COURSES: TimeTrialCourse[] = [
         floor(0, 10, -60, 8, 8)
       ],
       enemies: [
-        sentry("ga-1", low(0, 0, -16)), sentry("ga-2", eye(-10, 6, -28)), drifter("ga-3", [0, 9, -34], "x", 4, 0.6),
+        crouchSentry("ga-1", 0, 0, -16), sentry("ga-2", eye(-10, 6, -28)), drifter("ga-3", [0, 9, -34], "x", 4, 0.6),
         sentry("ga-4", eye(10, 6, -40)), orbit("ga-5", [0, 13, -50], "xz", 3, 2, 0.1), sentry("ga-6", eye(0, 10, -58))
       ]
     }

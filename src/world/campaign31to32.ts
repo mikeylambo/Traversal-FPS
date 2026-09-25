@@ -1,7 +1,7 @@
 import type { CampaignMapDefinition } from "./campaign";
 import type { HazardSpec, RoomSpec } from "./stages";
 import {
-  apertureX, crawl, cube, diamond, drifter, eye, floor, low, moving, orbit, prism, ring,
+  apertureX, crawl, crouchSentry, cube, diamond, drifter, eye, floor, low, moving, orbit, prism, ring,
   sentry, shield, solid, sweep
 } from "./authoring";
 
@@ -41,8 +41,8 @@ const S31: RoomSpec = {
     sentry("syn-01", eye(-15, 4, 0)),
     cube("syn-cube", [-18, 6, 2], ["syn-gate"]),
     sentry("syn-02", eye(-11, 10, 1)),
-    sentry("syn-03", eye(3, 4, 0)),
-    diamond("syn-diamond", [0, 4.8, 1], ["syn-shuttle"]),
+    sentry("syn-03", eye(5, 4, 0)),
+    { ...diamond("syn-diamond", [0, 4.65, 1], ["syn-shuttle"]), radius: 0.5 },
     sentry("syn-04", eye(7, 10, 0)),
     prism("syn-prism", [24, 6, -2], ["syn-aperture"], -25),
     drifter("syn-05", [22, 7, 2], "y", 1, 0.7),
@@ -93,7 +93,7 @@ const S32: RoomSpec = {
     cube("vec-cube", [-10, 4, -30], ["vec-slit"]),
     orbit("vec-05", [0, 10, -28], "xz", 6, 4, 0.08),
     drifter("vec-06", [12, 8, -24], "y", 2, 0.6),
-    sentry("vec-final", low(0, 0, -38), undefined, { axis: "y", max: 3 })
+    crouchSentry("vec-final", 0, 0, -38, { axis: "y", max: 3 })
   ],
   hazards: [
     S32_SLIT_GATE,

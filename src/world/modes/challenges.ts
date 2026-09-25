@@ -1,6 +1,6 @@
 import type { HazardSpec, RoomSpec } from "../stages";
 import {
-  apertureX, crawl, cube, diamond, drifter, eye, field, floor, lockedGate, low, moving, orbit,
+  apertureX, crawl, crouchSentry, cube, diamond, drifter, eye, field, floor, lockedGate, low, moving, orbit,
   prism, ring, sentry, shield, slitWallX, slitWallZ, solid, sweep
 } from "../authoring";
 
@@ -41,7 +41,7 @@ export const CHALLENGE_CHAMBERS: ChallengeChamber[] = [
       id: "ch-low-line", grammar: ["low-profile", "origin-matters"],
       spawn: eye(-12, 0, 0), goal: ring(12, 0, 0), requiredKills: 1,
       platforms: [floor(0, 0, 0, 30, 8), ...slitWallZ(-4, 4, -4, 0, 6, 1.5), crawl(-3.25, 8, -4, 4, 0)],
-      enemies: [sentry("ll-1", low(6, 0, 0)), sentry("ll-decoy", eye(6, 0, 1.5))]
+      enemies: [crouchSentry("ll-1", 6, 0, 0)]
     }
   },
 
@@ -74,16 +74,18 @@ export const CHALLENGE_CHAMBERS: ChallengeChamber[] = [
     label: "CEILING", family: "PRECISION", inspiredBy: "map-38",
     room: {
       id: "ch-ceiling", grammar: ["low-profile", "stop-short"],
-      spawn: eye(0, 6, -10), goal: ring(0, 0, 18), requiredKills: 1,
+      spawn: eye(-9, 6, 9), goal: ring(1, 0, -25), requiredKills: 1,
       platforms: [
-        floor(0, 6, -6, 10, 12), floor(0, 0, 6, 12, 36),
-        solid(-6, 6, 0, 0.8, 8, 8.5), solid(-6, 6, 1.35, 3, 8, 16),
-        // Capped chamber beyond the slit: the only way in is the crouched line.
-        solid(-6, 6, 3, 3.6, 16, 24.5)
+        floor(-9, 6, 8, 10, 8), floor(-4, 0, 0, 20, 10), floor(1, 0, -17.5, 10, 25),
+        solid(-4, 6, 0, 0.8, -12.5, -12), solid(-4, 6, 1.35, 3, -20, -12),
+        // Capped, walled chamber beyond the slit: the only way in is the crouched line.
+        solid(-4, 6, 3, 3.6, -30.5, -20), solid(-4.5, -4, 0, 3.6, -30.5, -12), solid(6, 6.5, 0, 3.6, -30.5, -12)
       ],
-      enemies: [sentry("ce-1", [0, 1.06, 40]), sentry("ce-decoy", [0, 1.8, 30])]
+      enemies: [sentry("ce-1", [1, 1.06, -40]), sentry("ce-decoy", [1, 1.8, -34])]
     }
   },
+
+
 
 
   {
@@ -264,7 +266,7 @@ export const CHALLENGE_CHAMBERS: ChallengeChamber[] = [
       id: "ch-underpass", grammar: ["low-profile", "origin-matters"],
       spawn: eye(0, 8, 2), goal: ring(0, 0, -2), requiredKills: 2,
       platforms: [floor(0, 8, 0, 10, 10), floor(0, 0, -7, 12, 22), crawl(-6, 6, -6, 4, 0)],
-      enemies: [sentry("up-1", eye(0, 0, -16)), sentry("up-2", low(3, 0, 2), undefined, { axis: "y", max: 2 }), sentry("up-decoy", eye(-4, 0, -17))]
+      enemies: [sentry("up-1", eye(0, 0, -16)), crouchSentry("up-2", 3, 0, 2, { axis: "y", max: 2 }), sentry("up-decoy", eye(-4, 0, -17))]
     }
   },
 
@@ -290,7 +292,7 @@ export const CHALLENGE_CHAMBERS: ChallengeChamber[] = [
       platforms: [floor(0, 0, 0, 16, 16), floor(4, 5, -2, 8, 12), floor(4, 10, -6, 6, 4)],
       enemies: [
         sentry("px-1", eye(6, 5, 2)), shield("px-2", eye(2, 10, -6), { axis: "y", min: 5 }),
-        sentry("px-3", eye(6, 10, -7), undefined, { axis: "x", max: 1 }), sentry("px-decoy", low(-4, 0, -4))
+        sentry("px-3", eye(6, 10, -7), undefined, { axis: "x", max: 1 }), crouchSentry("px-decoy", -4, 0, -4)
       ]
     }
   },
@@ -306,7 +308,7 @@ export const CHALLENGE_CHAMBERS: ChallengeChamber[] = [
         floor(-10, 6, -16, 4, 4), floor(10, 6, -16, 4, 4), floor(0, 12, -20, 6, 6)
       ],
       enemies: [
-        sentry("cv-1", low(12, 0, 3)), sentry("cv-2", eye(-10, 6, -16)), sentry("cv-3", eye(10, 6, -16)),
+        crouchSentry("cv-1", 12, 0, 3), sentry("cv-2", eye(-10, 6, -16)), sentry("cv-3", eye(10, 6, -16)),
         sentry("cv-4", eye(0, 12, -19), undefined, { axis: "y", min: 6 }), sentry("cv-decoy", eye(-12, 0, -2))
       ]
     }
