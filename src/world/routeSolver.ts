@@ -35,6 +35,22 @@ export interface SolveOptions {
   allowAirborneChain?: boolean;
   maxStates?: number;
   maxMillis?: number;
+  /** Skip the search; only measure how much of the room is skippable from the goal. */
+  goalFirstOnly?: boolean;
+}
+
+/**
+ * "Warp to the end, then shoot": how early the player can stand where the goal is
+ * walkable, and how many Spheres are shootable from there. A valid tactic, but a
+ * room where it covers the whole requirement has no middle.
+ */
+export interface GoalFirst {
+  /** Fewest Sphere kills before the player can stand on the goal's platform (-1: not within 3). */
+  arrivalKills: number;
+  /** Spheres shootable from the goal's platform. */
+  finaleSpheres: number;
+  required: number;
+  verdict: "SKIPPABLE" | "EARLY FINISH" | "BALANCED";
 }
 
 export interface SolveStep {
@@ -55,6 +71,7 @@ export interface SolveResult {
   /** Lowest and highest floor the witness route stands on. */
   yRange: [number, number];
   warps: number;
+  goalFirst?: GoalFirst;
 }
 
 type Floor = { box: Box; top: number; source: number; ride?: boolean };
@@ -480,6 +497,10 @@ export function solveRoom(room: RoomSpec, options: SolveOptions = {}): SolveResu
     return out;
   };
 
+  if (options.goalFirstOnly) {
+    return { solved: false, states: 0, steps: [], reason: "goal-first analysis only", yRange: [0, 0], warps: 0, goalFirst: goalFirstAnalysis() };
+  }
+
   for (let s = nextState(); s >= 0; s = nextState()) {
     if (states.length > maxStates || Date.now() > deadline) {
       return { solved: false, states: states.length, steps: [], reason: "search budget exhausted", yRange: [0, 0], warps: 0 };
@@ -545,6 +566,56 @@ export function solveRoom(room: RoomSpec, options: SolveOptions = {}): SolveResu
   const best = sphereCount(bestState.mask);
   const missing = targets.filter((t) => t.sphere && !(bestState.mask & (1 << t.index))).map((t) => t.spec.id).join(",");
   return { solved: false, states: states.length, steps: [], reason: `no route reaches an active Gravity Ring (best ${best}/${room.requiredKills} Spheres; missing ${missing})`, yRange: [0, 0], warps: 0 };
+
+  function goalFirstAnalysis(): GoalFirst {
+    const w = world(0);
+    const goalNodes = new Set(w.nodes.map((_, i) => i).filter((i) => goalInReach(w, [i])));
+    // Finale: the end platform itself, i.e. regions the goal sits in. Perches
+    // that merely drop onto it are part of the route, not the finish.
+    const finaleScc = new Set([...goalNodes].map((i) => w.scc[i]!));
+    const finale = new Set(w.nodes.map((_, i) => i).filter((i) => finaleScc.has(w.scc[i]!)));
+    const spheres = targets.filter((t) => t.sphere);
+    const finaleSpheres = spheres.filter((t) => t.phases.some((_, ph) => [...visibleFrom(w, t, ph)].some((k) => finale.has(k >> 1)))).length;
+
+    // Breadth-first by kills: fire (optionally warp) from each region reached so far.
+    let arrivalKills = -1;
+    let frontier = new Map<string, { scc: number; mask: number }>([[`${w.scc[start]!}|0`, { scc: w.scc[start]!, mask: 0 }]]);
+    const seenStates = new Set(frontier.keys());
+    for (let depth = 0; depth <= 3 && frontier.size; depth++) {
+      if ([...frontier.values()].some((f) => reach(w, f.scc).some((n) => finale.has(n)))) { arrivalKills = depth; break; }
+      if (depth === 3 || Date.now() > deadline) break;
+      const next = new Map<string, { scc: number; mask: number }>();
+      const add = (node: number, mask: number) => {
+        const key = `${w.scc[node]!}|${mask}`;
+        if (seenStates.has(key)) return;
+        seenStates.add(key);
+        next.set(key, { scc: w.scc[node]!, mask });
+      };
+      for (const f of frontier.values()) {
+        for (const t of spheres) {
+          if (f.mask & (1 << t.index)) continue;
+          const mask = f.mask | (1 << t.index);
+          for (let ph = 0; ph < t.phases.length; ph++) {
+            const e = expand(w, f.scc, t, ph);
+            if (!e) continue;
+            for (const k of e.killers) {
+              add(k >> 1, mask);
+              for (const land of warpsFrom(w, w.scc[k >> 1]!, t, ph).lands) add(land.node, mask);
+            }
+          }
+        }
+      }
+      frontier = next;
+    }
+
+    const required = room.requiredKills;
+    const covers = arrivalKills >= 0 && arrivalKills + finaleSpheres >= required;
+    // One- and two-Sphere rooms are meant to end with "hit it, warp there".
+    const verdict = required < 3 || !covers ? "BALANCED"
+      : arrivalKills <= 1 ? "SKIPPABLE"
+        : arrivalKills * 2 <= required ? "EARLY FINISH" : "BALANCED";
+    return { arrivalKills, finaleSpheres, required, verdict };
+  }
 
   function finish(index: number): SolveResult {
     const steps: SolveStep[] = [];

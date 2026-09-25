@@ -59,6 +59,8 @@ It runs, in order:
 
 `npm run content:audit -- --necessity --out audit.json` writes the layout-family report (similarity matrix, action class per room, and which verbs each room provably requires).
 
+`npm run content:goal-first` is a warning-only balance report for the "warp to the end, then shoot" tactic: how early each room's goal platform is reachable and how many required Spheres are shootable from it (SKIPPABLE / EARLY FINISH / BALANCED). It never fails the build.
+
 Authoring: build rooms with `src/world/authoring.ts` (floor-relative helpers for crouch lanes, slits, crawl roofs, origin gates). Dev tools (Level Lab, Map Editor, dev console) appear only in `vite dev` or after `?dev=1`.
 
 Additional Shell certification profiles:
