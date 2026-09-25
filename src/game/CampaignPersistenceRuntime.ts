@@ -18,7 +18,7 @@ type RuntimeState = {
 };
 
 type PendingCampaignStart = {
-  kind: "new" | "continue";
+  kind: "new" | "continue" | "interior";
   sectorId: string;
 };
 
@@ -55,6 +55,13 @@ export function installCampaignPersistenceRuntime(
       return;
     }
 
+    if (campaignSetupActive && screenId === "stage-select" && choiceId === "campaign-interior") {
+      pending = { kind: "interior", sectorId: "" };
+      content.setModeSuite("interior");
+      state.ui.show("difficulty-select");
+      return;
+    }
+
     if (campaignSetupActive && screenId === "stage-select") {
       const target = choiceId === "campaign-new"
         ? firstImplementedSector()
@@ -74,7 +81,8 @@ export function installCampaignPersistenceRuntime(
 
     if (campaignSetupActive && pending && screenId === "difficulty-select") {
       state.shell.difficulty.set(choiceId);
-      content.setSelectedMap(pending.sectorId);
+      if (pending.kind === "interior") content.setModeSuite("interior");
+      else content.setSelectedMap(pending.sectorId);
       if (pending.kind === "new") void progression.startCampaign(pending.sectorId);
 
       campaignSetupActive = false;
@@ -125,6 +133,11 @@ function refreshCampaignMenu(state: RuntimeState, progression: TraversalProgress
           ? current?.label ?? "Resume campaign"
           : "No active campaign",
         disabled: !progression.hasCampaignContinue()
+      },
+      {
+        id: "campaign-interior",
+        label: "Vault",
+        description: "Indoor preview."
       }
     ]
   });

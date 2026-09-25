@@ -1,4 +1,5 @@
 import { devToolsEnabled } from "../dev/devTools";
+import { INTERIOR_PILOT_ROOMS } from "../world/interiorPilot";
 import { installBrowserLifecycle, mountBrowserDevConsole } from "@slu/web-shell";
 import { CAMPAIGN_MAPS, type CampaignMapDefinition } from "../world/campaign";
 import { buildChallengeChamber, buildChallengeSuite, buildTimeTrialCourse, buildTimeTrialSuite } from "../world/modeSuites";
@@ -10,7 +11,7 @@ import { ROOMS, type RoomSpec } from "../world/stages";
 export type TraversalContentId = "controls" | "training" | "suite-time-trial" | "suite-challenge" | "suite-reversal" | string;
 export type TraversalContentForm = "controls" | "training" | "campaign-field" | "course" | "postgame";
 export type TrainingPath = "controls" | "grammar";
-export type ModeSuite = "time-trial" | "challenge" | "reversal" | null;
+export type ModeSuite = "time-trial" | "challenge" | "reversal" | "interior" | null;
 
 export interface ContentRuntime {
   selectedContentId(): TraversalContentId;
@@ -103,6 +104,13 @@ export function installContentRuntime(shell: any): ContentRuntime {
       activeId = "suite-reversal";
       activeForm = "postgame";
       return buildReversalLabyrinth();
+    }
+
+    // Interior pilot: a standalone course outside Campaign progression.
+    if (modeId === "standard" && selectedModeSuite === "interior") {
+      activeId = "interior-pilot";
+      activeForm = "course";
+      return structuredClone(INTERIOR_PILOT_ROOMS) as RoomSpec[];
     }
 
     const map = (CAMPAIGN_MAPS.find((entry) => entry.id === selectedMapId && entry.implemented)

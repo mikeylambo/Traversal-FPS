@@ -7,6 +7,7 @@ import { registerCampaign02 } from "../src/world/registerCampaign02";
 import { registerCampaign03 } from "../src/world/registerCampaign03";
 import { registerCampaign04 } from "../src/world/registerCampaign04";
 import { solveRoom } from "../src/world/routeSolver";
+import { INTERIOR_PILOT_ROOMS } from "../src/world/interiorPilot";
 import type { RoomSpec } from "../src/world/stages";
 
 /**
@@ -35,7 +36,8 @@ const entries: Entry[] = [
     key: `campaign:${map.id}`, room: map.campaignRooms[0]!, exact: false, blocking: !ADVISORY.has(map.id)
   })),
   ...buildTimeTrialSuite().map((room) => ({ key: `time-trial:${room.id}`, room, exact: false, blocking: true })),
-  ...buildChallengeSuite().map((room) => ({ key: `challenge:${room.id}`, room, exact: true, blocking: true }))
+  ...buildChallengeSuite().map((room) => ({ key: `challenge:${room.id}`, room, exact: true, blocking: true })),
+  ...INTERIOR_PILOT_ROOMS.map((room) => ({ key: `interior:${room.id}`, room, exact: false, blocking: true }))
 ];
 
 const geometryHash = (room: RoomSpec, exact: boolean) => createHash("sha1")

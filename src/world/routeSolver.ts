@@ -575,14 +575,23 @@ export function solveRoom(room: RoomSpec, options: SolveOptions = {}): SolveResu
     const finaleScc = new Set([...goalNodes].map((i) => w.scc[i]!));
     const finale = new Set(w.nodes.map((_, i) => i).filter((i) => finaleScc.has(w.scc[i]!)));
     const spheres = targets.filter((t) => t.sphere);
-    const finaleSpheres = spheres.filter((t) => t.phases.some((_, ph) => [...visibleFrom(w, t, ph)].some((k) => finale.has(k >> 1)))).length;
+    const finaleVisible = spheres.filter((t) => t.phases.some((_, ph) => [...visibleFrom(w, t, ph)].some((k) => finale.has(k >> 1))));
+    const finaleSpheres = finaleVisible.length;
 
     // Breadth-first by kills: fire (optionally warp) from each region reached so far.
+    // The best arrival is the one that leaves the most required Spheres still
+    // shootable from the goal platform (kills spent getting there don't count twice).
     let arrivalKills = -1;
+    let bestCover = 0;
     let frontier = new Map<string, { scc: number; mask: number }>([[`${w.scc[start]!}|0`, { scc: w.scc[start]!, mask: 0 }]]);
     const seenStates = new Set(frontier.keys());
     for (let depth = 0; depth <= 3 && frontier.size; depth++) {
-      if ([...frontier.values()].some((f) => reach(w, f.scc).some((n) => finale.has(n)))) { arrivalKills = depth; break; }
+      const arrived = [...frontier.values()].filter((f) => reach(w, f.scc).some((n) => finale.has(n)));
+      if (arrived.length) {
+        arrivalKills = depth;
+        bestCover = Math.max(...arrived.map((f) => depth + finaleVisible.filter((t) => !(f.mask & (1 << t.index))).length));
+        break;
+      }
       if (depth === 3 || Date.now() > deadline) break;
       const next = new Map<string, { scc: number; mask: number }>();
       const add = (node: number, mask: number) => {
@@ -609,7 +618,7 @@ export function solveRoom(room: RoomSpec, options: SolveOptions = {}): SolveResu
     }
 
     const required = room.requiredKills;
-    const covers = arrivalKills >= 0 && arrivalKills + finaleSpheres >= required;
+    const covers = arrivalKills >= 0 && bestCover >= required;
     // One- and two-Sphere rooms are meant to end with "hit it, warp there".
     const verdict = required < 3 || !covers ? "BALANCED"
       : arrivalKills <= 1 ? "SKIPPABLE"

@@ -496,5 +496,11 @@
     "solved": true,
     "warps": 2,
     "ms": 411
+  },
+  "interior:interior-vault": {
+    "hash": "7e508d54c7a92ba3",
+    "solved": true,
+    "warps": 3,
+    "ms": 249
   }
 }
