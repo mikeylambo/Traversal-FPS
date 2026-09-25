@@ -1,5 +1,6 @@
 import type { CampaignMapDefinition } from "./campaign";
 import type { RoomSpec } from "./stages";
+import { sanctum } from "./authoring";
 
 
 function map(
@@ -144,15 +145,20 @@ const S39: RoomSpec = {
   lesson:"The room is wider than your habits. Commit to distance.",
   grammar:["stop-short","moving-endpoint","route-fork"],
   spawn:[-34,2.2,8], goal:[34,1.1,-44], requiredKills:7,
+  // The ring sits in a sealed hall whose door faces away, north. The last
+  // island hangs beyond it: the finish is a lateral swing around the hall.
   platforms:[
     {center:[-34,0,7],size:[14,1,12]}, {center:[-18,3,-8],size:[7,1,7]}, {center:[0,-2,-20],size:[9,1,8]},
-    {center:[18,5,-31],size:[7,1,7]}, {center:[34,0,-44],size:[14,1,12]}
+    {center:[18,5,-31],size:[7,1,7]}, ...sanctum(34, 0, -44, 9, 8, "n", 2.6, 3.4),
+    {center:[40,3,-60],size:[6,1,6]}, {center:[4,1,-38],size:[5,1,5],collapse:{delay:"leave"}}
   ],
+  checkpoints:[[18,7.2,-31]],
   enemies:[
     {id:"span39-a",kind:"drifter",position:[-18,7,-8],drift:{axis:"x",amplitude:8,speed:.72}},
     {id:"span39-b",kind:"sentry",position:[-4,4,-16]}, {id:"span39-c",kind:"orbit",position:[0,4,-20],orbit:{plane:"xy",radiusA:8,radiusB:4,speed:.12}},
     {id:"span39-d",kind:"sentry",position:[18,7,-31]}, {id:"span39-e",kind:"drifter",position:[27,6,-37],drift:{axis:"y",amplitude:3,speed:.75}},
-    {id:"span39-f",kind:"sentry",position:[34,2.2,-44]}, {id:"span39-g",kind:"sentry",position:[8,9,-27]}
+    {id:"span39-f",kind:"sentry",position:[34,1.7,-44.5]}, {id:"span39-g",kind:"sentry",position:[8,9,-27]},
+    {id:"span39-h",kind:"sentry",position:[40,5.2,-60]}, {id:"span39-i",kind:"sentry",position:[4,3.2,-38]}
   ]
 };
 
@@ -161,16 +167,21 @@ const S40: RoomSpec = {
   lesson:"Lock the destination. Change yourself. Spend the line from where you stand now.",
   grammar:["origin-matters","reorientation","stop-short"],
   spawn:[-12,2.2,8], goal:[12,1.1,-46], requiredKills:5,
+  // The ring's hall opens east, away from the wall. Its own Sphere only lines up
+  // from the east perch, so the last change of origin is a flank.
   platforms:[
     {center:[-12,0,7],size:[13,1,11]}, {center:[-12,0,-12],size:[10,1,9]}, {center:[12,3,-12],size:[10,1,9]},
-    {center:[12,0,-46],size:[13,1,11]}, {center:[0,5,-23],size:[1.4,10,26]}, {center:[-8,3,-29],size:[11,1,8]}
+    ...sanctum(12, 0, -46, 9, 8, "e", 2.6, 3.4), {center:[0,5,-23],size:[1.4,10,26]}, {center:[-8,3,-29],size:[11,1,8]},
+    {center:[27,4,-42],size:[5,1,5]}
   ],
+  checkpoints:[[12,5.2,-12]],
   enemies:[
     {id:"parallax-lock",kind:"sentry",position:[12,5.2,-12]},
     {id:"parallax-02",kind:"shield",position:[-8,5.2,-29],originConstraint:{axis:"x",min:1}},
     {id:"parallax-03",kind:"sentry",position:[12,5,-31]},
     {id:"parallax-04",kind:"drifter",position:[0,8,-39],drift:{axis:"x",amplitude:8,speed:.7}},
-    {id:"parallax-05",kind:"sentry",position:[12,2.2,-48]}
+    {id:"parallax-05",kind:"sentry",position:[12,1.7,-46]},
+    {id:"parallax-06",kind:"sentry",position:[27,5.7,-40.5]}
   ]
 };
 

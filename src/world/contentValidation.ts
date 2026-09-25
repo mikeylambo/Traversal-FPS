@@ -80,6 +80,21 @@ export function validateRoom(room: RoomSpec): RoomValidationReport {
     }
   }
 
+  for (const [index, point] of (room.checkpoints ?? []).entries()) {
+    const supported = room.platforms.some((platform) => {
+      const top = platform.center[1] + platform.size[1] / 2;
+      return Math.abs(point[1] - (top + 1.7)) < 0.08 &&
+        Math.abs(point[0] - platform.center[0]) <= platform.size[0] / 2 &&
+        Math.abs(point[2] - platform.center[2]) <= platform.size[2] / 2 &&
+        !platform.collapse && !platform.motion;
+    });
+    if (!supported) push("error", "geometry.checkpoint-floating", `Checkpoint ${index + 1} is not at standing height over a solid, static floor.`);
+  }
+
+  room.platforms.forEach((platform, index) => {
+    if (platform.collapse && platform.motion) push("error", "geometry.collapse-moving", `Platform ${index + 1} both moves and collapses; collapse is for static floors.`);
+  });
+
   for (const enemy of room.enemies) {
     if (!isFiniteVec3(enemy.position) || enemy.drift || enemy.orbit) continue;
     const inside = room.platforms.findIndex((platform) => pointInside(enemy.position, platform, 0.05));

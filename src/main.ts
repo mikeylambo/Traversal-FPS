@@ -40,6 +40,8 @@ import { installGameplayClarity } from "./game/GameplayClarityRuntime";
 import { installWarpCancelRuntime } from "./game/WarpCancelRuntime";
 import { installInstantRestart } from "./game/InstantRestartRuntime";
 import { installSplitsRuntime } from "./game/SplitsRuntime";
+import { installCollapseRuntime } from "./game/CollapseRuntime";
+import { installCheckpointRuntime } from "./game/CheckpointRuntime";
 import { installExitGateRuntime } from "./game/ExitGateRuntime";
 import { installLandingReadabilityRuntime } from "./game/LandingReadabilityRuntime";
 import { installRewindWarpRuntime } from "./game/RewindWarpRuntime";
@@ -437,6 +439,9 @@ installOnboardingRuntime(game, contentRuntime);
 installMovementAudioRuntime(game);
 installPlatformMotionAudioRuntime(game);
 installConstructAmbienceRuntime(game);
+installCollapseRuntime(game);
+// Last loadRoom wrapper: a checkpoint respawn must skip every room rebuild.
+installCheckpointRuntime(game);
 if (devTools) installEditorShortcut();
 game.start();
 

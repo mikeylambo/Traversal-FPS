@@ -1,6 +1,6 @@
 import type { CampaignMapDefinition } from "./campaign";
 import type { RoomSpec } from "./stages";
-import {
+import { sanctum,
   apertureX, crawl, crouchSentry, cube, diamond, drifter, eye, field, floor, gated, lockedGate, low, moving, orbit,
   prism, ring, sentry, shield, slabWithHole, slitWallX, slitWallZ, solid, sweep
 } from "./authoring";
@@ -181,8 +181,10 @@ const S23: RoomSpec = {
   ))
 };
 
-// MINIMAL — the room stops teaching. Tiny islands in open space; any three
-// Spheres open the ring. Mastery is visible in what you leave untouched.
+// MINIMAL — the room stops teaching. Tiny islands in open space and a sealed
+// sanctum holding the ring, its one doorway facing the void. Any four Spheres
+// open the ring, but the sanctum's own Sphere only lines up through the door
+// from the lone island beyond it: the finish is a firing position, not a pad.
 const S25: RoomSpec = {
   id: "sector-25-minimal",
   title: "MINIMAL",
@@ -190,16 +192,19 @@ const S25: RoomSpec = {
   grammar: ["route-fork", "stop-short", "reorientation", "origin-matters"],
   spawn: eye(0, 0, 0),
   goal: ring(30, 14, -30),
-  requiredKills: 3,
+  requiredKills: 4,
+  checkpoints: [eye(18, 8, -8)],
   platforms: [
     floor(0, 0, 0, 3, 3),
     floor(-10, 4, -12, 2.5, 2.5),
-    floor(8, 2, -16, 2.5, 2.5),
+    { ...floor(8, 2, -16, 2.5, 2.5), collapse: { delay: "leave" } },
     floor(18, 8, -8, 2.5, 2.5),
     floor(-4, 10, -28, 2.5, 2.5),
     floor(14, 12, -36, 2.5, 2.5),
     floor(26, 6, -18, 2.5, 2.5),
-    floor(30, 14, -30, 4, 4)
+    ...sanctum(30, 14, -30, 6, 6, "e", 2.4, 3.4),
+    // The approach: a lone island beyond the sanctum, facing its doorway.
+    floor(40, 14, -26, 4, 6)
   ],
   enemies: [
     sentry("min-01", eye(-10, 4, -12)),
@@ -208,7 +213,8 @@ const S25: RoomSpec = {
     shield("min-04", eye(-4, 10, -28), { axis: "x", max: -6 }),
     sentry("min-05", eye(14, 12, -36)),
     sentry("min-06", eye(26, 6, -18)),
-    sentry("min-07", eye(30, 14, -31.5)),
+    sentry("min-07", eye(29, 14, -30)),
+    sentry("min-09", eye(40, 14, -24)),
     orbit("min-08", [10, 9, -24], "xz", 4, 3, 0.1)
   ]
 };

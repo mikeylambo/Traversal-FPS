@@ -139,3 +139,42 @@ export function slabWithHole(
   add(hx1, x1, hz0, hz1);
   return out;
 }
+
+/**
+ * An enterable structure in open space: floor, walls, roof and one doorway.
+ * Put a Gravity Ring inside and the goal platform only sees out through the
+ * door, so "reach the end, then shoot everything" needs the right doorway line.
+ * Walls sit outside the floor footprint; `door` names the open side.
+ */
+export function sanctum(
+  x: number, top: number, z: number, w: number, d: number,
+  door: "n" | "s" | "e" | "w" | "top", doorWidth = 2.4, height = 3.4, wall = 0.6
+): PlatformSpec[] {
+  const x0 = x - w / 2, x1 = x + w / 2, z0 = z - d / 2, z1 = z + d / 2;
+  // Walls run down through the floor slab so no sightline slips under them at the seam.
+  const y0 = top - 1, y1 = top + height, doorTop = top + Math.min(height - 0.4, 2.6);
+  const out: PlatformSpec[] = [floor(x, top, z, w, d)];
+  const side = (s: "n" | "s" | "e" | "w") => {
+    const alongX = s === "n" || s === "s";
+    const fixed0 = s === "n" ? z0 - wall : s === "s" ? z1 : s === "w" ? x0 - wall : x1;
+    const fixed1 = fixed0 + wall;
+    const a0 = alongX ? x0 - wall : z0, a1 = alongX ? x1 + wall : z1;
+    const box = (b0: number, b1: number, h0: number, h1: number) => alongX
+      ? solid(b0, b1, h0, h1, fixed0, fixed1)
+      : solid(fixed0, fixed1, h0, h1, b0, b1);
+    if (s !== door) return [box(a0, a1, y0, y1)];
+    const mid = alongX ? x : z;
+    return [
+      box(a0, mid - doorWidth / 2, y0, y1),
+      box(mid + doorWidth / 2, a1, y0, y1),
+      box(mid - doorWidth / 2, mid + doorWidth / 2, doorTop, y1),
+      // Sill below the door: flush with the floor so you can walk out.
+      box(mid - doorWidth / 2, mid + doorWidth / 2, y0, top)
+    ];
+  };
+  out.push(...side("n"), ...side("s"), ...side("e"), ...side("w"));
+  // "top" is a skylight: the roof has a square hole over the middle.
+  if (door === "top") out.push(...slabWithHole(x0 - wall, x1 + wall, z0 - wall, z1 + wall, y1 + wall, x - doorWidth / 2, x + doorWidth / 2, z - doorWidth / 2, z + doorWidth / 2, wall));
+  else out.push(solid(x0 - wall, x1 + wall, y1, y1 + wall, z0 - wall, z1 + wall));
+  return out;
+}

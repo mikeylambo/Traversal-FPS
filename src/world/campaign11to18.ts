@@ -2,7 +2,7 @@ import type { CampaignMapDefinition } from "./campaign";
 import type { HazardSpec, RoomSpec } from "./stages";
 import {
   apertureX, crawl, crouchSentry, cube, diamond, drifter, eye, field, floor, gated, low, moving, orbit, prism,
-  ring, sentry, shield, slabWithHole, slitWallX, solid, sweep
+  ring, sanctum, sentry, shield, slabWithHole, slitWallX, solid, sweep
 } from "./authoring";
 
 /**
@@ -277,6 +277,8 @@ const S17: RoomSpec = {
 
 // SWEEP — open arena. Blades cross the floor on two axes; staggered pylons are
 // the only ground they cannot reach. Leave the hazard plane, and keep leaving it.
+// The ring waits in a sealed vault with a skylight: the way in is from the high
+// perch above it, reached only by chaining across the pylons.
 const S18: RoomSpec = {
   id: "sector-18-sweep",
   title: "SWEEP",
@@ -292,15 +294,18 @@ const S18: RoomSpec = {
     solid(8.75, 11.25, 0, 10, -9.25, -6.75),
     solid(-9.25, -6.75, 0, 12, -19.25, -16.75),
     solid(10.75, 13.25, 0, 9, -27.25, -24.75),
-    floor(0, 4, -37, 10, 6)
+    ...sanctum(0, 4, -37, 10, 6, "top", 3, 3.4),
+    floor(0, 15, -33, 3, 3)
   ],
+  checkpoints: [eye(-8, 12, -18)],
   enemies: [
     sentry("sweep-01", eye(-12, 8, -2)),
     sentry("sweep-02", eye(10, 10, -8)),
     drifter("sweep-03", [0, 10, -12], "x", 4, 0.6),
     sentry("sweep-04", eye(-8, 12, -18)),
     sentry("sweep-05", eye(12, 9, -26)),
-    orbit("sweep-06", [0, 7.5, -35], "xy", 2, 1, 0.12)
+    sentry("sweep-06", eye(0, 15, -33)),
+    sentry("sweep-07", eye(2.5, 4, -37))
   ],
   hazards: [
     sweep("sweep-a", [0, 1.5, -11], [40, 3, 0.8], "z", 19, 0.1),

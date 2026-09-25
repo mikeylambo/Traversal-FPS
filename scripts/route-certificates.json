@@ -108,10 +108,10 @@
     "ms": 151
   },
   "campaign:map-18": {
-    "hash": "6a9c449a081c726d",
+    "hash": "d14975a313527375",
     "solved": true,
-    "warps": 4,
-    "ms": 11976
+    "warps": 6,
+    "ms": 15829
   },
   "campaign:map-19": {
     "hash": "985a5984b85cf8a5",
@@ -150,10 +150,10 @@
     "ms": 3531
   },
   "campaign:map-25": {
-    "hash": "23aa544411ac10e6",
+    "hash": "a43e0eb8cda87be2",
     "solved": true,
-    "warps": 3,
-    "ms": 8
+    "warps": 7,
+    "ms": 3042
   },
   "campaign:map-26": {
     "hash": "4f31228b3ad6e97c",
@@ -234,16 +234,16 @@
     "ms": 503
   },
   "campaign:map-39": {
-    "hash": "762c19d895b176e7",
-    "solved": true,
-    "warps": 7,
-    "ms": 2677
-  },
-  "campaign:map-40": {
-    "hash": "4a35bedb0bbfff30",
+    "hash": "90a9a7a76379e6a8",
     "solved": true,
     "warps": 5,
-    "ms": 330
+    "ms": 9464
+  },
+  "campaign:map-40": {
+    "hash": "74871abc69e8eba2",
+    "solved": true,
+    "warps": 5,
+    "ms": 936
   },
   "campaign:map-41": {
     "hash": "42f2fa0db4419ab2",

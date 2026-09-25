@@ -21,6 +21,12 @@ export interface PlatformSpec {
     phase?: number;
     active?: boolean;
   };
+  /**
+   * Collapsing floor (static platforms only). It arms the first time you stand
+   * on it, then falls away `delay` seconds later, or as soon as you step off
+   * when `delay` is "leave". It returns only when the room resets.
+   */
+  collapse?: { delay: number | "leave" };
 }
 
 export interface EnemySpec {
@@ -61,6 +67,11 @@ export interface RoomSpec {
   platforms: PlatformSpec[];
   enemies: EnemySpec[];
   hazards?: HazardSpec[];
+  /**
+   * Campaign checkpoints: eye positions. Reaching one makes it the respawn for
+   * falls, hazards and Reset, with the room kept exactly as it was.
+   */
+  checkpoints?: Vec3Tuple[];
 }
 
 export const ROOMS: RoomSpec[] = [
