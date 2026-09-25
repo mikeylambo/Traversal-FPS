@@ -1,6 +1,8 @@
 import * as THREE from "three";
 import { mountRegisteredVisual, type ProceduralVisualKey } from "../art/procedural/ProceduralVisualRegistry";
 import type { EnemySpec } from "../world/stages";
+import { installActorLinkRuntime } from "./ActorLinkRuntime";
+import { UTILITY_ROLE_COLORS } from "./TraversalAccessibility";
 
 type ActiveEnemy = {
   spec: EnemySpec;
@@ -26,6 +28,8 @@ export function installActorGeometryRuntime(game: object): void {
     originalLoadRoom(index);
     for (const enemy of state.enemies) applyGeometry(enemy);
   };
+
+  installActorLinkRuntime(game);
 }
 
 function applyGeometry(enemy: ActiveEnemy): void {
@@ -35,17 +39,17 @@ function applyGeometry(enemy: ActiveEnemy): void {
   if (enemy.spec.kind === "cube") {
     replaceGeometry(enemy, new THREE.BoxGeometry(radius * 1.75, radius * 1.75, radius * 1.75));
     replaceWireShell(enemy, new THREE.BoxGeometry(radius * 2.02, radius * 2.02, radius * 2.02));
-    setMaterialColor(material, 0xeef4ff);
+    setMaterialColor(material, UTILITY_ROLE_COLORS.cube);
     enemy.mesh.rotation.set(0.22, 0.35, 0.12);
   } else if (enemy.spec.kind === "diamond") {
     replaceGeometry(enemy, new THREE.OctahedronGeometry(radius * 1.22, 0));
     replaceWireShell(enemy, new THREE.OctahedronGeometry(radius * 1.42, 0));
-    setMaterialColor(material, 0xd7fff1);
+    setMaterialColor(material, UTILITY_ROLE_COLORS.diamond);
     enemy.mesh.rotation.set(0, 0, Math.PI * 0.25);
   } else if (enemy.spec.kind === "prism") {
     replaceGeometry(enemy, new THREE.CylinderGeometry(radius, radius, radius * 2.05, 3, 1, false));
     replaceWireShell(enemy, new THREE.CylinderGeometry(radius * 1.17, radius * 1.17, radius * 2.36, 3, 1, false));
-    setMaterialColor(material, 0xffedc7);
+    setMaterialColor(material, UTILITY_ROLE_COLORS.prism);
     enemy.mesh.rotation.set(Math.PI * 0.5, 0, 0);
   } else {
     setMaterialColor(material, SPHERE_COLOR);

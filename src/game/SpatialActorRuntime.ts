@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { emitTraversalAudio } from "../audio/TraversalAudio";
-import { actorColor, utilityRingColor } from "./TraversalAccessibility";
+import { actorColor, UTILITY_ROLE_COLORS } from "./TraversalAccessibility";
 import { evaluateActorOrigin, resolveOriginConstraint } from "../world/spatialActors";
 import { ROOMS, type EnemySpec } from "../world/stages";
 import { installActorGeometryRuntime } from "./ActorGeometryRuntime";
@@ -210,7 +210,7 @@ function decorateUtility(enemy: ActiveEnemy, kind: "cube" | "diamond" | "prism")
   const ring = new THREE.Mesh(
     new THREE.TorusGeometry(radius * 1.42, radius * 0.045, 8, kind === "prism" ? 3 : 36),
     new THREE.MeshBasicMaterial({
-      color: utilityRingColor(),
+      color: UTILITY_ROLE_COLORS[kind],
       transparent: true,
       opacity: 0.78,
       blending: THREE.AdditiveBlending,

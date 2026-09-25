@@ -92,11 +92,18 @@ export function hazardCue(kind: HazardKind, profile = traversalAccessibility().c
   return HAZARD_PALETTE[profile][kind];
 }
 
+/**
+ * One hue per utility role, so a shape reads before its silhouette resolves:
+ * Cube (state) white, Diamond (motion) green, Prism (energy) gold. Deliberately
+ * never the Sphere cyan: only Spheres move the player.
+ */
+export const UTILITY_ROLE_COLORS = { cube: 0xf2f5ff, diamond: 0x4dffa6, prism: 0xffc93c } as const;
+
 export function actorColor(kind: EnemyKind, profile = traversalAccessibility().colorProfile): number {
   const palette = ACTOR_PALETTE[profile];
   if (kind === "shield") return palette.shield;
   if (kind === "drifter") return palette.drifter;
-  if (kind === "cube" || kind === "diamond" || kind === "prism") return palette.sphere;
+  if (kind === "cube" || kind === "diamond" || kind === "prism") return UTILITY_ROLE_COLORS[kind];
   return palette.sphere;
 }
 
