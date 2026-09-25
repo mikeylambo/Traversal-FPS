@@ -96,7 +96,17 @@ export function installGameplayClarity(game: object): void {
 
 function installLiveWarpGrammar(state: RuntimeState, game: object): void {
   const collisionRay = new THREE.Raycaster();
+  const solidBounds = new THREE.Box3();
   state.warp.setCommitValidator((from, to) => {
+    // A destination inside solid geometry would leave the player embedded in it
+    // (and able to fall through floors), so it is never a valid landing.
+    const embedded = state.platformMeshes.some((mesh) =>
+      solidBounds.setFromObject(mesh).expandByScalar(-0.05).containsPoint(to));
+    if (embedded) {
+      state.flashMessage("VECTOR BLOCKED // SOLID GEOMETRY", 1050);
+      return false;
+    }
+
     const direction = to.clone().sub(from);
     const distance = direction.length();
     if (distance <= 0.5) return true;

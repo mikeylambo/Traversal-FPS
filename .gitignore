@@ -8,3 +8,4 @@ dist/
 *.blend2
 *.blend@
 *.blend@*
+.audit/

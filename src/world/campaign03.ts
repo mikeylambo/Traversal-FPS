@@ -41,9 +41,9 @@ export const MAP_03_FIELD: RoomSpec[] = [
       { id: "occlusion-slot", kind: "sentry", position: [-15, 5.3, -36], radius: 0.52 },
       { id: "occlusion-high", kind: "sentry", position: [16, 6.7, -61], radius: 0.58 },
 
-      // Alternate low route. From the high platform the vector crosses the
-      // -84 landing well inside its footprint before continuing beyond it.
-      { id: "occlusion-low", kind: "drifter", position: [-8, 3.1, -92], radius: 0.55, drift: { axis: "x", amplitude: 3, speed: 0.58 } },
+      // Alternate low route. Rides just above the -91 slab (it used to sit inside
+      // it); a crouched arrival settles on the slab before the final leg.
+      { id: "occlusion-low", kind: "drifter", position: [-8, 4.25, -92], radius: 0.55, drift: { axis: "x", amplitude: 3, speed: 0.58 } },
 
       // Higher alternate route lands directly on the -105 platform.
       { id: "occlusion-alt", kind: "drifter", position: [11, 6.1, -105], radius: 0.55, drift: { axis: "y", amplitude: 2.8, speed: 0.72 } },

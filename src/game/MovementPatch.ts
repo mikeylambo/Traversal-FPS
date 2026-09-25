@@ -292,9 +292,14 @@ function resolveWarpArrival(
       Math.abs(position.z - cz) <= sz * 0.5 + WARP_LANDING_EDGE_CUSHION;
     if (!withinFootprint) continue;
 
-    const standingY = cy + sy * 0.5 + eyeHeight;
+    const top = cy + sy * 0.5;
+    const standingY = top + eyeHeight;
     const deltaY = Math.abs(position.y - standingY);
-    if (deltaY > WARP_LANDING_VERTICAL_CUSHION) continue;
+    // A shallow Stop Short can end with the eye between the surface and standing
+    // height. Floor resolution never catches that (it only sees falls from above
+    // standing height), so the player would drop straight through the slab.
+    const lowArrival = position.y > top + 0.05 && position.y < standingY;
+    if (deltaY > WARP_LANDING_VERTICAL_CUSHION && !lowArrival) continue;
     if (!best || deltaY < best.deltaY) best = { platform, standingY, deltaY };
   }
 

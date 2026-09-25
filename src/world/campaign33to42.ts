@@ -32,21 +32,27 @@ const S33: RoomSpec = {
   id: "sector-33-ascent", title: "ASCENT",
   lesson: "Height is the route. Read upward, not forward.",
   grammar: ["reorientation", "airborne-chain", "origin-matters"],
-  spawn: [0, 2.2, 8], goal: [0, 37.1, -8], requiredKills: 6,
+  // A solid core owns the centre. Perches spiral around it (E, N, W, S, E) far
+  // enough out that each upward vector arrives above the next lip; the core hides
+  // everything but the next perch, and the summit caps it.
+  spawn: [0, 2.2, 8], goal: [0, 31.6, -5], requiredKills: 6,
   platforms: [
     { center: [0,0,7], size:[14,1,12] },
-    { center: [8,6,-5], size:[7,1,7] }, { center:[-7,12,-10], size:[7,1,7] },
-    { center:[7,18,-5], size:[7,1,7] }, { center:[-6,25,0], size:[7,1,7] },
-    { center:[0,32,-8], size:[9,1,9] }, { center:[0,36,-8], size:[12,1,10] },
-    { center:[0,18,4], size:[1.2,34,13] }
+    { center: [0,15.5,-5], size:[4,29,4] },
+    { center: [11,4,-5], size:[7,1,7] },
+    { center: [0,9,-16], size:[7,1,7] },
+    { center: [-11,14,-5], size:[7,1,7] },
+    { center: [0,19,6], size:[7,1,7] },
+    { center: [11,25,-5], size:[7,1,7] },
+    { center: [0,30.5,-5], size:[12,1,12] }
   ],
   enemies: [
-    { id:"ascent-01", kind:"sentry", position:[8,8.2,-5] },
-    { id:"ascent-02", kind:"drifter", position:[-7,15,-10], drift:{axis:"y",amplitude:2.5,speed:.72} },
-    { id:"ascent-03", kind:"sentry", position:[7,20.2,-5] },
-    { id:"ascent-04", kind:"orbit", position:[-6,28,0], orbit:{plane:"xy",radiusA:4,radiusB:2.5,speed:.12} },
-    { id:"ascent-05", kind:"sentry", position:[0,34.2,-8] },
-    { id:"ascent-06", kind:"sentry", position:[0,38.2,-8] }
+    { id:"ascent-01", kind:"sentry", position:[11,6.2,-5] },
+    { id:"ascent-02", kind:"drifter", position:[0,11.2,-16], drift:{axis:"x",amplitude:2,speed:.62} },
+    { id:"ascent-03", kind:"sentry", position:[-11,16.2,-5] },
+    { id:"ascent-04", kind:"orbit", position:[0,21.2,6], orbit:{plane:"xz",radiusA:2,radiusB:1.5,speed:.12} },
+    { id:"ascent-05", kind:"sentry", position:[11,27.2,-5] },
+    { id:"ascent-06", kind:"sentry", position:[4,32.7,-5] }
   ]
 };
 
@@ -75,8 +81,8 @@ const S34: RoomSpec = {
     {center:[0,5,-26],size:[24,10,1.2]}, {center:[-18,5,-26],size:[8,10,1.2]}, {center:[18,5,-26],size:[8,10,1.2]}
   ],
   enemies:[
-    {id:"under-01",kind:"sentry",position:[-8,1.55,-10],radius:.55},
-    {id:"under-02",kind:"sentry",position:[3,1.55,-10],radius:.55},
+    {id:"under-01",kind:"sentry",position:[-8,1.42,-10],radius:.55},
+    {id:"under-02",kind:"sentry",position:[3,1.42,-10],radius:.55},
     {id:"under-03",kind:"shield",position:[16,2.2,-20],originConstraint:{axis:"x",max:2}},
     {id:"under-04",kind:"sentry",position:[-10,2.2,-38]},
     {id:"under-05",kind:"sentry",position:[16,2.2,-44]}
@@ -202,7 +208,7 @@ const S38: RoomSpec = {
     {center:[0,5,-22],size:[1.2,11,20]}
   ],
   enemies:[
-    {id:"ou-01",kind:"sentry",position:[-8,12.2,-10]}, {id:"ou-02",kind:"sentry",position:[-2,1.55,-14],radius:.52},
+    {id:"ou-01",kind:"sentry",position:[-8,12.2,-10]}, {id:"ou-02",kind:"sentry",position:[-2,1.42,-14],radius:.52},
     {id:"ou-03",kind:"sentry",position:[8,2.2,-14]}, {id:"ou-04",kind:"shield",position:[8,12.2,-30],originConstraint:{axis:"x",max:0}},
     {id:"ou-05",kind:"drifter",position:[0,8,-38],drift:{axis:"y",amplitude:3,speed:.72}},
     {id:"ou-06",kind:"sentry",position:[12,12.2,-45]}
@@ -316,7 +322,7 @@ const S42: RoomSpec = {
     {center:[0,8,-28],size:[1.4,18,28]}
   ],
   enemies:[
-    {id:"conv-low",kind:"sentry",position:[0,1.55,-12],radius:.52},
+    {id:"conv-low",kind:"sentry",position:[0,1.42,-12],radius:.52},
     {id:"conv-left",kind:"sentry",position:[-24,4.2,-14]}, {id:"conv-right",kind:"shield",position:[24,7.2,-14],originConstraint:{axis:"x",max:0}},
     {id:"conv-drop",kind:"sentry",position:[0,-1.8,-32]}, {id:"conv-rise-a",kind:"drifter",position:[-18,13,-43],drift:{axis:"y",amplitude:3,speed:.8}},
     {id:"conv-rise-b",kind:"orbit",position:[18,18,-38],orbit:{plane:"yz",radiusA:4,radiusB:4,speed:.12}},
