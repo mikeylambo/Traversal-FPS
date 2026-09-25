@@ -7,6 +7,7 @@
     "dev": "vite",
     "content:doctor": "tsx scripts/content-doctor.ts",
     "content:certify": "tsx scripts/route-certify.ts",
+    "content:audit": "tsx scripts/layout-audit.ts",
     "test:regression": "tsx scripts/regression-tests.ts",
     "build": "npm run content:doctor && npm run content:certify && npm run audio:doctor && npm run test:regression && tsc --noEmit && vite build",
     "check": "tsc --noEmit",
