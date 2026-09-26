@@ -20,7 +20,18 @@ const surfaceVertex = /* glsl */`
   }
 `;
 
+// Walkable (upward-facing) surfaces fill most of the first-person frame and are
+// always seen at grazing angles, so the view-rim term washed them to flat cyan.
+// Floors keep a quieter rim and albedo and let the tech grid carry them; walls,
+// silhouettes and edges are unchanged.
+const TOP_FACE_LIGHT = "0.75";
+const TOP_GRID_BOOST = "1.45";
+const TOP_RIM = "0.22";
+
 const surfaceFragment = /* glsl */`
+  #define TOP_FACE_LIGHT ${TOP_FACE_LIGHT}
+  #define TOP_GRID_BOOST ${TOP_GRID_BOOST}
+  #define TOP_RIM ${TOP_RIM}
   uniform vec3 uBase;
   uniform vec3 uAccent;
   uniform vec3 uFogColor;
@@ -59,11 +70,14 @@ const surfaceFragment = /* glsl */`
     vec3 an = abs(n);
     float grid = gxz * an.y + gxy * an.z + gyz * an.x;
     grid *= uGridStrength * (0.55 + uRoomFocus * 0.45);
+    float up = smoothstep(0.55, 0.95, n.y);
+    grid *= mix(1.0, TOP_GRID_BOOST, up);
 
     float scan = 0.5 + 0.5 * sin(vWorldPosition.y * 5.5 + uTime * 0.7);
     float micro = smoothstep(0.94, 1.0, scan) * 0.06 * uRoomFocus;
 
-    vec3 base = uBase * (0.28 + lit * 0.82);
+    vec3 base = uBase * (0.28 + lit * 0.82) * mix(1.0, TOP_FACE_LIGHT, up);
+    rim *= mix(1.0, TOP_RIM, up);
     vec3 energy = uAccent * (rim * 0.55 + grid * 0.72 + micro) * uEnergyStrength;
     vec3 color = base + energy;
     float fogFactor = 1.0 - exp(-uFogDensity * uFogDensity * vViewDepth * vViewDepth);
