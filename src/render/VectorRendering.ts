@@ -5,6 +5,8 @@ import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js"
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import type { TraversalVisualSettings } from "../game/TraversalSettings";
 import { WarpLensPass } from "./WarpLensPass";
+import { FinishPass } from "./FinishPass";
+import { GTAOPass } from "three/addons/postprocessing/GTAOPass.js";
 
 const surfaceVertex = /* glsl */`
   varying vec3 vWorldPosition;
@@ -146,6 +148,8 @@ export class VectorRendering {
   private readonly composer: EffectComposer;
   private readonly bloom: UnrealBloomPass;
   readonly warpLens = new WarpLensPass();
+  private readonly finish = new FinishPass();
+  private readonly ao: GTAOPass;
   private readonly materials: StylizedMaterial[] = [];
   private time = 0;
 
@@ -156,10 +160,14 @@ export class VectorRendering {
   ) {
     this.composer = new EffectComposer(renderer);
     this.composer.addPass(new RenderPass(scene, camera));
+    this.ao = new GTAOPass(scene, camera, 1, 1);
+    this.ao.updateGtaoMaterial({ radius: 1.4, distanceExponent: 1.6, thickness: 2, scale: 1 });
+    this.composer.addPass(this.ao);
     this.bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.9, 0.62, 0.72);
     this.composer.addPass(this.bloom);
     this.composer.addPass(this.warpLens);
     this.composer.addPass(new OutputPass());
+    this.composer.addPass(this.finish);
   }
 
   createSurfaceMaterial(base: number, accent: number, roomFocus = 0): THREE.ShaderMaterial {
@@ -206,6 +214,9 @@ export class VectorRendering {
     this.bloom.strength = visual.bloomStrength;
     this.bloom.radius = 0.56;
     this.bloom.threshold = 0.71;
+    this.ao.enabled = visual.ambientOcclusion > 0.01;
+    this.ao.blendIntensity = visual.ambientOcclusion;
+    this.finish.apply(visual, this.time);
 
     const fog = this.scene.fog;
     if (fog instanceof THREE.FogExp2) fog.density = visual.fogDensity;
@@ -227,6 +238,7 @@ export class VectorRendering {
   resize(width: number, height: number): void {
     this.composer.setSize(width, height);
     this.warpLens.setAspect(width / Math.max(1, height));
+    this.finish.setAspect(width / Math.max(1, height));
   }
 
   clearDisposableMaterials(): void {

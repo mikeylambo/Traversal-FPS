@@ -23,8 +23,8 @@ export interface WarpRifleVisualState {
 
 type P2 = readonly [number, number];
 
-const WHITE = 0x939ca3;
-const WHITE_EDGE = 0x838d95;
+const WHITE = 0xe2e7ea;
+const WHITE_EDGE = 0xcdd4d9;
 const GRAPHITE = 0x2a3139;
 const DARK = 0x0b0f14;
 const CYAN = 0x4fe6ff;
@@ -223,8 +223,8 @@ export function createWarpRifleModel(): THREE.Group {
   const root = new THREE.Group();
   root.name = "warp-rifle-approved-v3";
 
-  const white = surface(WHITE, 0.04, 0.52, 0.45);
-  const whiteEdge = surface(WHITE_EDGE, 0.06, 0.48, 0.45);
+  const white = surface(WHITE, 0.04, 0.42, 0.8);
+  const whiteEdge = surface(WHITE_EDGE, 0.06, 0.4, 0.8);
   const graphite = surface(GRAPHITE, 0.72, 0.36, 1.1);
   const dark = surface(DARK, 0.55, 0.5, 0.7);
   const gripPad = surface(0x151a20, 0.2, 0.82, 0.4);

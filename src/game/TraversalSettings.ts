@@ -7,6 +7,12 @@ export interface TraversalVisualSettings {
   bloomStrength: number;
   exposure: number;
   starTwinkle: number;
+  ambientOcclusion: number;
+  contrast: number;
+  saturation: number;
+  warmth: number;
+  vignette: number;
+  grain: number;
 }
 
 /**
@@ -68,16 +74,23 @@ export function activeTraversalSettingsStore(): TraversalSettingsStore | null {
   return activeStore;
 }
 
-// Canonical ROOM 01 lookdev preset, promoted from the first player-tuned pass.
+// Canonical lookdev preset: the player-tuned neon pass (dark exposure, no rim,
+// high energy, deep fog) plus the finish stack.
 export const DEFAULT_VISUAL_SETTINGS: TraversalVisualSettings = {
-  toonStrength: 0.91,
-  rimStrength: 1.95,
-  gridStrength: 0.70,
-  energyStrength: 0.55,
-  fogDensity: 0.0135,
-  bloomStrength: 0.30,
-  exposure: 2.00,
-  starTwinkle: 0.82
+  toonStrength: 1,
+  rimStrength: 0,
+  gridStrength: 0.40,
+  energyStrength: 2.25,
+  fogDensity: 0.0230,
+  bloomStrength: 0.20,
+  exposure: 0.65,
+  starTwinkle: 1.50,
+  ambientOcclusion: 0.6,
+  contrast: 1.08,
+  saturation: 1.05,
+  warmth: 0,
+  vignette: 0.35,
+  grain: 0.25
 };
 
 /**

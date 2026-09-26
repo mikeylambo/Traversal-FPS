@@ -12,11 +12,17 @@ const sliderConfig: Array<{
   { key: "toonStrength", id: "look-toon", min: 0, max: 1, step: 0.01, format: (v) => `${Math.round(v * 100)}%` },
   { key: "rimStrength", id: "look-rim", min: 0, max: 2.5, step: 0.05, format: (v) => v.toFixed(2) },
   { key: "gridStrength", id: "look-grid", min: 0, max: 1.5, step: 0.02, format: (v) => v.toFixed(2) },
-  { key: "energyStrength", id: "look-energy", min: 0.3, max: 2.5, step: 0.05, format: (v) => v.toFixed(2) },
-  { key: "fogDensity", id: "look-fog", min: 0.002, max: 0.03, step: 0.0005, format: (v) => v.toFixed(4) },
+  { key: "energyStrength", id: "look-energy", min: 0.3, max: 3.5, step: 0.05, format: (v) => v.toFixed(2) },
+  { key: "fogDensity", id: "look-fog", min: 0.002, max: 0.05, step: 0.0005, format: (v) => v.toFixed(4) },
   { key: "bloomStrength", id: "look-bloom", min: 0, max: 2.2, step: 0.05, format: (v) => v.toFixed(2) },
-  { key: "exposure", id: "look-exposure", min: 0.65, max: 2, step: 0.05, format: (v) => v.toFixed(2) },
-  { key: "starTwinkle", id: "look-stars", min: 0, max: 1.5, step: 0.05, format: (v) => v.toFixed(2) }
+  { key: "exposure", id: "look-exposure", min: 0.3, max: 2.5, step: 0.05, format: (v) => v.toFixed(2) },
+  { key: "starTwinkle", id: "look-stars", min: 0, max: 2.5, step: 0.05, format: (v) => v.toFixed(2) },
+  { key: "ambientOcclusion", id: "look-ao", min: 0, max: 1, step: 0.05, format: (v) => `${Math.round(v * 100)}%` },
+  { key: "contrast", id: "look-contrast", min: 0.7, max: 1.5, step: 0.01, format: (v) => v.toFixed(2) },
+  { key: "saturation", id: "look-saturation", min: 0, max: 1.8, step: 0.02, format: (v) => v.toFixed(2) },
+  { key: "warmth", id: "look-warmth", min: -1, max: 1, step: 0.05, format: (v) => (v > 0 ? "+" : "") + v.toFixed(2) },
+  { key: "vignette", id: "look-vignette", min: 0, max: 1, step: 0.05, format: (v) => `${Math.round(v * 100)}%` },
+  { key: "grain", id: "look-grain", min: 0, max: 1, step: 0.05, format: (v) => `${Math.round(v * 100)}%` }
 ];
 
 export class VisualLab {
