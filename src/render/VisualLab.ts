@@ -1,3 +1,4 @@
+import { devToolsEnabled } from "../dev/devTools";
 import type { TraversalSettingsStore, TraversalVisualSettings } from "../game/TraversalSettings";
 
 const sliderConfig: Array<{
@@ -33,6 +34,8 @@ export class VisualLab {
     this.panel = panel;
     this.toggle = toggle;
     this.reset = reset;
+    // Players reach the lab through Settings; the floating HUD button is authoring-only.
+    this.toggle.hidden = !devToolsEnabled();
 
     this.toggle.addEventListener("click", () => this.toggleVisible());
     this.reset.addEventListener("click", () => {

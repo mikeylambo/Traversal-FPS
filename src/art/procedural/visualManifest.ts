@@ -6,8 +6,8 @@ registerProceduralVisual("weapon.warp-rifle.default", {
   update: updateWarpRifleModel,
   tier: "hero",
   options: {
-    scale: 0.6,
-    position: [0.02, -0.07, -0.2],
+    scale: 0.52,
+    position: [0.05, -0.06, -0.18],
     rotation: [-0.03, 0.05, 0.012]
   }
 });

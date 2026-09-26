@@ -232,3 +232,4 @@ body.touch-device #visual-lab.visible { z-index: 1600; }
   .mobile-action.warp { right: max(94px, calc(env(safe-area-inset-right) + 86px)); }
   body.touch-device #vector-console { bottom: max(124px, calc(env(safe-area-inset-bottom) + 116px)); }
 }
+#visual-lab-toggle[hidden] { display: none !important; }
