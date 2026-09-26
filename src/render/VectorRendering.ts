@@ -4,6 +4,7 @@ import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import type { TraversalVisualSettings } from "../game/TraversalSettings";
+import { WarpLensPass } from "./WarpLensPass";
 
 const surfaceVertex = /* glsl */`
   varying vec3 vWorldPosition;
@@ -144,6 +145,7 @@ type StylizedMaterial = THREE.ShaderMaterial & {
 export class VectorRendering {
   private readonly composer: EffectComposer;
   private readonly bloom: UnrealBloomPass;
+  readonly warpLens = new WarpLensPass();
   private readonly materials: StylizedMaterial[] = [];
   private time = 0;
 
@@ -156,6 +158,7 @@ export class VectorRendering {
     this.composer.addPass(new RenderPass(scene, camera));
     this.bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.9, 0.62, 0.72);
     this.composer.addPass(this.bloom);
+    this.composer.addPass(this.warpLens);
     this.composer.addPass(new OutputPass());
   }
 
@@ -223,6 +226,7 @@ export class VectorRendering {
 
   resize(width: number, height: number): void {
     this.composer.setSize(width, height);
+    this.warpLens.setAspect(width / Math.max(1, height));
   }
 
   clearDisposableMaterials(): void {

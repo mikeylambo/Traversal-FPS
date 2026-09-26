@@ -1,5 +1,6 @@
 import * as THREE from "three";
-import { actorColor, onAccessibilityChange } from "../game/TraversalAccessibility";
+import { actorColor, flashScale, motionScale, onAccessibilityChange } from "../game/TraversalAccessibility";
+import { devToolsEnabled } from "../dev/devTools";
 import type { TraversalSettingsStore } from "../game/TraversalSettings";
 import { ROOMS, type EnemySpec, type PlatformSpec } from "../world/stages";
 import { VectorRendering } from "./VectorRendering";
@@ -22,10 +23,12 @@ type RuntimeState = {
   input: {
     consumePause(): boolean;
     consumeWarpFraction(): number | null;
+    isWarpHeld(): boolean;
   };
   warp: {
     setSelectionFraction(value: number): void;
     hasAnchor(): boolean;
+    isTransiting(): boolean;
     selectionPercent(): number;
     write(origin: THREE.Vector3, target: THREE.Vector3): void;
   };
@@ -203,6 +206,11 @@ export function enhanceTraversalPresentation(game: object, settings: TraversalSe
     originalSyncPhase(phase);
   };
 
+  if (devToolsEnabled()) {
+    (window as unknown as { __traversalWarpLens?: unknown }).__traversalWarpLens =
+      (lens: { charge: number; transit: number; arrival: number } | null) => rendering.warpLens.setOverride(lens);
+  }
+
   let lastPresentationTime = performance.now();
   const originalFrame = state.frame.bind(game);
   state.frame = () => {
@@ -219,6 +227,12 @@ export function enhanceTraversalPresentation(game: object, settings: TraversalSe
       rendererAny.render = nativeRender;
     }
 
+    rendering.warpLens.tick(dt, {
+      charging: state.input.isWarpHeld() && state.warp.hasAnchor(),
+      transiting: state.warp.isTransiting(),
+      motion: motionScale(),
+      flash: flashScale()
+    });
     targetResolve.update(dt);
     starfield.update(dt, settings.value.visual.starTwinkle);
     rendering.update(dt, settings.value.visual);
