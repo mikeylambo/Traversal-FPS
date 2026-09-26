@@ -6,6 +6,7 @@ import { ROOMS, type EnemySpec, type PlatformSpec } from "../world/stages";
 import { VectorRendering } from "./VectorRendering";
 import { VisualLab } from "./VisualLab";
 import { TwinklingStarfield } from "./TwinklingStarfield";
+import { NebulaSky } from "./NebulaSky";
 import { TargetResolveFx } from "./TargetResolveFx";
 
 const ROOM_ACCENTS = [0x69e7ff, 0xffcf66, 0xff78c8, 0xff9d67, 0xa1ff91];
@@ -50,6 +51,7 @@ export function enhanceTraversalPresentation(game: object, settings: TraversalSe
   const targetResolve = new TargetResolveFx(state.scene);
   const touchCapable = navigator.maxTouchPoints > 0 || matchMedia("(pointer: coarse)").matches;
   const starfield = new TwinklingStarfield(state.scene, state.camera, touchCapable ? 850 : 1300);
+  const nebula = new NebulaSky(state.scene, state.camera);
 
   state.scene.background = new THREE.Color(0x020812);
   if (state.scene.fog instanceof THREE.FogExp2) state.scene.fog.color.setHex(0x04111d);
@@ -62,7 +64,7 @@ export function enhanceTraversalPresentation(game: object, settings: TraversalSe
     const accent = ROOM_ACCENTS[state.roomIndex % ROOM_ACCENTS.length]!;
     const roomFocus = state.roomIndex === 0 ? 1 : 0.76;
     const base = state.roomIndex === 0 ? 0x1d3650 : 0x20374d;
-    const material = rendering.createSurfaceMaterial(base, accent, roomFocus);
+    const material = rendering.createSurfaceMaterial(base, accent, roomFocus, spec.size);
     const mesh = new THREE.Mesh(new THREE.BoxGeometry(...spec.size), material);
     mesh.position.set(...spec.center);
     state.roomRoot.add(mesh);
@@ -235,6 +237,7 @@ export function enhanceTraversalPresentation(game: object, settings: TraversalSe
     });
     targetResolve.update(dt);
     starfield.update(dt, settings.value.visual.starTwinkle);
+    nebula.update(dt, settings.value.visual.nebula);
     rendering.update(dt, settings.value.visual);
     rendering.render();
   };
@@ -268,7 +271,7 @@ function addRoomEnvironment(state: RuntimeState, rendering: VectorRendering, ind
   const outerX = Math.max(6.2, Math.max(...xValues.map((x) => Math.abs(x))) + 5.4);
 
   const structure = (size: [number, number, number], position: [number, number, number], base = 0x11283d) => {
-    const mesh = new THREE.Mesh(new THREE.BoxGeometry(...size), rendering.createSurfaceMaterial(base, accent, focus));
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(...size), rendering.createSurfaceMaterial(base, accent, focus, size));
     mesh.position.set(...position);
     state.roomRoot.add(mesh);
     return mesh;

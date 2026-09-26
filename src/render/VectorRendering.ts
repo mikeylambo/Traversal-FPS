@@ -12,8 +12,12 @@ const surfaceVertex = /* glsl */`
   varying vec3 vWorldPosition;
   varying vec3 vWorldNormal;
   varying float vViewDepth;
+  varying vec3 vLocal;
+  varying vec3 vLocalNormal;
 
   void main() {
+    vLocal = position;
+    vLocalNormal = normal;
     vec4 world = modelMatrix * vec4(position, 1.0);
     vec4 view = viewMatrix * world;
     vWorldPosition = world.xyz;
@@ -45,10 +49,15 @@ const surfaceFragment = /* glsl */`
   uniform float uEnergyStrength;
   uniform float uTime;
   uniform float uRoomFocus;
+  uniform vec3 uHalf;
 
   varying vec3 vWorldPosition;
   varying vec3 vWorldNormal;
   varying float vViewDepth;
+  varying vec3 vLocal;
+  varying vec3 vLocalNormal;
+
+  float hash2(vec2 p) { return fract(sin(dot(p, vec2(41.3, 289.1))) * 43758.5453); }
 
   float gridLine(vec2 p, float scale) {
     vec2 coord = p * scale;
@@ -81,8 +90,61 @@ const surfaceFragment = /* glsl */`
 
     vec3 base = uBase * (0.28 + lit * 0.82) * mix(1.0, TOP_FACE_LIGHT, up);
     rim *= mix(1.0, TOP_RIM, up);
-    vec3 energy = uAccent * (rim * 0.55 + grid * 0.72 + micro) * uEnergyStrength;
-    vec3 color = base + energy;
+
+    // Surface language (object space, so it rides moving platforms): machined
+    // edge chamfers, a cavity shadow inside each edge, panel seams with slight
+    // per-panel tone variation, and an inset light lip under the top edge.
+    float chamfer = 0.0;
+    float seam = 0.0;
+    float lip = 0.0;
+    float panelTone = 0.5;
+    if (uHalf.x > 0.0) {
+      vec3 ln = abs(vLocalNormal);
+      vec3 d = uHalf - abs(vLocal);
+      vec2 face;
+      vec2 faceHalf;
+      float edgeDist;
+      if (ln.y > 0.5) { edgeDist = min(d.x, d.z); face = vLocal.xz; faceHalf = uHalf.xz; }
+      else if (ln.x > 0.5) { edgeDist = min(d.y, d.z); face = vLocal.zy; faceHalf = uHalf.zy; }
+      else { edgeDist = min(d.x, d.y); face = vLocal.xy; faceHalf = uHalf.xy; }
+
+      float bevelWidth = clamp(min(faceHalf.x, faceHalf.y) * 0.25, 0.012, 0.055);
+      chamfer = 1.0 - smoothstep(bevelWidth * 0.55, bevelWidth, edgeDist);
+      float cavity = smoothstep(bevelWidth, bevelWidth * 5.0, edgeDist);
+      base *= mix(0.62, 1.0, cavity);
+
+      // Panels are laid out from the face edge so seams frame the object.
+      vec2 panelSize = max(vec2(1.0), floor(faceHalf * 2.0 / 1.7 + 0.5));
+      vec2 cell = (face + faceHalf) / (faceHalf * 2.0) * panelSize;
+      vec2 fromSeam = abs(fract(cell) - 0.5) * (faceHalf * 2.0 / panelSize);
+      vec2 seamDist = (faceHalf * 2.0 / panelSize) * 0.5 - fromSeam;
+      vec2 seamPx = seamDist / max(fwidth(face), vec2(1e-4));
+      vec2 seamOn = step(vec2(1.5), panelSize);
+      seam = max((1.0 - smoothstep(0.6, 1.8, seamPx.x)) * seamOn.x, (1.0 - smoothstep(0.6, 1.8, seamPx.y)) * seamOn.y);
+      seam *= smoothstep(bevelWidth * 1.5, bevelWidth * 3.0, edgeDist);
+      base *= mix(1.0, 0.35, seam);
+      panelTone = hash2(floor(cell) + uBase.rg * 91.0);
+      base *= 0.8 + panelTone * 0.4;
+
+      // Inset light lip just under the top edge on side faces.
+      if (ln.y < 0.5 && uHalf.y > 0.1) {
+        float fromTop = uHalf.y - vLocal.y;
+        float lipCenter = min(0.11, uHalf.y * 0.45);
+        lip = 1.0 - smoothstep(0.008, 0.02, abs(fromTop - lipCenter));
+        lip *= smoothstep(0.02, 0.08, min(d.x, d.z));
+      }
+    }
+
+    // Lacquered tops: fresnel sheen toward the horizon plus a tight key-light
+    // highlight, varied per panel so the floor reads as a material, not a fill.
+    float fres = pow(1.0 - max(dot(n, viewDir), 0.0), 5.0);
+    vec3 halfDir = normalize(lightDir + viewDir);
+    float gloss = mix(60.0, 180.0, panelTone);
+    float spec = pow(max(dot(n, halfDir), 0.0), gloss) * (1.0 - seam);
+    vec3 sheen = (uAccent * 0.22 + vec3(0.08, 0.12, 0.16)) * fres * up * (1.0 - seam) + vec3(0.9, 0.97, 1.0) * spec * 0.5;
+
+    vec3 energy = uAccent * (rim * 0.55 + grid * 0.72 + micro + chamfer * (0.35 + up * 0.4) + lip * 1.1) * uEnergyStrength;
+    vec3 color = base + energy + uBase * chamfer * 0.8 + sheen;
     float fogFactor = 1.0 - exp(-uFogDensity * uFogDensity * vViewDepth * vViewDepth);
     color = mix(color, uFogColor, clamp(fogFactor, 0.0, 1.0));
     gl_FragColor = vec4(color, 1.0);
@@ -170,7 +232,8 @@ export class VectorRendering {
     this.composer.addPass(this.finish);
   }
 
-  createSurfaceMaterial(base: number, accent: number, roomFocus = 0): THREE.ShaderMaterial {
+  /** `size` (box dimensions) enables the edge/panel surface language; omit for plain surfaces. */
+  createSurfaceMaterial(base: number, accent: number, roomFocus = 0, size?: readonly [number, number, number]): THREE.ShaderMaterial {
     const material = new THREE.ShaderMaterial({
       vertexShader: surfaceVertex,
       fragmentShader: surfaceFragment,
@@ -184,7 +247,8 @@ export class VectorRendering {
         uGridStrength: { value: 0.42 },
         uEnergyStrength: { value: 1.15 },
         uTime: { value: 0 },
-        uRoomFocus: { value: roomFocus }
+        uRoomFocus: { value: roomFocus },
+        uHalf: { value: size ? new THREE.Vector3(size[0] * 0.5, size[1] * 0.5, size[2] * 0.5) : new THREE.Vector3() }
       }
     }) as StylizedMaterial;
     this.materials.push(material);

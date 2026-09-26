@@ -17,6 +17,7 @@ const sliderConfig: Array<{
   { key: "bloomStrength", id: "look-bloom", min: 0, max: 2.2, step: 0.05, format: (v) => v.toFixed(2) },
   { key: "exposure", id: "look-exposure", min: 0.3, max: 2.5, step: 0.05, format: (v) => v.toFixed(2) },
   { key: "starTwinkle", id: "look-stars", min: 0, max: 2.5, step: 0.05, format: (v) => v.toFixed(2) },
+  { key: "nebula", id: "look-nebula", min: 0, max: 2, step: 0.05, format: (v) => v.toFixed(2) },
   { key: "ambientOcclusion", id: "look-ao", min: 0, max: 1, step: 0.05, format: (v) => `${Math.round(v * 100)}%` },
   { key: "contrast", id: "look-contrast", min: 0.7, max: 1.5, step: 0.01, format: (v) => v.toFixed(2) },
   { key: "saturation", id: "look-saturation", min: 0, max: 1.8, step: 0.02, format: (v) => v.toFixed(2) },

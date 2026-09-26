@@ -7,6 +7,7 @@ export interface TraversalVisualSettings {
   bloomStrength: number;
   exposure: number;
   starTwinkle: number;
+  nebula: number;
   ambientOcclusion: number;
   contrast: number;
   saturation: number;
@@ -85,6 +86,7 @@ export const DEFAULT_VISUAL_SETTINGS: TraversalVisualSettings = {
   bloomStrength: 0.20,
   exposure: 0.65,
   starTwinkle: 1.50,
+  nebula: 0.8,
   ambientOcclusion: 0.6,
   contrast: 1.08,
   saturation: 1.05,
