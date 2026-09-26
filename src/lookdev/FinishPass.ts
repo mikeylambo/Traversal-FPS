@@ -14,6 +14,7 @@ const FinishShader = {
     uWarmth: { value: 0 },
     uVignette: { value: 0 },
     uGrain: { value: 0 },
+    uChromatic: { value: 0 },
     uAspect: { value: 16 / 9 },
     uTime: { value: 0 }
   },
@@ -31,6 +32,7 @@ const FinishShader = {
     uniform float uWarmth;
     uniform float uVignette;
     uniform float uGrain;
+    uniform float uChromatic;
     uniform float uAspect;
     uniform float uTime;
     varying vec2 vUv;
@@ -40,6 +42,10 @@ const FinishShader = {
     void main() {
       vec4 src = texture2D(tDiffuse, vUv);
       vec3 col = src.rgb;
+      // Lens fringe: red/blue split growing toward the frame edge.
+      vec2 off = (vUv - 0.5) * dot(vUv - 0.5, vUv - 0.5) * uChromatic * 0.035;
+      col.r = texture2D(tDiffuse, vUv + off).r;
+      col.b = texture2D(tDiffuse, vUv - off).b;
       col += vec3(0.05, 0.012, -0.05) * uWarmth;
       float luma = dot(col, vec3(0.2126, 0.7152, 0.0722));
       col = mix(vec3(luma), col, uSaturation);
@@ -59,6 +65,7 @@ export interface FinishSettings {
   warmth: number;
   vignette: number;
   grain: number;
+  chromatic: number;
 }
 
 export class FinishPass extends ShaderPass {
@@ -73,6 +80,7 @@ export class FinishPass extends ShaderPass {
     u.uWarmth.value = settings.warmth;
     u.uVignette.value = settings.vignette;
     u.uGrain.value = settings.grain;
+    u.uChromatic.value = settings.chromatic;
     u.uTime.value = time;
   }
 

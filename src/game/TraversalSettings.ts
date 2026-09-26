@@ -1,20 +1,7 @@
-export interface TraversalVisualSettings {
-  toonStrength: number;
-  rimStrength: number;
-  gridStrength: number;
-  energyStrength: number;
-  fogDensity: number;
-  bloomStrength: number;
-  exposure: number;
-  starTwinkle: number;
-  nebula: number;
-  ambientOcclusion: number;
-  contrast: number;
-  saturation: number;
-  warmth: number;
-  vignette: number;
-  grain: number;
-}
+import { DEFAULT_LOOK, sanitizeLook, type LookSettings } from "../lookdev/lookSchema";
+
+/** Rendering look; the full parameter list lives in src/lookdev/lookSchema.ts. */
+export type TraversalVisualSettings = LookSettings;
 
 /**
  * Perceptual access settings.
@@ -75,25 +62,8 @@ export function activeTraversalSettingsStore(): TraversalSettingsStore | null {
   return activeStore;
 }
 
-// Canonical lookdev preset: the player-tuned neon pass (dark exposure, no rim,
-// high energy, deep fog) plus the finish stack.
-export const DEFAULT_VISUAL_SETTINGS: TraversalVisualSettings = {
-  toonStrength: 1,
-  rimStrength: 0,
-  gridStrength: 0.40,
-  energyStrength: 2.25,
-  fogDensity: 0.0230,
-  bloomStrength: 0.20,
-  exposure: 0.65,
-  starTwinkle: 1.50,
-  nebula: 0.8,
-  ambientOcclusion: 0.6,
-  contrast: 1.08,
-  saturation: 1.05,
-  warmth: 0,
-  vignette: 0.35,
-  grain: 0.25
-};
+// Canonical look: the player-tuned neon pass with the ceramic-frame platform language.
+export const DEFAULT_VISUAL_SETTINGS: TraversalVisualSettings = DEFAULT_LOOK;
 
 /**
  * Reduce Flash and Reduce Motion default to the operating system preference on a
@@ -410,6 +380,11 @@ export class TraversalSettingsStore {
     this.save();
   }
 
+  replaceVisual(look: TraversalVisualSettings): void {
+    Object.assign(this.value.visual, look);
+    this.save();
+  }
+
   resetVisual(): void {
     Object.assign(this.value.visual, DEFAULT_VISUAL_SETTINGS);
     this.save();
@@ -429,7 +404,7 @@ export class TraversalSettingsStore {
       const merged: TraversalSettingsValue = {
         ...DEFAULT_TRAVERSAL_SETTINGS,
         ...parsed,
-        visual: { ...DEFAULT_VISUAL_SETTINGS, ...(parsed.visual ?? {}) },
+        visual: sanitizeLook(parsed.visual as Record<string, unknown> | undefined),
         accessibility: {
           ...DEFAULT_ACCESSIBILITY_SETTINGS,
           // A profile saved before accessibility existed still inherits the OS

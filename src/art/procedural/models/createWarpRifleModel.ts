@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { activeLook } from "../../../lookdev/lookRuntime";
 
 export interface WarpRifleVisualState {
   anchorReady?: boolean;
@@ -443,6 +444,7 @@ export function updateWarpRifleModel(visual: THREE.Group, dt: number, time: numb
   } | undefined;
   const state = (visual.parent?.userData.traversalWeaponState ?? {}) as WarpRifleVisualState;
   const preview = Boolean(state.anchorReady && state.warpHeld);
+  const look = activeLook();
   const motion = visual.userData.warpRifleMotion as { spin: number; orbit: number; shell: number; spread: number; energy: number } | undefined
     ?? (visual.userData.warpRifleMotion = { spin: 0.6, orbit: 0, shell: 0, spread: 0, energy: 0 });
 
@@ -459,17 +461,17 @@ export function updateWarpRifleModel(visual: THREE.Group, dt: number, time: numb
   if (parts?.ringSegments) {
     // The halo orbits the barrel as a whole, each plate floats on its own
     // phase, and a breathing wave travels around the ring.
-    motion.orbit += dt * (0.28 + e * e * 5.5);
-    motion.spread = approach(motion.spread, e * 0.07, dt, 0.08);
+    motion.orbit += dt * (0.28 + e * e * 5.5) * look.haloSpeed;
+    motion.spread = approach(motion.spread, e * 0.07 * look.haloSpread, dt, 0.08);
     parts.ringSegments.rotation.z = motion.orbit;
     parts.ringSegments.children.forEach((segment, index) => {
       const angle = segment.userData.baseAngle as number;
       const wave = Math.sin(angle * 2 - time * (2.2 + e * 6));
-      const radial = motion.spread + wave * (0.005 + e * 0.008);
-      segment.position.set(Math.cos(angle) * radial, Math.sin(angle) * radial, Math.sin(time * 1.7 + index * 0.9) * (0.008 + e * 0.012));
+      const radial = motion.spread + wave * (0.005 + e * 0.008) * look.haloFloat;
+      segment.position.set(Math.cos(angle) * radial, Math.sin(angle) * radial, Math.sin(time * 1.7 + index * 0.9) * (0.008 + e * 0.012) * look.haloFloat);
       // Plates tilt like they are held by a field, not bolted on.
-      segment.rotation.x = Math.sin(time * 1.3 + index * 1.7) * (0.05 + e * 0.05);
-      segment.rotation.y = Math.cos(time * 1.1 + index * 2.3) * (0.05 + e * 0.05);
+      segment.rotation.x = Math.sin(time * 1.3 + index * 1.7) * (0.05 + e * 0.05) * look.haloFloat;
+      segment.rotation.y = Math.cos(time * 1.1 + index * 2.3) * (0.05 + e * 0.05) * look.haloFloat;
     });
   }
 
@@ -483,8 +485,9 @@ export function updateWarpRifleModel(visual: THREE.Group, dt: number, time: numb
         : state.anchorReady
           ? 3.4 + Math.sin(time * 4.4) * 0.25
           : 2.6 + Math.sin(time * 1.4) * 0.2;
+    materials.energy.emissiveIntensity *= look.rifleGlow;
   }
   if (materials?.energySoft) {
-    materials.energySoft.opacity = state.transiting ? 1 : preview ? 0.95 : state.anchorReady ? 0.78 : 0.6;
+    materials.energySoft.opacity = Math.min(1, (state.transiting ? 1 : preview ? 0.95 : state.anchorReady ? 0.78 : 0.6) * look.rifleGlow);
   }
 }

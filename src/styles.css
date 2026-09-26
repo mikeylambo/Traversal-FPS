@@ -661,7 +661,7 @@ body.playing #hud { opacity: 1; }
   #ui .slu-choice::after { transition: none !important; }
 }
 
-/* The GPU warp lens (src/render/WarpLensPass.ts) now owns the transit and arrival
+/* The GPU warp lens (src/lookdev/WarpLensPass.ts) now owns the transit and arrival
    look. The DOM overlay keeps only its vignette as a frame; its streaks, radial
    flash, axis strobe and canvas colour pump are retired so the two don't stack. */
 #warp-fx::before, #warp-fx::after, .warp-streaks { display: none; }
