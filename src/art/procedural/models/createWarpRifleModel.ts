@@ -288,11 +288,15 @@ export function createWarpRifleModel(): THREE.Group {
   const coreHousing = new THREE.Mesh(fullRing(0.225, 0.29, 0.15), graphite);
   coreHousing.name = "warp-core-housing";
   coreAnchor.add(coreHousing);
-  // Segmented white shell over the housing, with four machined gaps.
+  // Segmented white shell over the housing, with four machined gaps. It turns
+  // slowly against the halo so the core always reads as a live mechanism.
+  const coreShell = new THREE.Group();
+  coreShell.name = "core-shell-pivot";
+  coreAnchor.add(coreShell);
   for (let i = 0; i < 4; i += 1) {
     const seg = new THREE.Mesh(annulus(0.262, 0.34, Math.PI * 0.03 + i * Math.PI * 0.5, Math.PI * 0.44, 0.18, 0.016), white);
     seg.name = `warp-core-shell-${i}`;
-    coreAnchor.add(seg);
+    coreShell.add(seg);
   }
   const face = new THREE.Mesh(new THREE.CircleGeometry(0.24, 40), dark);
   face.position.z = -0.05;
@@ -417,12 +421,18 @@ export function createWarpRifleModel(): THREE.Group {
   recoilPivot.add(muzzleSocket);
 
   root.userData.warpRifleMaterials = { energy, energySoft };
-  root.userData.warpRifleParts = { recoilPivot, coreAnchor, corePivot, ringSegments, muzzleAssembly, muzzleSocket };
+  root.userData.warpRifleParts = { recoilPivot, coreAnchor, coreShell, corePivot, ringSegments, muzzleAssembly, muzzleSocket };
   return root;
+}
+
+/** Smoothly approach a target so state changes ramp instead of snapping. */
+function approach(current: number, target: number, dt: number, seconds: number): number {
+  return current + (target - current) * (1 - Math.exp(-dt / seconds));
 }
 
 export function updateWarpRifleModel(visual: THREE.Group, dt: number, time: number): void {
   const parts = visual.userData.warpRifleParts as {
+    coreShell?: THREE.Group;
     corePivot?: THREE.Group;
     ringSegments?: THREE.Group;
     muzzleAssembly?: THREE.Group;
@@ -433,22 +443,33 @@ export function updateWarpRifleModel(visual: THREE.Group, dt: number, time: numb
   } | undefined;
   const state = (visual.parent?.userData.traversalWeaponState ?? {}) as WarpRifleVisualState;
   const preview = Boolean(state.anchorReady && state.warpHeld);
+  const motion = visual.userData.warpRifleMotion as { spin: number; orbit: number; shell: number; spread: number; energy: number } | undefined
+    ?? (visual.userData.warpRifleMotion = { spin: 0.6, orbit: 0, shell: 0, spread: 0, energy: 0 });
 
-  if (parts?.corePivot) parts.corePivot.rotation.z += dt * (state.transiting ? 6 : preview ? 2.8 : 0.6);
+  // One "energy" level drives every moving part so they accelerate together:
+  // idle 0, anchor ready 0.35, primed 0.7, transit 1.
+  motion.energy = approach(motion.energy, state.transiting ? 1 : preview ? 0.7 : state.anchorReady ? 0.35 : 0, dt, state.transiting ? 0.04 : 0.18);
+  const e = motion.energy;
+
+  // Core rotor spins up hard; the white shell counter-rotates slowly.
+  motion.spin = approach(motion.spin, 0.6 + e * e * 9, dt, 0.12);
+  if (parts?.corePivot) parts.corePivot.rotation.z += dt * motion.spin;
+  if (parts?.coreShell) parts.coreShell.rotation.z -= dt * (0.12 + e * 0.9);
 
   if (parts?.ringSegments) {
-    // Halo drifts slowly and opens outward while a warp is primed.
-    const spread = state.transiting ? 0.07 : preview ? 0.04 + Math.sin(time * 9) * 0.006 : state.anchorReady ? 0.012 : 0;
-    parts.ringSegments.rotation.z = Math.sin(time * 0.7) * 0.03;
+    // The halo orbits the barrel as a whole, each plate floats on its own
+    // phase, and a breathing wave travels around the ring.
+    motion.orbit += dt * (0.28 + e * e * 5.5);
+    motion.spread = approach(motion.spread, e * 0.07, dt, 0.08);
+    parts.ringSegments.rotation.z = motion.orbit;
     parts.ringSegments.children.forEach((segment, index) => {
       const angle = segment.userData.baseAngle as number;
-      const bob = Math.sin(time * 1.9 + index * 1.1) * 0.004;
-      const target = spread + bob;
-      const ease = 1 - Math.exp(-dt * 10);
-      const current = (segment.userData.offset as number | undefined) ?? 0;
-      const offset = current + (target - current) * ease;
-      segment.userData.offset = offset;
-      segment.position.set(Math.cos(angle) * offset, Math.sin(angle) * offset, 0);
+      const wave = Math.sin(angle * 2 - time * (2.2 + e * 6));
+      const radial = motion.spread + wave * (0.005 + e * 0.008);
+      segment.position.set(Math.cos(angle) * radial, Math.sin(angle) * radial, Math.sin(time * 1.7 + index * 0.9) * (0.008 + e * 0.012));
+      // Plates tilt like they are held by a field, not bolted on.
+      segment.rotation.x = Math.sin(time * 1.3 + index * 1.7) * (0.05 + e * 0.05);
+      segment.rotation.y = Math.cos(time * 1.1 + index * 2.3) * (0.05 + e * 0.05);
     });
   }
 
@@ -461,7 +482,7 @@ export function updateWarpRifleModel(visual: THREE.Group, dt: number, time: numb
         ? 4.6 + Math.sin(time * 10) * 0.8
         : state.anchorReady
           ? 3.4 + Math.sin(time * 4.4) * 0.25
-          : 2.6;
+          : 2.6 + Math.sin(time * 1.4) * 0.2;
   }
   if (materials?.energySoft) {
     materials.energySoft.opacity = state.transiting ? 1 : preview ? 0.95 : state.anchorReady ? 0.78 : 0.6;

@@ -71,16 +71,16 @@ const WarpLensShader = {
 
       // Charge pinch: the edge of the world leans toward the aim point.
       float pinch = uCharge * 0.02 * smoothstep(0.25, 0.95, r);
-      float bend = (-pinch + ring * 0.03) * uMotion;
+      float bend = (-pinch + ring * 0.022) * uMotion;
       vec2 uv = vUv + dir * bend * toUv;
 
-      float fringe = (uCharge * 0.0022 + uTransit * 0.011 + ring * 0.008) * r * uMotion;
+      float fringe = (uCharge * 0.0018 + uTransit * 0.007 + ring * 0.006) * r * uMotion;
       vec2 shift = dir * fringe * toUv;
 
       vec3 col;
       if (uTransit > 0.002) {
         // Zoom tunnel: accumulate samples pulled toward the centre.
-        float blur = uTransit * 0.16 * uMotion;
+        float blur = uTransit * 0.1 * uMotion;
         vec3 acc = vec3(0.0);
         float wsum = 0.0;
         for (int i = 0; i < 12; i++) {
@@ -97,7 +97,7 @@ const WarpLensShader = {
 
       // Transit light: cool tunnel walls, radial streaks, white-cyan core.
       float edge = smoothstep(0.12, 0.85, r);
-      col = mix(col, col * vec3(0.32, 0.62, 1.05), uTransit * edge);
+      col = mix(col, col * vec3(0.5, 0.75, 1.05), uTransit * edge * 0.8);
       float angle = atan(ca.y, ca.x);
       float lanes = angle * 96.0;
       float lane = floor(lanes);
@@ -106,11 +106,11 @@ const WarpLensShader = {
       float streak = step(0.78, seed) * thin;
       float reach = 0.18 + hash(lane * 3.1) * 0.5;
       streak *= smoothstep(reach, reach + 0.35, r);
-      col += vec3(0.45, 0.9, 1.0) * streak * uTransit * 0.55 * uFlash;
-      col += vec3(0.7, 0.96, 1.0) * exp(-r * r * 30.0) * uTransit * 0.32 * uFlash;
+      col += vec3(0.45, 0.9, 1.0) * streak * uTransit * 0.32 * uFlash;
+      col += vec3(0.7, 0.96, 1.0) * exp(-r * r * 30.0) * uTransit * 0.18 * uFlash;
 
       // Arrival light: the ring's leading edge and a short core flash.
-      col += vec3(0.4, 0.9, 1.0) * ring * 0.28 * uFlash;
+      col += vec3(0.4, 0.9, 1.0) * ring * 0.16 * uFlash;
       col += vec3(0.7, 0.96, 1.0) * exp(-r * r * 14.0) * fade * fade * 0.12 * uFlash;
 
       // Charge: a cool rim closes in from the frame edge.
@@ -154,12 +154,12 @@ export class WarpLensPass extends ShaderPass {
       // Hard attack so a 0.1 s warp still peaks.
       this.transit = Math.min(1, this.transit + dt / 0.035);
     } else {
-      this.transit *= Math.exp(-dt / 0.085);
+      this.transit *= Math.exp(-dt / 0.06);
       if (this.transit < 0.002) this.transit = 0;
     }
     if (this.wasTransiting && !input.transiting) this.arrival = 0;
     this.wasTransiting = input.transiting;
-    this.arrival = Math.min(1, this.arrival + dt / 0.55);
+    this.arrival = Math.min(1, this.arrival + dt / 0.42);
 
     const state = this.override ?? { charge: this.charge, transit: this.transit, arrival: this.arrival };
     const u = this.uniforms as typeof WarpLensShader.uniforms;
