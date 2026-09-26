@@ -1,10 +1,15 @@
 import * as THREE from "three";
-import { actorColor, onAccessibilityChange } from "../game/TraversalAccessibility";
+import { actorColor, flashScale, motionScale, onAccessibilityChange } from "../game/TraversalAccessibility";
+import { devToolsEnabled } from "../dev/devTools";
 import type { TraversalSettingsStore } from "../game/TraversalSettings";
 import { ROOMS, type EnemySpec, type PlatformSpec } from "../world/stages";
-import { VectorRendering } from "./VectorRendering";
+import { LookRenderer } from "../lookdev/LookRenderer";
 import { VisualLab } from "./VisualLab";
 import { TwinklingStarfield } from "./TwinklingStarfield";
+import { NebulaSky } from "../lookdev/NebulaSky";
+import { DustMotes } from "../lookdev/DustMotes";
+import { publishLook, resolveLook } from "../lookdev/lookRuntime";
+import { moodForRoom } from "./actMoods";
 import { TargetResolveFx } from "./TargetResolveFx";
 
 const ROOM_ACCENTS = [0x69e7ff, 0xffcf66, 0xff78c8, 0xff9d67, 0xa1ff91];
@@ -22,10 +27,12 @@ type RuntimeState = {
   input: {
     consumePause(): boolean;
     consumeWarpFraction(): number | null;
+    isWarpHeld(): boolean;
   };
   warp: {
     setSelectionFraction(value: number): void;
     hasAnchor(): boolean;
+    isTransiting(): boolean;
     selectionPercent(): number;
     write(origin: THREE.Vector3, target: THREE.Vector3): void;
   };
@@ -42,11 +49,13 @@ type RuntimeState = {
 
 export function enhanceTraversalPresentation(game: object, settings: TraversalSettingsStore): void {
   const state = game as unknown as RuntimeState;
-  const rendering = new VectorRendering(state.renderer, state.scene, state.camera);
+  const rendering = new LookRenderer(state.renderer, state.scene, state.camera);
   const visualLab = new VisualLab(settings);
   const targetResolve = new TargetResolveFx(state.scene);
   const touchCapable = navigator.maxTouchPoints > 0 || matchMedia("(pointer: coarse)").matches;
   const starfield = new TwinklingStarfield(state.scene, state.camera, touchCapable ? 850 : 1300);
+  const nebula = new NebulaSky(state.scene, state.camera);
+  const dust = new DustMotes(state.scene, state.camera);
 
   state.scene.background = new THREE.Color(0x020812);
   if (state.scene.fog instanceof THREE.FogExp2) state.scene.fog.color.setHex(0x04111d);
@@ -59,7 +68,7 @@ export function enhanceTraversalPresentation(game: object, settings: TraversalSe
     const accent = ROOM_ACCENTS[state.roomIndex % ROOM_ACCENTS.length]!;
     const roomFocus = state.roomIndex === 0 ? 1 : 0.76;
     const base = state.roomIndex === 0 ? 0x1d3650 : 0x20374d;
-    const material = rendering.createSurfaceMaterial(base, accent, roomFocus);
+    const material = rendering.createSurfaceMaterial(base, accent, roomFocus, spec.size);
     const mesh = new THREE.Mesh(new THREE.BoxGeometry(...spec.size), material);
     mesh.position.set(...spec.center);
     state.roomRoot.add(mesh);
@@ -203,6 +212,11 @@ export function enhanceTraversalPresentation(game: object, settings: TraversalSe
     originalSyncPhase(phase);
   };
 
+  if (devToolsEnabled()) {
+    (window as unknown as { __traversalWarpLens?: unknown }).__traversalWarpLens =
+      (lens: { charge: number; transit: number; arrival: number } | null) => rendering.warpLens.setOverride(lens);
+  }
+
   let lastPresentationTime = performance.now();
   const originalFrame = state.frame.bind(game);
   state.frame = () => {
@@ -219,14 +233,29 @@ export function enhanceTraversalPresentation(game: object, settings: TraversalSe
       rendererAny.render = nativeRender;
     }
 
+    const look = resolveLook(settings.value.visual, moodForRoom(state.roomIndex));
+    publishLook(look);
+    rendering.warpLens.tick(dt, {
+      charging: state.input.isWarpHeld() && state.warp.hasAnchor(),
+      transiting: state.warp.isTransiting(),
+      motion: motionScale(),
+      flash: flashScale(),
+      tunnel: look.warpTunnel,
+      streaks: look.warpStreaks,
+      ring: look.warpRing,
+      tail: look.warpTail,
+      arrivalSeconds: look.warpArrival
+    });
     targetResolve.update(dt);
-    starfield.update(dt, settings.value.visual.starTwinkle);
-    rendering.update(dt, settings.value.visual);
+    starfield.update(dt, look.starTwinkle);
+    nebula.update(dt, look);
+    dust.update(dt, look.dust);
+    rendering.update(dt, look);
     rendering.render();
   };
 }
 
-function disposeRoomObjects(root: THREE.Group, rendering: VectorRendering): void {
+function disposeRoomObjects(root: THREE.Group, rendering: LookRenderer): void {
   root.traverse((object) => {
     const drawable = object as THREE.Mesh | THREE.LineSegments | THREE.Points;
     const geometry = drawable.geometry as THREE.BufferGeometry | undefined;
@@ -242,7 +271,7 @@ function disposeRoomObjects(root: THREE.Group, rendering: VectorRendering): void
   rendering.clearDisposableMaterials();
 }
 
-function addRoomEnvironment(state: RuntimeState, rendering: VectorRendering, index: number): void {
+function addRoomEnvironment(state: RuntimeState, rendering: LookRenderer, index: number): void {
   const room = ROOMS[index]!;
   const accent = ROOM_ACCENTS[index % ROOM_ACCENTS.length]!;
   const focus = index === 0 ? 1 : 0.82;
@@ -254,7 +283,7 @@ function addRoomEnvironment(state: RuntimeState, rendering: VectorRendering, ind
   const outerX = Math.max(6.2, Math.max(...xValues.map((x) => Math.abs(x))) + 5.4);
 
   const structure = (size: [number, number, number], position: [number, number, number], base = 0x11283d) => {
-    const mesh = new THREE.Mesh(new THREE.BoxGeometry(...size), rendering.createSurfaceMaterial(base, accent, focus));
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(...size), rendering.createSurfaceMaterial(base, accent, focus, size));
     mesh.position.set(...position);
     state.roomRoot.add(mesh);
     return mesh;

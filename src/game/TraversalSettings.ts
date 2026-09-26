@@ -1,13 +1,7 @@
-export interface TraversalVisualSettings {
-  toonStrength: number;
-  rimStrength: number;
-  gridStrength: number;
-  energyStrength: number;
-  fogDensity: number;
-  bloomStrength: number;
-  exposure: number;
-  starTwinkle: number;
-}
+import { DEFAULT_LOOK, sanitizeLook, type LookSettings } from "../lookdev/lookSchema";
+
+/** Rendering look; the full parameter list lives in src/lookdev/lookSchema.ts. */
+export type TraversalVisualSettings = LookSettings;
 
 /**
  * Perceptual access settings.
@@ -68,17 +62,8 @@ export function activeTraversalSettingsStore(): TraversalSettingsStore | null {
   return activeStore;
 }
 
-// Canonical ROOM 01 lookdev preset, promoted from the first player-tuned pass.
-export const DEFAULT_VISUAL_SETTINGS: TraversalVisualSettings = {
-  toonStrength: 0.91,
-  rimStrength: 1.95,
-  gridStrength: 0.70,
-  energyStrength: 0.55,
-  fogDensity: 0.0135,
-  bloomStrength: 0.30,
-  exposure: 2.00,
-  starTwinkle: 0.82
-};
+// Canonical look: the player-tuned neon pass with the ceramic-frame platform language.
+export const DEFAULT_VISUAL_SETTINGS: TraversalVisualSettings = DEFAULT_LOOK;
 
 /**
  * Reduce Flash and Reduce Motion default to the operating system preference on a
@@ -395,6 +380,11 @@ export class TraversalSettingsStore {
     this.save();
   }
 
+  replaceVisual(look: TraversalVisualSettings): void {
+    Object.assign(this.value.visual, look);
+    this.save();
+  }
+
   resetVisual(): void {
     Object.assign(this.value.visual, DEFAULT_VISUAL_SETTINGS);
     this.save();
@@ -414,7 +404,7 @@ export class TraversalSettingsStore {
       const merged: TraversalSettingsValue = {
         ...DEFAULT_TRAVERSAL_SETTINGS,
         ...parsed,
-        visual: { ...DEFAULT_VISUAL_SETTINGS, ...(parsed.visual ?? {}) },
+        visual: sanitizeLook(parsed.visual as Record<string, unknown> | undefined),
         accessibility: {
           ...DEFAULT_ACCESSIBILITY_SETTINGS,
           // A profile saved before accessibility existed still inherits the OS
