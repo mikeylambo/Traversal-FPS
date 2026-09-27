@@ -226,7 +226,7 @@ function testRouteSolverAndSuites(): void {
   equal(solveRoom(ledge).solved, false, "solver treats drops as one-way");
 
   const suites = [...buildTimeTrialSuite(), ...buildChallengeSuite()];
-  equal(suites.length, 40, "Time Trial and Challenge ship 16 + 24 rooms");
+  equal(suites.length, 48, "Time Trial and Challenge ship 24 + 24 rooms");
   const campaignRooms = CAMPAIGN_MAPS.flatMap((map) => map.campaignRooms);
   const campaignHashes = new Set(campaignRooms.map((room) => describeLayout(room).geometryHash));
   assert(suites.every((room) => !campaignHashes.has(describeLayout(room).geometryHash)), "no Time Trial or Challenge room clones a Campaign room");

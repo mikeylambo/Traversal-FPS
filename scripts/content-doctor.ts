@@ -17,7 +17,7 @@ type Catalog = { label: string; rooms: RoomSpec[] };
 const timeTrialSuite = buildTimeTrialSuite();
 const challengeSuite = buildChallengeSuite();
 
-if (timeTrialSuite.length !== 16) throw new Error(`Canonical Time Trial suite must contain 16 courses; found ${timeTrialSuite.length}.`);
+if (timeTrialSuite.length !== 24) throw new Error(`Canonical Time Trial suite must contain 24 courses; found ${timeTrialSuite.length}.`);
 if (challengeSuite.length !== 24) throw new Error(`Canonical Challenge suite must contain 24 chambers; found ${challengeSuite.length}.`);
 
 const catalogs: Catalog[] = [
