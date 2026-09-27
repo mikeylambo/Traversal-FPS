@@ -3,6 +3,8 @@ import { CAMPAIGN_MAPS } from "../world/campaign";
 import type { ContentRuntime } from "./ContentRuntime";
 import { installCampaignPersistenceRuntime } from "./CampaignPersistenceRuntime";
 import { activeTraversalProgression } from "./Progression";
+import { playtestUnlocked } from "./playtestUnlocks";
+import { TIME_TRIAL_ENTRIES } from "../world/modeSuites";
 
 type RuntimeState = {
   modeId: string;
@@ -85,7 +87,7 @@ export function installCampaignFlow(game: object, content: ContentRuntime): void
   const unlockState = () => {
     const snapshot = progression?.snapshot();
     const completed = new Set(snapshot?.completedMaps ?? []);
-    const campaignComplete = Boolean(snapshot?.campaign.completed);
+    const campaignComplete = Boolean(snapshot?.campaign.completed) || playtestUnlocked();
     return {
       mapSelect: campaignComplete || completed.has(MAP_SELECT_UNLOCK),
       timeTrial: campaignComplete || completed.has(TIME_TRIAL_UNLOCK),
@@ -104,7 +106,7 @@ export function installCampaignFlow(game: object, content: ContentRuntime): void
         {
           id: "time-trial",
           label: "Time Trial",
-          description: unlocked.timeTrial ? "16 race courses." : "LOCKED // Clear Act II to unlock Time Trial.",
+          description: unlocked.timeTrial ? `${TIME_TRIAL_ENTRIES.length} race courses.` : "LOCKED // Clear Act II to unlock Time Trial.",
           disabled: !unlocked.timeTrial
         },
         {

@@ -47,6 +47,7 @@ import { installLandingReadabilityRuntime } from "./game/LandingReadabilityRunti
 import { installRewindWarpRuntime } from "./game/RewindWarpRuntime";
 import { installSectorTransitions } from "./game/SectorTransitionRuntime";
 import { installCampaignFlow } from "./game/CampaignFlowRuntime";
+import { playtestUnlocked } from "./game/playtestUnlocks";
 import { installOnboardingRuntime } from "./game/OnboardingRuntime";
 import { installSettingsFocusRetention } from "./game/SettingsFocusRuntime";
 import { installControlsRuntime } from "./game/ControlsRuntime";
@@ -209,7 +210,7 @@ const contentRuntime = installContentRuntime(app.shell);
 
 const reversalUnlocked = () => {
   const snapshot = progression.snapshot();
-  return snapshot.campaign.completed || snapshot.completedMaps.includes("map-42");
+  return playtestUnlocked() || snapshot.campaign.completed || snapshot.completedMaps.includes("map-42");
 };
 
 app.ui.register([

@@ -1,3 +1,4 @@
+import { playtestUnlocked } from "./playtestUnlocks";
 import { CAMPAIGN_MAPS } from "../world/campaign";
 import type { ContentRuntime } from "./ContentRuntime";
 import type { TraversalProgression } from "./Progression";
@@ -67,7 +68,9 @@ export function installCampaignPersistenceRuntime(
         ? firstImplementedSector()
         : choiceId === "campaign-continue"
           ? continueSector(progression)
-          : undefined;
+          : choiceId.startsWith(SECTOR_CHOICE)
+            ? CAMPAIGN_MAPS.find((map) => map.implemented && map.id === choiceId.slice(SECTOR_CHOICE.length))
+            : undefined;
       if (!target) return;
 
       pending = {
@@ -113,6 +116,8 @@ export function installCampaignPersistenceRuntime(
   };
 }
 
+const SECTOR_CHOICE = "campaign-sector:";
+
 function refreshCampaignMenu(state: RuntimeState, progression: TraversalProgression): void {
   const checkpoint = progression.campaignCheckpoint();
   const current = CAMPAIGN_MAPS.find((map) => map.id === checkpoint?.sectorId);
@@ -138,7 +143,15 @@ function refreshCampaignMenu(state: RuntimeState, progression: TraversalProgress
         id: "campaign-interior",
         label: "Vault",
         description: "Indoor preview."
-      }
+      },
+      // Playtest level select: every implemented sector, entered directly.
+      ...(playtestUnlocked()
+        ? CAMPAIGN_MAPS.filter((map) => map.implemented).map((map) => ({
+          id: `${SECTOR_CHOICE}${map.id}`,
+          label: map.label,
+          description: map.subtitle
+        }))
+        : [])
     ]
   });
 }
