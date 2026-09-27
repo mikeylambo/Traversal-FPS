@@ -278,7 +278,9 @@ const S17: RoomSpec = {
 // SWEEP — open arena. Blades cross the floor on two axes; staggered pylons are
 // the only ground they cannot reach. Leave the hazard plane, and keep leaving it.
 // The ring waits in a sealed vault with a skylight: the way in is from the high
-// perch above it, reached only by chaining across the pylons.
+// perch above it, reached only by chaining across the pylons. A third blade
+// rises and falls through the pylon band, so no top is a place to rest, and the
+// vault's Sphere only answers a shot dropped through the skylight from the perch.
 const S18: RoomSpec = {
   id: "sector-18-sweep",
   title: "SWEEP",
@@ -286,7 +288,7 @@ const S18: RoomSpec = {
   grammar: ["airborne-chain", "reorientation", "timing-chain"],
   spawn: eye(0, 2, 16),
   goal: ring(0, 4, -37),
-  requiredKills: 6,
+  requiredKills: 7,
   platforms: [
     floor(0, 2, 16, 10, 6),
     floor(0, 0, -11, 40, 40),
@@ -305,11 +307,12 @@ const S18: RoomSpec = {
     sentry("sweep-04", eye(-8, 12, -18)),
     sentry("sweep-05", eye(12, 9, -26)),
     sentry("sweep-06", eye(0, 15, -33)),
-    sentry("sweep-07", eye(2.5, 4, -37))
+    sentry("sweep-07", eye(2.5, 4, -37), undefined, { axis: "y", min: 13 })
   ],
   hazards: [
     sweep("sweep-a", [0, 1.5, -11], [40, 3, 0.8], "z", 19, 0.1),
-    sweep("sweep-b", [0, 1.5, -11], [0.8, 3, 40], "x", 19, 0.13, 1.2)
+    sweep("sweep-b", [0, 1.5, -11], [0.8, 3, 40], "x", 19, 0.13, 1.2),
+    sweep("sweep-rise", [0, 10.5, -14], [32, 0.5, 30], "y", 3.5, 0.09, 0.6)
   ]
 };
 

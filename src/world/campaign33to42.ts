@@ -195,11 +195,19 @@ const S41: RoomSpec = {
     {center:[0,8,-46],size:[8,1,8]}, {center:[20,4,-34],size:[8,1,8]}, {center:[20,1,-12],size:[8,1,8]},
     {center:[0,5,-23],size:[15,10,1.5]}
   ],
+  // One direction only: every Sphere answers only from the platform before it,
+  // and the last shot is home, fired back from the east side as the loop closes.
   enemies:[
-    {id:"loop-a",kind:"sentry",position:[-20,4.2,-12]}, {id:"loop-b",kind:"drifter",position:[-20,8,-34],drift:{axis:"y",amplitude:2,speed:.7}},
-    {id:"loop-c",kind:"orbit",position:[0,11,-46],orbit:{plane:"xy",radiusA:5,radiusB:3,speed:.12}},
-    {id:"loop-d",kind:"sentry",position:[20,6.2,-34]}, {id:"loop-e",kind:"drifter",position:[20,4,-12],drift:{axis:"x",amplitude:4,speed:.8}},
-    {id:"loop-f",kind:"sentry",position:[0,2.2,0]}
+    {id:"loop-a",kind:"sentry",position:[-20,4.2,-12],originConstraint:{axis:"z",min:-6}},
+    {id:"loop-b",kind:"drifter",position:[-20,8,-34],drift:{axis:"y",amplitude:2,speed:.7},originConstraint:{axis:"z",min:-20}},
+    {id:"loop-c",kind:"orbit",position:[0,11,-46],orbit:{plane:"xy",radiusA:5,radiusB:3,speed:.12},originConstraint:{axis:"x",max:-14}},
+    {id:"loop-d",kind:"sentry",position:[20,6.2,-34],originConstraint:{axis:"z",max:-40}},
+    {id:"loop-e",kind:"drifter",position:[20,4,-12],drift:{axis:"x",amplitude:4,speed:.8},originConstraint:{axis:"z",max:-28}},
+    {id:"loop-f",kind:"sentry",position:[0,2.2,0],originConstraint:{axis:"x",min:14}}
+  ],
+  // A lethal crown on the divider: the loop cannot be cut across the top.
+  hazards:[
+    {id:"loop-crown",kind:"lethal-field",center:[0,13,-23],size:[15,6,1.5]}
   ]
 };
 

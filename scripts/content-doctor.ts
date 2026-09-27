@@ -53,7 +53,7 @@ for (const { catalog, issue } of allIssues) {
 
 console.log("");
 console.log(
-  `Traversal content doctor: ${roomCount} rooms // ${errors.length} errors // ${warnings.length} warnings // 16 TT // 24 Challenge`
+  `Traversal content doctor: ${roomCount} rooms // ${errors.length} errors // ${warnings.length} warnings // ${buildTimeTrialSuite().length} TT // ${buildChallengeSuite().length} Challenge`
 );
 
 if (errors.length > 0) {

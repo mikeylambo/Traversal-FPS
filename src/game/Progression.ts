@@ -28,7 +28,7 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
   { id: "act-3", label: "ACT III", description: "Clear Sector 30." },
   { id: "campaign-complete", label: "THE CONSTRUCT", description: "Clear Sector 42." },
   { id: "gold-line", label: "GOLD LINE", description: "Beat a Time Trial course's Gold time." },
-  { id: "all-gold", label: "ALL GOLD", description: "Beat Gold on all 16 Time Trial courses." },
+  { id: "all-gold", label: "ALL GOLD", description: "Beat Gold on every Time Trial course." },
   { id: "exact-all", label: "EXACT", description: "Clear all 24 Challenge chambers." },
   { id: "reverse-clear", label: "THE REVERSE", description: "Complete The Reverse." }
 ];

@@ -108,10 +108,10 @@
     "ms": 151
   },
   "campaign:map-18": {
-    "hash": "d14975a313527375",
+    "hash": "09a6de551cfcfe2e",
     "solved": true,
     "warps": 6,
-    "ms": 15829
+    "ms": 13981
   },
   "campaign:map-19": {
     "hash": "985a5984b85cf8a5",
@@ -156,10 +156,10 @@
     "ms": 3042
   },
   "campaign:map-26": {
-    "hash": "4f31228b3ad6e97c",
+    "hash": "8c067aca9805ff0d",
     "solved": true,
-    "warps": 4,
-    "ms": 1449
+    "warps": 6,
+    "ms": 469
   },
   "campaign:map-27": {
     "hash": "b6e8e37e10c9305e",
@@ -180,10 +180,10 @@
     "ms": 1553
   },
   "campaign:map-30": {
-    "hash": "b47405edd73f6d2a",
+    "hash": "a55e9c5d40ab8a32",
     "solved": true,
     "warps": 6,
-    "ms": 1652
+    "ms": 2945
   },
   "campaign:map-31": {
     "hash": "8abc6d2db7ac290d",
@@ -246,10 +246,10 @@
     "ms": 936
   },
   "campaign:map-41": {
-    "hash": "42f2fa0db4419ab2",
+    "hash": "7e1629da6c69c5a6",
     "solved": true,
     "warps": 6,
-    "ms": 2353
+    "ms": 215
   },
   "campaign:map-42": {
     "hash": "c220bde56ae9119d",
@@ -352,6 +352,54 @@
     "solved": true,
     "warps": 6,
     "ms": 83
+  },
+  "time-trial:tt-17": {
+    "hash": "951bd2268f151e38",
+    "solved": true,
+    "warps": 4,
+    "ms": 1240
+  },
+  "time-trial:tt-18": {
+    "hash": "48b1cf114e4bc8ff",
+    "solved": true,
+    "warps": 4,
+    "ms": 184
+  },
+  "time-trial:tt-19": {
+    "hash": "7f17bc351bf99a35",
+    "solved": true,
+    "warps": 3,
+    "ms": 24
+  },
+  "time-trial:tt-20": {
+    "hash": "ce07c5df80673836",
+    "solved": true,
+    "warps": 2,
+    "ms": 51
+  },
+  "time-trial:tt-21": {
+    "hash": "def6b86c5a0f9a32",
+    "solved": true,
+    "warps": 6,
+    "ms": 731
+  },
+  "time-trial:tt-22": {
+    "hash": "a4b296fbc4309023",
+    "solved": true,
+    "warps": 4,
+    "ms": 112
+  },
+  "time-trial:tt-23": {
+    "hash": "184e59ce10942368",
+    "solved": true,
+    "warps": 4,
+    "ms": 171
+  },
+  "time-trial:tt-24": {
+    "hash": "09d22427ccfe7c5d",
+    "solved": true,
+    "warps": 3,
+    "ms": 580
   },
   "challenge:challenge-01": {
     "hash": "9d17867de1cacc45",

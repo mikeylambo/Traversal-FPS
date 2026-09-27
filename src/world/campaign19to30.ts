@@ -220,7 +220,8 @@ const S25: RoomSpec = {
 };
 
 // ORBIT — a vertical wheel of Spheres turning in front of the summit pillar. The
-// Diamond sets the side lift moving; the wheel decides when either is useful.
+// wheel only answers from the lift side, and the lift sleeps until the west
+// Diamond wakes it: go west, wake it, ride it, and fire as the wheel comes round.
 const S26: RoomSpec = {
   id: "sector-26-orbit",
   title: "ORBIT",
@@ -236,9 +237,9 @@ const S26: RoomSpec = {
     solid(-3, 3, 0, 26, -36, -30)
   ],
   enemies: [
-    orbit("wheel-a", [0, 14, -20], "xy", 10, 10, 0.06, 0),
-    orbit("wheel-b", [0, 14, -20], "xy", 10, 10, 0.06, 2.1),
-    orbit("wheel-c", [0, 14, -20], "xy", 10, 10, 0.06, 4.2),
+    { ...orbit("wheel-a", [0, 14, -20], "xy", 10, 10, 0.06, 0), originConstraint: { axis: "x", min: 10 } },
+    { ...orbit("wheel-b", [0, 14, -20], "xy", 10, 10, 0.06, 2.1), originConstraint: { axis: "x", min: 10 } },
+    { ...orbit("wheel-c", [0, 14, -20], "xy", 10, 10, 0.06, 4.2), originConstraint: { axis: "x", min: 10 } },
     sentry("orbit-west", eye(-16, 10, -20)),
     diamond("orbit-diamond", [-16, 13, -23], ["orbit-lift"]),
     sentry("orbit-east", eye(16, 16, -20)),
@@ -424,9 +425,10 @@ const S29: RoomSpec = {
   ]
 };
 
-// KINETIC — a piston hall. Diamonds wake pairs of pistons; the gallery Sphere
-// only answers from above, which only a raised piston can reach. Use the motion
-// instead of waiting for it to finish.
+// KINETIC — a piston hall over a pulsing floor. Diamonds wake pairs of pistons;
+// the hall floor is lethal on a beat, so the pistons are the route, not an
+// option. The second Diamond and the gallery Sphere only answer from above,
+// which only a raised piston can reach. Use the motion instead of waiting for it.
 const S30: RoomSpec = {
   id: "sector-30-kinetic",
   title: "KINETIC",
@@ -447,11 +449,14 @@ const S30: RoomSpec = {
     diamond("kin-diamond-1", [-6, 3, -10], ["kin-a", "kin-b"]),
     sentry("kin-01", eye(-9, 4, -18)),
     sentry("kin-02", eye(-3, 8, -26)),
-    diamond("kin-diamond-2", [0, 12, -30], ["kin-c", "kin-d"]),
+    { ...diamond("kin-diamond-2", [0, 12, -30], ["kin-c", "kin-d"]), originConstraint: { axis: "y", min: 10 } },
     drifter("kin-03", [6, 11, -30], "y", 3, 0.5),
     sentry("kin-04", eye(3, 8, -34)),
     sentry("kin-05", eye(9, 12, -42)),
     shield("kin-06", eye(0, 16, -49), { axis: "y", min: 14 })
+  ],
+  hazards: [
+    field("kin-floor", -15, 15, 0, 1.2, -12, -3, { period: 3.4, openFor: 1.5 })
   ]
 };
 

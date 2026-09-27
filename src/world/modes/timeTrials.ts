@@ -1,11 +1,11 @@
 import type { RoomSpec } from "../stages";
 import {
-  crawl, crouchSentry, cube, diamond, drifter, eye, floor, lockedGate, low, moving, orbit, ring, sentry,
-  shield, solid
+  crawl, crouchSentry, cube, diamond, drifter, eye, field, floor, lockedGate, low, moving, orbit, ring, sentry,
+  shield, slitWallX, solid, sweep
 } from "../authoring";
 
 /**
- * Time Trial: sixteen bespoke race spaces. None reuses Campaign or Challenge
+ * Time Trial: twenty-four bespoke race spaces. None reuses Campaign or Challenge
  * geometry; each takes one Campaign idea and rebuilds it around speed — multiple
  * lines, risky cuts, chains and interceptions.
  */
@@ -215,5 +215,148 @@ export const TIME_TRIAL_COURSES: TimeTrialCourse[] = [
         sentry("ga-4", eye(10, 6, -40)), orbit("ga-5", [0, 13, -50], "xz", 3, 2, 0.1), sentry("ga-6", eye(0, 10, -58))
       ]
     }
-  }
+  },
+
+  // ------------------------------------------------------------ v0.16 courses
+  {
+    label: "BLADE RUN", inspiredBy: "map-18", goldSeconds: 11,
+    room: {
+      id: "tt-blade-run", grammar: ["airborne-chain", "timing-chain"],
+      spawn: eye(0, 2, 8), goal: ring(0, 9, -46), requiredKills: 4,
+      platforms: [
+        floor(0, 2, 8, 8, 6),
+        floor(0, 0, -18, 22, 40),
+        solid(-8, -5, 0, 6, -9, -6), solid(5, 8, 0, 8, -21, -18), solid(-8, -5, 0, 7, -33, -30),
+        floor(0, 9, -46, 8, 6)
+      ],
+      enemies: [
+        sentry("br-1", eye(-6.5, 6, -7.5)), sentry("br-2", eye(6.5, 8, -19.5)),
+        sentry("br-3", eye(-6.5, 7, -31.5)), sentry("br-4", eye(0, 9, -45))
+      ],
+      hazards: [
+        sweep("br-a", [0, 1.5, -18], [22, 3, 0.8], "z", 19, 0.16),
+        sweep("br-b", [0, 1.5, -18], [22, 3, 0.8], "z", 19, 0.16, Math.PI)
+      ]
+    }
+  },
+  {
+    label: "STILTS", inspiredBy: "map-22", goldSeconds: 10,
+    room: {
+      id: "tt-stilts", grammar: ["airborne-chain", "reorientation"],
+      spawn: eye(-20, 14, 0), goal: ring(22, 4, -24), requiredKills: 4,
+      platforms: [
+        solid(-23, -17, -20, 14, -3, 3),
+        solid(-10, -6, -20, 10, -14, -10),
+        solid(0, 4, -20, 16, -4, 0),
+        solid(8, 12, -20, 7, -18, -14),
+        solid(18, 26, -20, 4, -28, -20)
+      ],
+      enemies: [
+        sentry("st-1", eye(-8, 10, -12)), sentry("st-2", eye(2, 16, -2)),
+        sentry("st-3", eye(10, 7, -16)), shield("st-4", eye(22, 4, -22), { axis: "y", min: 8 })
+      ]
+    }
+  },
+  {
+    label: "PINHOLE", inspiredBy: "map-27", goldSeconds: 9,
+    room: {
+      id: "tt-pinhole", grammar: ["stop-short", "reorientation"],
+      spawn: eye(0, 0, 4), goal: ring(0, 13, -30), requiredKills: 3,
+      platforms: [floor(0, 0, 0, 14, 10), floor(4, 6, -14, 5, 5), floor(0, 13, -30, 6, 6)],
+      enemies: [sentry("ph-1", eye(4, 6, -14)), drifter("ph-2", [-3, 16, -24], "x", 2, 0.6), sentry("ph-3", eye(0, 13, -31))],
+      hazards: [
+        // Two lethal decks, one hole each: a full Warp always ends inside one.
+        field("ph-l1-s", -10, 10, 3, 3.5, -26, -16.5), field("ph-l1-n", -10, 10, 3, 3.5, -11.5, -6),
+        field("ph-l1-w", -10, 1.5, 3, 3.5, -16.5, -11.5), field("ph-l1-e", 6.5, 10, 3, 3.5, -16.5, -11.5),
+        field("ph-l2-s", -10, 10, 9, 9.5, -38, -33.5), field("ph-l2-n", -10, 10, 9, 9.5, -26.5, -17),
+        field("ph-l2-w", -10, -3.5, 9, 9.5, -33.5, -26.5), field("ph-l2-e", 3.5, 10, 9, 9.5, -33.5, -26.5)
+      ]
+    }
+  },
+  {
+    label: "LOW ORIGIN", inspiredBy: "map-27", goldSeconds: 12,
+    room: {
+      // Each target is visible only through a knee-high slit: fire and warp from a crouch.
+      id: "tt-low-origin", grammar: ["low-profile", "origin-matters"],
+      spawn: eye(0, 0, 6), goal: ring(0, 0, -44), requiredKills: 3,
+      platforms: [
+        floor(0, 0, -19, 12, 54),
+        ...slitWallX(-6, 6, -6, 0, 6),
+        ...slitWallX(-6, 6, -20, 0, 6),
+        ...slitWallX(-6, 6, -34, 0, 6)
+      ],
+      enemies: [crouchSentry("lo-1", 2, 0, -14), crouchSentry("lo-2", -2, 0, -28), crouchSentry("lo-3", 0, 0, -41)]
+    }
+  },
+  {
+    label: "WEAVE", inspiredBy: "map-31", goldSeconds: 13,
+    room: {
+      // Zig-zag over and under a spine: upper decks alternate sides and climb,
+      // lower decks sit on the spine. The last lower Sphere answers only from below.
+      id: "tt-weave", grammar: ["reorientation", "route-fork", "low-profile"],
+      spawn: eye(-30, 10, 0), goal: ring(30, 16, 0), requiredKills: 6,
+      platforms: [
+        floor(-28, 10, 0, 8, 6),
+        floor(-12, 11, -9, 7, 5), floor(4, 13, 9, 7, 5), floor(18, 15, -9, 7, 5),
+        floor(-18, 2, 0, 7, 6), floor(-2, 4, 0, 7, 6), floor(12, 6, 0, 7, 6),
+        floor(30, 16, 0, 8, 8)
+      ],
+      enemies: [
+        sentry("wv-1", eye(-18, 2, 0)), sentry("wv-2", eye(-12, 11, -9)), sentry("wv-3", eye(-2, 4, 0)),
+        sentry("wv-4", eye(4, 13, 9)), sentry("wv-5", eye(12, 6, 0), undefined, { axis: "y", max: 10 }),
+        sentry("wv-6", eye(29, 16, 0))
+      ]
+    }
+  },
+  {
+    label: "RETURN", inspiredBy: "map-41", goldSeconds: 14,
+    room: {
+      // The ring is at the start: out through three quadrants and home again.
+      id: "tt-return", grammar: ["reorientation", "airborne-chain", "origin-matters"],
+      spawn: eye(0, 0, 3), goal: ring(0, 0, -1), requiredKills: 4,
+      platforms: [
+        floor(0, 0, 1, 10, 8),
+        floor(-18, 5, -18, 6, 6), floor(18, 8, -18, 6, 6), floor(18, 3, 18, 6, 6)
+      ],
+      enemies: [
+        sentry("rt-1", eye(-18, 5, -18)), sentry("rt-2", eye(18, 8, -18)), sentry("rt-3", eye(18, 3, 18)),
+        sentry("rt-4", eye(3, 0, 2), undefined, { axis: "z", min: 12 })
+      ]
+    }
+  },
+  {
+    label: "CROSSFIRE", inspiredBy: "map-37", goldSeconds: 12,
+    room: {
+      id: "tt-crossfire", grammar: ["route-fork", "origin-matters"],
+      spawn: eye(0, 0, 0), goal: ring(0, 12, -22), requiredKills: 4,
+      platforms: [
+        floor(0, 0, 0, 10, 10), floor(-20, 4, 0, 6, 6), floor(20, 6, 0, 6, 6), floor(0, 2, 20, 6, 6),
+        floor(0, 12, -22, 8, 6)
+      ],
+      enemies: [
+        sentry("cf-w", eye(-20, 4, 0)), sentry("cf-e", eye(20, 6, 0)), sentry("cf-s", eye(0, 2, 20)),
+        shield("cf-out", eye(0, 12, -21), { axis: "z", min: 12 })
+      ]
+    }
+  },
+  {
+    label: "UNDERTOW", inspiredBy: "map-38", goldSeconds: 13,
+    room: {
+      // Sideways over / under: a high deck, the crawl beneath it, and back up.
+      id: "tt-undertow", grammar: ["low-profile", "reorientation", "stop-short"],
+      spawn: eye(-26, 9, 0), goal: ring(28, 12, -2), requiredKills: 4,
+      platforms: [
+        floor(-26, 9, 0, 6, 8),
+        floor(-2, 0, 0, 30, 14),
+        floor(-2, 9, 0, 12, 14),
+        crawl(4, 13, -7, 7, 0),
+        floor(18, 5, 2, 6, 6),
+        floor(28, 12, -2, 8, 8)
+      ],
+      enemies: [
+        sentry("ut-1", eye(-4, 9, 3)), crouchSentry("ut-2", 9, 0, -2),
+        drifter("ut-3", [18, 8, 2], "y", 1.5, 0.6), sentry("ut-4", eye(27, 12, -2))
+      ]
+    }
+  },
 ];

@@ -304,7 +304,7 @@ app.ui.updateScreen("credits", {
     { id: "credit-tech", label: "Technology // Three.js + SLU Web Game Shell", disabled: true },
     { id: "credit-type", label: "Typography // Rajdhani + Sora", disabled: true },
     { id: "credit-tools", label: "Development Assistance // OpenAI + Anthropic", disabled: true },
-    { id: "credit-build", label: "Build // v0.15 RC Content", description: "42 Campaign sectors // 8 Reversal chambers // 24 Challenges // 16 Time Trials", disabled: true }
+    { id: "credit-build", label: "Build // v0.15 RC Content", description: "42 Campaign sectors // 8 Reversal chambers // 24 Challenges // 24 Time Trials", disabled: true }
   ]
 });
 
