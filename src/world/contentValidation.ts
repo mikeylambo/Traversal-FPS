@@ -1,4 +1,4 @@
-import { spatialActorDefinition } from "./spatialActors";
+import { isProximity, spatialActorDefinition } from "./spatialActors";
 import type { EnemySpec, HazardSpec, PlatformSpec, RoomSpec, Vec3Tuple } from "./stages";
 
 export type ValidationSeverity = "error" | "warning";
@@ -63,7 +63,7 @@ export function validateRoom(room: RoomSpec): RoomValidationReport {
 
   const ids = new Set<string>();
   for (const enemy of room.enemies) {
-    validateEnemy(enemy, push);
+    validateEnemy(enemy, push, room.platforms);
     if (ids.has(enemy.id)) push("error", "entity.id.duplicate", `Duplicate entity id: ${enemy.id}`, enemy.id);
     ids.add(enemy.id);
   }
@@ -254,7 +254,8 @@ function validatePlatform(
 
 function validateEnemy(
   enemy: EnemySpec,
-  push: (severity: ValidationSeverity, code: string, message: string, entityId?: string) => void
+  push: (severity: ValidationSeverity, code: string, message: string, entityId?: string) => void,
+  platforms: PlatformSpec[]
 ): void {
   if (!enemy.id?.trim()) push("error", "enemy.id", "Actor id is required.");
   if (!isFiniteVec3(enemy.position)) push("error", "enemy.position", "Actor position is invalid.", enemy.id);
@@ -296,7 +297,12 @@ function validateEnemy(
     }
   }
 
-  if (enemy.originConstraint) {
+  if (enemy.originConstraint && isProximity(enemy.originConstraint)) {
+    const within = enemy.originConstraint.within;
+    if (!Number.isFinite(within) || within <= (enemy.radius ?? 0.72) + 1) {
+      push("error", "enemy.origin.within", "Proximity range must be finite and reach past the Sphere's surface.", enemy.id);
+    }
+  } else if (enemy.originConstraint) {
     const constraint = enemy.originConstraint;
     if (!(["x", "y", "z"] as const).includes(constraint.axis)) {
       push("error", "enemy.origin.axis", "Origin constraint axis must be x, y, or z.", enemy.id);
@@ -317,7 +323,21 @@ function validateEnemy(
     ) {
       push("error", "enemy.origin.order", "Origin constraint min cannot exceed max.", enemy.id);
     }
+    // Standing on top of a Sphere reads as "above it"; a floor line far higher
+    // than the Sphere turns that read into a rejection (the Sector 18 trap).
+    if (constraint.axis === "y" && constraint.min !== undefined && platforms.some((p) => standsOverButBelow(p, enemy.position, constraint.min!))) {
+      push("warning", "enemy.origin.above-trap", "A floor near this Sphere stands clearly above it but under its height gate; firing from there rejects. Prefer a proximity gate or a lower line.", enemy.id);
+    }
   }
+}
+
+/** A floor within 8m whose standing eye is over the Sphere yet under the gate line. */
+function standsOverButBelow(platform: PlatformSpec, at: Vec3Tuple, line: number): boolean {
+  const eye = platform.center[1] + platform.size[1] / 2 + 1.7;
+  if (eye <= at[1] + 1.5 || eye >= line) return false;
+  const dx = Math.max(0, Math.abs(at[0] - platform.center[0]) - platform.size[0] / 2);
+  const dz = Math.max(0, Math.abs(at[2] - platform.center[2]) - platform.size[2] / 2);
+  return Math.hypot(dx, dz) <= 8;
 }
 
 function validateHazard(

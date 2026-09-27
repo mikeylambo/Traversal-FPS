@@ -10,6 +10,7 @@ import {
 import { buildReversalLabyrinth } from "../world/reversalLabyrinth";
 import type { RoomSpec } from "../world/stages";
 import { validateRoom } from "../world/contentValidation";
+import { isProximity } from "../world/spatialActors";
 import type { ContentRuntime } from "../game/ContentRuntime";
 
 type LabFamily = "campaign" | "time-trial" | "challenge" | "reversal";
@@ -389,7 +390,20 @@ export function installLevelLab(game: object, content: ContentRuntime, shell: Sh
         path.userData.labCategory = "paths";
         debugGroup.add(path);
       }
-      if (e.originConstraint) {
+      if (e.originConstraint && isProximity(e.originConstraint)) {
+        const centre = new THREE.Vector3(...e.position);
+        const r = e.originConstraint.within;
+        const points = Array.from({ length: 65 }, (_, k) => {
+          const t = (k / 64) * Math.PI * 2;
+          return centre.clone().add(new THREE.Vector3(Math.cos(t) * r, 0, Math.sin(t) * r));
+        });
+        const range = new THREE.Line(
+          new THREE.BufferGeometry().setFromPoints(points),
+          new THREE.LineBasicMaterial({ color: 0xffe06a, transparent: true, opacity: 0.6, depthTest: false })
+        );
+        range.userData.labCategory = "origin";
+        debugGroup.add(range);
+      } else if (e.originConstraint) {
         const start = new THREE.Vector3(...e.position);
         const end = start.clone();
         const c = e.originConstraint;

@@ -1,10 +1,39 @@
 export type OriginAxis = "x" | "y" | "z";
 
-export interface OriginConstraint {
+/** The Sphere answers only shots fired from one side of a world-axis plane. */
+export interface AxisOriginConstraint {
   axis: OriginAxis;
   min?: number;
   max?: number;
   rejectMessage?: string;
+}
+
+/**
+ * The Sphere answers only shots fired from within `within` metres of its live
+ * centre. Drawn as a mace whose spikes fold away once you are close enough, so
+ * "get closer" reads from the silhouette before any text does.
+ */
+export interface ProximityConstraint {
+  within: number;
+  rejectMessage?: string;
+}
+
+export type OriginConstraint = AxisOriginConstraint | ProximityConstraint;
+
+export function isProximity(constraint: OriginConstraint): constraint is ProximityConstraint {
+  return "within" in constraint;
+}
+
+type Tuple3 = readonly [number, number, number];
+
+/** What stands between the player and a valid shot: which way to move, and how far. */
+export interface OriginGuidance {
+  kind: "axis" | "proximity";
+  axis?: OriginAxis;
+  /** Unit world-space direction that leads into the firing zone. */
+  move: [number, number, number];
+  /** Metres still to cover in that direction. */
+  distance: number;
 }
 
 export type SpatialActorSchemaId =
@@ -114,13 +143,23 @@ export function resolveOriginConstraint(
   return authored ?? spatialActorDefinition(kind)?.defaultOriginConstraint;
 }
 
+/**
+ * `at` is the Sphere's live centre (drifters and orbits move), which proximity
+ * gates measure against; axis gates ignore it.
+ */
 export function evaluateActorOrigin(
   kind: string,
   authored: OriginConstraint | undefined,
-  origin: readonly [number, number, number]
+  origin: Tuple3,
+  at: Tuple3
 ): { allowed: boolean; message?: string } {
   const constraint = resolveOriginConstraint(kind, authored);
   if (!constraint) return { allowed: true };
+
+  if (isProximity(constraint)) {
+    const d = Math.hypot(origin[0] - at[0], origin[1] - at[1], origin[2] - at[2]);
+    return d <= constraint.within ? { allowed: true } : { allowed: false, message: "GET CLOSER" };
+  }
 
   const axisIndex = constraint.axis === "x" ? 0 : constraint.axis === "y" ? 1 : 2;
   const value = origin[axisIndex];
@@ -136,8 +175,30 @@ export function evaluateActorOrigin(
   };
 }
 
+export function originGuidance(
+  kind: string,
+  authored: OriginConstraint | undefined,
+  origin: Tuple3,
+  at: Tuple3
+): OriginGuidance | null {
+  const constraint = resolveOriginConstraint(kind, authored);
+  if (!constraint || evaluateActorOrigin(kind, authored, origin, at).allowed) return null;
+  if (isProximity(constraint)) {
+    const d: [number, number, number] = [at[0] - origin[0], at[1] - origin[1], at[2] - origin[2]];
+    const length = Math.hypot(d[0], d[1], d[2]) || 1;
+    return { kind: "proximity", move: [d[0] / length, d[1] / length, d[2] / length], distance: length - constraint.within };
+  }
+  const index = constraint.axis === "x" ? 0 : constraint.axis === "y" ? 1 : 2;
+  const value = origin[index];
+  const up = constraint.min !== undefined && value < constraint.min;
+  const target = up ? constraint.min! : constraint.max!;
+  const move: [number, number, number] = [0, 0, 0];
+  move[index] = up ? 1 : -1;
+  return { kind: "axis", axis: constraint.axis, move, distance: Math.abs(target - value) };
+}
+
 function directionalOriginHint(
-  constraint: OriginConstraint,
+  constraint: AxisOriginConstraint,
   belowMin: boolean,
   aboveMax: boolean
 ): string {

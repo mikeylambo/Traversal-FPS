@@ -185,29 +185,32 @@ const S40: RoomSpec = {
   ]
 };
 
+// LOOP — a 68m-wide ring over a void around a solid core: climb the west side,
+// cross the summit, descend the east side, and close the loop at home. Every
+// Sphere answers only from the platform before it, every stepping stone falls
+// away once you leave it, and the landings are small and timed against moving
+// endpoints: miss one and the loop starts again.
 const S41: RoomSpec = {
   id:"sector-41-loop", title:"LOOP",
   lesson:"Forward stops meaning forward when the route closes around itself.",
-  grammar:["route-fork","reorientation","moving-endpoint"],
+  grammar:["route-fork","reorientation","moving-endpoint","airborne-chain"],
   spawn:[0,2.2,0], goal:[0,1.1,0], requiredKills:6,
   platforms:[
-    {center:[0,0,0],size:[12,1,12]}, {center:[-20,2,-12],size:[8,1,8]}, {center:[-20,5,-34],size:[8,1,8]},
-    {center:[0,8,-46],size:[8,1,8]}, {center:[20,4,-34],size:[8,1,8]}, {center:[20,1,-12],size:[8,1,8]},
-    {center:[0,5,-23],size:[15,10,1.5]}
+    {center:[0,0,0],size:[10,1,10]},
+    {center:[-30,2.5,-10],size:[5,1,5],collapse:{delay:"leave"}},
+    {center:[-32,8.5,-34],size:[5,1,5],collapse:{delay:"leave"}},
+    {center:[0,15.5,-56],size:[6,1,6]},
+    {center:[32,10.5,-34],size:[5,1,5],collapse:{delay:"leave"}},
+    {center:[30,4.5,-10],size:[5,1,5],collapse:{delay:"leave"}},
+    {center:[0,11,-30],size:[20,22,28]}
   ],
-  // One direction only: every Sphere answers only from the platform before it,
-  // and the last shot is home, fired back from the east side as the loop closes.
   enemies:[
-    {id:"loop-a",kind:"sentry",position:[-20,4.2,-12],originConstraint:{axis:"z",min:-6}},
-    {id:"loop-b",kind:"drifter",position:[-20,8,-34],drift:{axis:"y",amplitude:2,speed:.7},originConstraint:{axis:"z",min:-20}},
-    {id:"loop-c",kind:"orbit",position:[0,11,-46],orbit:{plane:"xy",radiusA:5,radiusB:3,speed:.12},originConstraint:{axis:"x",max:-14}},
-    {id:"loop-d",kind:"sentry",position:[20,6.2,-34],originConstraint:{axis:"z",max:-40}},
-    {id:"loop-e",kind:"drifter",position:[20,4,-12],drift:{axis:"x",amplitude:4,speed:.8},originConstraint:{axis:"z",max:-28}},
-    {id:"loop-f",kind:"sentry",position:[0,2.2,0],originConstraint:{axis:"x",min:14}}
-  ],
-  // A lethal crown on the divider: the loop cannot be cut across the top.
-  hazards:[
-    {id:"loop-crown",kind:"lethal-field",center:[0,13,-23],size:[15,6,1.5]}
+    {id:"loop-a",kind:"sentry",position:[-30,4.7,-10],originConstraint:{axis:"z",min:-4}},
+    {id:"loop-b",kind:"drifter",position:[-32,11.2,-34],drift:{axis:"y",amplitude:2.5,speed:.7},originConstraint:{axis:"x",max:-26}},
+    {id:"loop-c",kind:"orbit",position:[0,19,-56],orbit:{plane:"xy",radiusA:5,radiusB:2,speed:.12},originConstraint:{axis:"x",max:-24}},
+    {id:"loop-d",kind:"sentry",position:[32,12.7,-34],originConstraint:{axis:"z",max:-50}},
+    {id:"loop-e",kind:"drifter",position:[30,6.7,-10],drift:{axis:"x",amplitude:4,speed:.8},originConstraint:{axis:"z",max:-28}},
+    {id:"loop-f",kind:"sentry",position:[0,2.2,0],originConstraint:{axis:"x",min:20}}
   ]
 };
 

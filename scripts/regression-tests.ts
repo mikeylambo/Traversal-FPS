@@ -4,7 +4,7 @@ import { CAMPAIGN_MAPS } from "../src/world/campaign";
 import { registerCampaign02 } from "../src/world/registerCampaign02";
 import { registerCampaign03 } from "../src/world/registerCampaign03";
 import { registerCampaign04 } from "../src/world/registerCampaign04";
-import { evaluateActorOrigin } from "../src/world/spatialActors";
+import { evaluateActorOrigin, originGuidance } from "../src/world/spatialActors";
 import { ROOMS, type RoomSpec } from "../src/world/stages";
 import { validateRoom, validateRoomCatalog } from "../src/world/contentValidation";
 import { solveRoom } from "../src/world/routeSolver";
@@ -142,15 +142,25 @@ async function testProgression(): Promise<void> {
 
 function testSpatialActors(): void {
   registerCampaign04();
-  const rejected = evaluateActorOrigin("shield", undefined, [0, 2.2, 0]);
-  const accepted = evaluateActorOrigin("shield", undefined, [3, 2.2, 0]);
+  const rejected = evaluateActorOrigin("shield", undefined, [0, 2.2, 0], [5, 2.2, -8]);
+  const accepted = evaluateActorOrigin("shield", undefined, [3, 2.2, 0], [5, 2.2, -8]);
   equal(rejected.allowed, false, "shield default origin gate preserves current left-side rejection");
   equal(accepted.allowed, true, "shield default origin gate preserves current valid right-side shot");
 
-  const authored = evaluateActorOrigin("sentry", { axis: "z", max: -5 }, [0, 2.2, -8]);
-  const authoredRejected = evaluateActorOrigin("sentry", { axis: "z", max: -5 }, [0, 2.2, 0]);
+  const authored = evaluateActorOrigin("sentry", { axis: "z", max: -5 }, [0, 2.2, -8], [0, 2.2, -20]);
+  const authoredRejected = evaluateActorOrigin("sentry", { axis: "z", max: -5 }, [0, 2.2, 0], [0, 2.2, -20]);
   equal(authored.allowed, true, "origin constraints can be authored on non-shield actors");
   equal(authoredRejected.allowed, false, "authored generic origin constraint rejects invalid origin");
+
+  // Proximity gates measure from the Sphere's live centre, in any direction.
+  const mace = { within: 6 };
+  equal(evaluateActorOrigin("sentry", mace, [0, 9.7, -37], [2.5, 5.7, -37]).allowed, true, "proximity gate answers from close range, even from above");
+  equal(evaluateActorOrigin("sentry", mace, [0, 16.7, -33], [2.5, 5.7, -37]).allowed, false, "proximity gate rejects a distant origin");
+  equal(evaluateActorOrigin("drifter", mace, [10, 0, 0], [5, 0, 0]).allowed, true, "proximity follows a moving Sphere");
+  const guide = originGuidance("sentry", mace, [0, 0, 10], [0, 0, 0]);
+  assert(guide?.kind === "proximity" && Math.abs(guide.distance - 4) < 1e-6 && guide.move[2] === -1, "proximity guidance points at the Sphere with the metres left");
+  const axisGuide = originGuidance("sentry", { axis: "y", min: 13 }, [0, 9.7, 0], [0, 5.7, 0]);
+  assert(axisGuide?.axis === "y" && axisGuide.move[1] === 1 && Math.abs(axisGuide.distance - 3.3) < 1e-6, "axis guidance points across the threshold with the metres left");
 
   const orbitMap = CAMPAIGN_MAPS.find((map) => map.id === "map-04");
   assert(orbitMap?.implemented, "Crosscurrent is registered as playable content");
@@ -214,6 +224,16 @@ function testRouteSolverAndSuites(): void {
   // A spawn buried in geometry (the original Sector 33 defect) is a hard error.
   const buried: RoomSpec = { ...base, platforms: [...base.platforms, { center: [0, 18, 0], size: [1.2, 34, 13] }] };
   assert(validateRoom(buried).issues.some((issue) => issue.code === "geometry.spawn-clearance"), "Content Doctor rejects a spawn inside geometry");
+
+  // A roof over a Sphere whose height gate sits above the roof is the Sector 18 trap.
+  const roofTrap: RoomSpec = {
+    ...base,
+    platforms: [...base.platforms, { center: [0, 7.7, -24], size: [8, 0.6, 8] }],
+    enemies: [{ id: "vault", kind: "sentry", position: [0, 2.2, -24], originConstraint: { axis: "y", min: 13 } }]
+  };
+  assert(validateRoom(roofTrap).issues.some((issue) => issue.code === "enemy.origin.above-trap"), "Content Doctor flags a height gate a roof over the Sphere cannot satisfy");
+  const mace: RoomSpec = { ...roofTrap, enemies: [{ id: "vault", kind: "sentry", position: [0, 2.2, -24], originConstraint: { within: 0.5 } }] };
+  assert(validateRoom(mace).issues.some((issue) => issue.code === "enemy.origin.within"), "Content Doctor rejects a proximity range inside the Sphere");
 
   // Dropping is one-way: a Sphere only visible from below cannot be spent from above.
   const ledge: RoomSpec = {

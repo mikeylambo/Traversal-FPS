@@ -249,7 +249,8 @@ function chooseCandidate(args: {
         state.camera.position.x,
         state.camera.position.y,
         state.camera.position.z
-      ] as [number, number, number]
+      ] as [number, number, number],
+      [enemy.mesh.position.x, enemy.mesh.position.y, enemy.mesh.position.z]
     );
     if (!originRule.allowed) continue;
 

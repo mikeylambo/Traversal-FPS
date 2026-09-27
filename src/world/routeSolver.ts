@@ -87,6 +87,8 @@ type World = {
   lethal: Lethal[];
   nodes: Node[];
   byKey: Map<string, number>;
+  /** Node lookup that survives world changes (see stableKey). */
+  byStable: Map<string, number>;
   byColumn: Map<string, number[]>;
   scc: Int32Array;
   sccNodes: number[][];
@@ -263,7 +265,7 @@ export function solveRoom(room: RoomSpec, options: SolveOptions = {}): SolveResu
   };
 
   const canSee = (w: World, eye: V, target: Target, p: V): boolean => {
-    if (!evaluateActorOrigin(target.spec.kind, target.spec.originConstraint, eye).allowed) return false;
+    if (!evaluateActorOrigin(target.spec.kind, target.spec.originConstraint, eye, p).allowed) return false;
     const d = sub(p, eye);
     const dist = len(d);
     if (dist < 0.5) return true;
@@ -529,7 +531,7 @@ export function solveRoom(room: RoomSpec, options: SolveOptions = {}): SolveResu
           // Utility actors change world state; re-home the player where they fired from.
           const nw = world(nextMask);
           for (const k of e.killers) {
-            const home = nw.byKey.get(nodeKey(w.nodes[k >> 1]!));
+            const home = nw.byStable.get(stableKey(w, w.nodes[k >> 1]!));
             if (home !== undefined) push(nw, home, nextMask, s, () => [killStepAt(k)]);
           }
           break;
@@ -657,7 +659,15 @@ function rectEntry(origin: V, target: V, b: Box): [number, number] | null {
   return t0 <= t1 ? [t0, t1] : null;
 }
 
-const nodeKey = (n: Node) => `${n.floor}:${n.ix}:${n.iz}`;
+/**
+ * Floor indices shift between worlds (waking a platform inserts its sampled
+ * positions), so carrying a player across a world change keys on the source
+ * platform and the floor's actual placement instead.
+ */
+const stableKey = (w: World, n: Node) => {
+  const f = w.floors[n.floor]!;
+  return `${f.source}@${f.box.min.map((v) => v.toFixed(2)).join(",")}:${n.ix}:${n.iz}`;
+};
 
 function nodeEye(w: World, i: number): V {
   const n = w.nodes[i]!;
@@ -838,7 +848,7 @@ function buildWorld(room: RoomSpec, targets: Target[], mask: number, allowCrouch
   });
 
   const w: World = {
-    mask, floors, solids, shotBlockers, lethal, nodes, byKey, byColumn,
+    mask, floors, solids, shotBlockers, lethal, nodes, byKey, byStable: new Map(), byColumn,
     scc: new Int32Array(nodes.length), sccNodes: [], sccReach: new Map(), coarse, adj: [], ride: new Map(),
     vis: new Map(), warp: new Map()
   };
@@ -854,6 +864,7 @@ function buildWorld(room: RoomSpec, targets: Target[], mask: number, allowCrouch
     if (list) list.push(i); else groups.set(key, [i]);
   });
   for (const list of groups.values()) for (const i of list) w.ride.set(i, list);
+  nodes.forEach((n, i) => w.byStable.set(stableKey(w, n), i));
   computeScc(w);
   return w;
 }

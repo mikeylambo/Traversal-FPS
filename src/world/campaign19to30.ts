@@ -425,38 +425,38 @@ const S29: RoomSpec = {
   ]
 };
 
-// KINETIC — a piston hall over a pulsing floor. Diamonds wake pairs of pistons;
-// the hall floor is lethal on a beat, so the pistons are the route, not an
-// option. The second Diamond and the gallery Sphere only answer from above,
-// which only a raised piston can reach. Use the motion instead of waiting for it.
+// KINETIC — the Act III finale. A wide piston hall over a void: three dormant
+// pistons (west, centre, east) and a crown beyond them. Every Diamond is read
+// from a piston another Diamond raised, so the route zig-zags across the width
+// (west -> centre -> east -> back to a centre that now moves) instead of
+// running to the far wall and turning round. The crown is a mace: it answers
+// only from the centre piston near the top of its stroke.
 const S30: RoomSpec = {
   id: "sector-30-kinetic",
   title: "KINETIC",
   lesson: "Diamonds make platforms into alignment events. Use their motion instead of waiting for it to finish.",
-  grammar: ["moving-endpoint", "airborne-chain", "stop-short", "reorientation"],
-  spawn: eye(0, 0, 2),
-  goal: ring(0, 16, -50),
+  grammar: ["moving-endpoint", "airborne-chain", "route-fork", "origin-matters", "reorientation"],
+  spawn: eye(0, 0, 4),
+  goal: ring(0, 18, -41),
   requiredKills: 6,
   platforms: [
-    floor(0, 0, -4, 30, 16),
-    moving(floor(-9, 4, -18, 4, 4), "kin-a", "y", 4, 0.1, true),
-    moving(floor(-3, 8, -26, 4, 4), "kin-b", "y", 4, 0.08, true),
-    moving(floor(3, 8, -34, 4, 4), "kin-c", "y", 5, 0.07, true),
-    moving(floor(9, 12, -42, 4, 4), "kin-d", "y", 4, 0.09, true),
-    floor(0, 16, -50, 30, 6)
+    floor(0, 0, 3, 10, 6),
+    floor(-18, 2, -8, 6, 6),
+    moving(floor(-18, 8, -24, 4, 4), "kin-w", "y", 5, 0.1, true),
+    moving(floor(0, 6, -32, 5, 5), "kin-c", "y", 8, 0.07, true),
+    moving(floor(18, 10, -24, 4, 4), "kin-e", "y", 6, 0.09, true),
+    floor(0, 18, -41, 8, 6)
   ],
   enemies: [
-    diamond("kin-diamond-1", [-6, 3, -10], ["kin-a", "kin-b"]),
-    sentry("kin-01", eye(-9, 4, -18)),
-    sentry("kin-02", eye(-3, 8, -26)),
-    { ...diamond("kin-diamond-2", [0, 12, -30], ["kin-c", "kin-d"]), originConstraint: { axis: "y", min: 10 } },
-    drifter("kin-03", [6, 11, -30], "y", 3, 0.5),
-    sentry("kin-04", eye(3, 8, -34)),
-    sentry("kin-05", eye(9, 12, -42)),
-    shield("kin-06", eye(0, 16, -49), { axis: "y", min: 14 })
-  ],
-  hazards: [
-    field("kin-floor", -15, 15, 0, 1.2, -12, -3, { period: 3.4, openFor: 1.5 })
+    sentry("kin-w1", eye(-18, 2, -8)),
+    diamond("kin-diamond-w", [-18, 10, -18], ["kin-w"]),
+    sentry("kin-w2", eye(-18, 8, -24), undefined, { axis: "x", max: -12 }),
+    { ...diamond("kin-diamond-e", [22, 16, -30], ["kin-e"]), originConstraint: { axis: "y", min: 13 } },
+    { ...orbit("kin-orbit", [0, 12, -32], "xz", 10, 2, 0.08), originConstraint: { axis: "x", max: -12 } },
+    sentry("kin-e1", eye(18, 10, -24), undefined, { axis: "z", max: -28 }),
+    { ...diamond("kin-diamond-c", [9, 21, -36], ["kin-c"]), originConstraint: { axis: "y", min: 15 } },
+    { ...drifter("kin-return", [0, 12, -32], "x", 2.5, 0.6), originConstraint: { axis: "x", min: 14 } },
+    sentry("kin-crown", [0, 20.2, -38.5], undefined, { within: 9 })
   ]
 };
 

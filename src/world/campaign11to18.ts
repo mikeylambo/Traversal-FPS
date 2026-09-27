@@ -279,8 +279,9 @@ const S17: RoomSpec = {
 // the only ground they cannot reach. Leave the hazard plane, and keep leaving it.
 // The ring waits in a sealed vault with a skylight: the way in is from the high
 // perch above it, reached only by chaining across the pylons. A third blade
-// rises and falls through the pylon band, so no top is a place to rest, and the
-// vault's Sphere only answers a shot dropped through the skylight from the perch.
+// rises and falls through the pylon band, so no top is a place to rest. The
+// vault's Sphere is a mace: it answers only from close range, so drop from the
+// perch onto the vault roof and fire down through the skylight.
 const S18: RoomSpec = {
   id: "sector-18-sweep",
   title: "SWEEP",
@@ -307,7 +308,7 @@ const S18: RoomSpec = {
     sentry("sweep-04", eye(-8, 12, -18)),
     sentry("sweep-05", eye(12, 9, -26)),
     sentry("sweep-06", eye(0, 15, -33)),
-    sentry("sweep-07", eye(2.5, 4, -37), undefined, { axis: "y", min: 13 })
+    sentry("sweep-07", eye(2.5, 4, -37), undefined, { within: 6.5 })
   ],
   hazards: [
     sweep("sweep-a", [0, 1.5, -11], [40, 3, 0.8], "z", 19, 0.1),
