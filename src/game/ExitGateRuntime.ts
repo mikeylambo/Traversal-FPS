@@ -20,7 +20,8 @@ type RuntimeState = {
 };
 
 const READY_COLOR = 0x78ffb2;
-const LOCKED_COLOR = 0x263b46;
+const LOCKED_COLOR = 0x6f95a6;
+const BEACON_HEIGHT = 70;
 
 /**
  * Gravity Rings are the only sector exits. The semantic torus remains authoritative;
@@ -34,6 +35,15 @@ export function installExitGateRuntime(game: object): void {
   let ringLoop: TraversalAudioLoopHandle | null = null;
   decorateGravityRing(state.goal);
   mountRegisteredVisual(state.goal, "exit.gravity-ring.default");
+  // The exit must read from anywhere in the sector, locked or not: the ring
+  // ignores fog, and a faint light pillar marks it above the geometry.
+  const beacon = createBeacon();
+  const ignoreFog = () => state.goal.traverse((child) => {
+    const materials = child instanceof THREE.Mesh ? (Array.isArray(child.material) ? child.material : [child.material]) : [];
+    for (const material of materials) {
+      if ("fog" in material && material.fog) { material.fog = false; material.needsUpdate = true; }
+    }
+  });
 
   const sync = () => {
     const room = ROOMS[state.roomIndex];
@@ -43,7 +53,13 @@ export function installExitGateRuntime(game: object): void {
       : state.roomKills >= room.requiredKills;
 
     state.goalMaterial.color.setHex(ready ? READY_COLOR : LOCKED_COLOR);
-    state.goalMaterial.opacity = ready ? 0.96 : 0.16;
+    state.goalMaterial.opacity = ready ? 0.96 : 0.5;
+    if (!beacon.parent && state.goal.parent) state.goal.parent.add(beacon);
+    beacon.position.copy(state.goal.position);
+    beacon.visible = state.goal.visible;
+    const beaconMaterial = beacon.material as THREE.ShaderMaterial;
+    beaconMaterial.uniforms.uColor.value.setHex(ready ? READY_COLOR : LOCKED_COLOR);
+    beaconMaterial.uniforms.uStrength.value = ready ? 0.55 : 0.22;
     state.goalLight.color.setHex(READY_COLOR);
     state.goalLight.intensity = ready ? 4 : 0;
     state.goal.userData.gravityRingReady = ready;
@@ -55,7 +71,7 @@ export function installExitGateRuntime(game: object): void {
     for (const child of state.goal.children) {
       if (child.userData.traversalPresentationOnly) continue;
       const material = child instanceof THREE.Mesh ? child.material : undefined;
-      if (material instanceof THREE.MeshBasicMaterial) material.opacity = ready ? 0.7 : 0.08;
+      if (material instanceof THREE.MeshBasicMaterial) material.opacity = ready ? 0.7 : 0.3;
     }
 
     if (ready && !wasReady) {
@@ -78,6 +94,7 @@ export function installExitGateRuntime(game: object): void {
   state.loadRoom = (index: number) => {
     wasReady = false;
     originalLoadRoom(index);
+    ignoreFog();
     sync();
   };
 
@@ -115,4 +132,38 @@ function decorateGravityRing(goal: THREE.Mesh): void {
   axis.rotation.y = Math.PI * 0.22;
 
   goal.add(outer, inner, axis);
+}
+
+/** A thin vertical light column above the ring, fading upward; fog-immune. */
+function createBeacon(): THREE.Mesh {
+  const geometry = new THREE.CylinderGeometry(0.07, 0.07, BEACON_HEIGHT, 10, 1, true);
+  geometry.translate(0, BEACON_HEIGHT / 2 + 1.8, 0);
+  const material = new THREE.ShaderMaterial({
+    uniforms: { uColor: { value: new THREE.Color(LOCKED_COLOR) }, uStrength: { value: 0.22 } },
+    vertexShader: `
+      varying float vT;
+      void main() {
+        vT = (position.y - 1.8) / ${BEACON_HEIGHT.toFixed(1)};
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      uniform vec3 uColor;
+      uniform float uStrength;
+      varying float vT;
+      void main() {
+        float a = uStrength * smoothstep(0.0, 0.04, vT) * pow(1.0 - vT, 2.2);
+        gl_FragColor = vec4(uColor * a, a);
+      }
+    `,
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    side: THREE.DoubleSide,
+    fog: false
+  });
+  const mesh = new THREE.Mesh(geometry, material);
+  mesh.name = "gravity-ring-beacon";
+  mesh.frustumCulled = false;
+  return mesh;
 }

@@ -552,6 +552,22 @@ body.playing #hud { opacity: 1; }
   cursor: not-allowed;
 }
 
+/* Results and achievement rows are informational, not unavailable: they are
+   rendered as disabled choices, so opt them out of the disabled fade on every
+   device (this previously only applied on touch landscape). */
+#ui .slu-screen[data-screen-id="results"] .slu-choice:disabled,
+#ui .slu-screen[data-screen-id="achievements"] .slu-choice:disabled {
+  opacity: 1 !important;
+  filter: none !important;
+  cursor: default;
+  color: rgba(235, 248, 252, .94) !important;
+}
+#ui .slu-screen[data-screen-id="results"] .slu-choice:disabled .slu-choice-desc,
+#ui .slu-screen[data-screen-id="achievements"] .slu-choice:disabled .slu-choice-desc {
+  opacity: .8 !important;
+  color: rgba(205, 226, 235, .85) !important;
+}
+
 #ui .slu-choice-label {
   display: block;
   font-size: 17px !important;

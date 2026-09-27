@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { emitTraversalAudioAt } from "../audio/TraversalAudio";
 import { roomTime } from "./RoomClock";
 import { ROOMS, type PlatformSpec } from "../world/stages";
+import { CHECKPOINT_RESPAWN_EVENT } from "./CheckpointRuntime";
 
 type RuntimeState = {
   camera: THREE.PerspectiveCamera;
@@ -58,6 +59,18 @@ export function installCollapseRuntime(game: object): void {
       });
     });
   };
+
+  window.addEventListener(CHECKPOINT_RESPAWN_EVENT, () => {
+    for (const floor of floors) {
+      floor.armedAt = null;
+      floor.leftAt = null;
+      floor.fallingAt = null;
+      floor.mesh.visible = true;
+      floor.mesh.position.copy(floor.home);
+      floor.mesh.rotation.z = 0;
+      (floor.edges.material as THREE.LineBasicMaterial).opacity = 0.8;
+    }
+  });
 
   const originalUpdate = state.update.bind(game);
   state.update = (dt: number) => {

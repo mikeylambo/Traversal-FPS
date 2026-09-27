@@ -85,6 +85,8 @@ export class WarpRifle {
     });
 
     this.group.userData.traversalWeaponState = state;
+    // Presentation-only: lets the rifle model flare its core on each discharge.
+    this.group.userData.traversalFireKick = this.kick;
     updateRegisteredVisual(this.group, dt, this.time);
   }
 

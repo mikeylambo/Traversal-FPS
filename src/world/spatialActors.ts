@@ -146,8 +146,10 @@ function directionalOriginHint(
     if (aboveMax) return "FIRE FROM THE LEFT SIDE";
   }
   if (constraint.axis === "y") {
-    if (belowMin) return "FIRE FROM ABOVE";
-    if (aboveMax) return "FIRE FROM BELOW";
+    // Relative to where the player stands, not the Sphere: the threshold can sit
+    // below the target, so "above" read as "over the Sphere" and misled players.
+    if (belowMin) return "FIRE FROM HIGHER UP";
+    if (aboveMax) return "FIRE FROM LOWER DOWN";
   }
   if (constraint.axis === "z") {
     if (belowMin) return "FIRE FROM FURTHER BACK";

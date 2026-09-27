@@ -20,14 +20,17 @@ type RuntimeState = {
   update(dt: number): void;
 };
 
+/** Fired when the player respawns at a checkpoint without reloading the room. */
+export const CHECKPOINT_RESPAWN_EVENT = "traversal:checkpoint-respawn";
+
 const REACH_RADIUS = 2.6;
 const DOUBLE_TAP_MS = 700;
 const IDLE = 0x7cefff;
 
 /**
  * Checkpoints inside a Campaign sector. Walking into one makes it the respawn:
- * falls, hazards and Reset return you there with the room exactly as it was
- * (Spheres stay destroyed, collapsed floors stay gone). Pressing Reset twice in
+ * falls, hazards and Reset return you there with your progress kept (Spheres
+ * stay destroyed) and collapsed floors restored, so the room is always finishable. Pressing Reset twice in
  * quick succession restarts the whole sector instead.
  */
 export function installCheckpointRuntime(game: object): void {
@@ -68,8 +71,11 @@ export function installCheckpointRuntime(game: object): void {
       state.pendingRoomResetAt = 0;
       state.warpWasTransiting = false;
       state.warp.reset();
-      const fromReset = performance.now() - resetPressedAt < 100;
-      state.flashMessage(fromReset ? "CHECKPOINT // RESET AGAIN TO RESTART SECTOR" : "CHECKPOINT", 1300);
+      // Floors come back so the remaining Spheres are always reachable from the
+      // checkpoint; Sphere progress stays. Without this a collapsed floor could
+      // strand the room and leave the menu as the only way out.
+      window.dispatchEvent(new CustomEvent(CHECKPOINT_RESPAWN_EVENT));
+      state.flashMessage("CHECKPOINT // RESET TWICE TO RESTART SECTOR", 1500);
       return;
     }
     forceFullReload = false;

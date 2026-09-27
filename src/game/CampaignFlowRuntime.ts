@@ -7,6 +7,11 @@ import { activeTraversalProgression } from "./Progression";
 type RuntimeState = {
   modeId: string;
   totalKills: number;
+  shots: number;
+  targetHits: number;
+  warps: number;
+  roomRestarts: number;
+  runStartedAt: number;
   shell: any;
   extraKills(): number;
   beginRun(): void;
@@ -33,8 +38,41 @@ const TIME_TRIAL_UNLOCK = "map-18";
 const CHALLENGE_UNLOCK = "map-30";
 const REVERSAL_UNLOCK = "map-42";
 
+/**
+ * Campaign auto-advance starts a fresh run per sector, which resets every
+ * counter. The session tallies sectors played back-to-back so the final results
+ * describe the whole stretch, not just the last sector.
+ */
+type CampaignSession = {
+  startedAt: number;
+  firstSector: number;
+  sectors: number;
+  shots: number;
+  targetHits: number;
+  kills: number;
+  warps: number;
+  restarts: number;
+  par: number;
+};
+
 export function installCampaignFlow(game: object, content: ContentRuntime): void {
   const state = game as unknown as RuntimeState;
+  let session: CampaignSession | null = null;
+  let advancing = false;
+
+  const tallySector = (sectorIndex: number) => {
+    session ??= {
+      startedAt: state.runStartedAt, firstSector: sectorIndex, sectors: 0,
+      shots: 0, targetHits: 0, kills: 0, warps: 0, restarts: 0, par: 0
+    };
+    session.sectors += 1;
+    session.shots += state.shots;
+    session.targetHits += state.targetHits;
+    session.kills += state.totalKills;
+    session.warps += state.warps;
+    session.restarts += state.roomRestarts;
+    session.par += content.activeParKills();
+  };
   const originalFinishRun = state.finishRun.bind(game);
   const originalBeginRun = state.beginRun.bind(game);
   const progression = activeTraversalProgression();
@@ -139,6 +177,9 @@ export function installCampaignFlow(game: object, content: ContentRuntime): void
   refreshModeSelect();
 
   state.beginRun = () => {
+    // A run started from the menu (not the sector hand-off) opens a new session.
+    if (!advancing) session = null;
+    advancing = false;
     telemetry.record("run.start", {
       modeId: state.shell.modes.active()?.id ?? "unknown",
       difficultyId: state.shell.difficulty.active()?.id ?? "unknown",
@@ -173,7 +214,12 @@ export function installCampaignFlow(game: object, content: ContentRuntime): void
     const activeProgression = activeTraversalProgression();
 
     if (!nextMap) {
-      originalFinishRun();
+      if (session && laterMaps.length === 0) {
+        finishWithSessionTotals(state, session, currentIndex, content.activeParKills(), originalFinishRun);
+        session = null;
+      } else {
+        originalFinishRun();
+      }
 
       if (laterMaps.length > 0) {
         void activeProgression?.completeCampaignContentBoundary(currentId);
@@ -221,12 +267,46 @@ export function installCampaignFlow(game: object, content: ContentRuntime): void
     telemetry.record("campaign.advance", { from: currentId, to: nextMap.id });
     playSectorClearCue();
 
+    tallySector(currentIndex);
     window.setTimeout(() => {
       content.setSelectedMap(nextMap.id);
       content.reloadSelected();
+      advancing = true;
       state.beginRun();
     }, SECTOR_HANDOFF_MS);
   };
+}
+
+/**
+ * Final results after sectors played back-to-back: fold the session into the
+ * run counters for the results build, then relabel the screen as a span.
+ */
+function finishWithSessionTotals(state: RuntimeState, session: CampaignSession, lastSector: number, lastPar: number, finish: () => void): void {
+  const par = session.par + lastPar;
+  state.shots += session.shots;
+  state.targetHits += session.targetHits;
+  state.totalKills += session.kills;
+  state.warps += session.warps;
+  state.roomRestarts += session.restarts;
+  state.runStartedAt = session.startedAt;
+  const first = String(session.firstSector + 1).padStart(2, "0");
+  const last = String(lastSector + 1).padStart(2, "0");
+  const span = `Sectors ${first}–${last} · ${session.sectors + 1} sectors`;
+
+  const originalUpdateScreen = state.ui.updateScreen.bind(state.ui);
+  state.ui.updateScreen = (screenId: string, payload: Record<string, unknown>) => {
+    if (screenId !== "results") return originalUpdateScreen(screenId, payload);
+    const choices = Array.isArray(payload.choices)
+      ? (payload.choices as ResultChoice[]).map((choice) =>
+        choice.id === "result-route" ? { ...choice, description: `${par} required across ${session.sectors + 1} sectors` } : choice)
+      : payload.choices;
+    originalUpdateScreen(screenId, { ...payload, subtitle: `${String(payload.subtitle ?? "")} · ${span}`, choices });
+  };
+  try {
+    finish();
+  } finally {
+    state.ui.updateScreen = originalUpdateScreen;
+  }
 }
 
 function runWithPlayerFacingResults(state: RuntimeState, finish: () => void): void {

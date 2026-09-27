@@ -5,6 +5,7 @@ import { DustMotes } from "./DustMotes";
 import { LookLab } from "./LookLab";
 import { LookRenderer } from "./LookRenderer";
 import { NebulaSky } from "./NebulaSky";
+import { ShotFx } from "./ShotFx";
 import { DEFAULT_LOOK, sanitizeLook, type LookSettings } from "./lookSchema";
 import { publishLook } from "./lookRuntime";
 
@@ -35,6 +36,13 @@ scene.add(camera);
 const rendering = new LookRenderer(renderer, scene, camera);
 const nebula = new NebulaSky(scene, camera);
 const dust = new DustMotes(scene, camera);
+const shots = new ShotFx(scene);
+let nextShot = 0.4;
+let frozenShot = false;
+let firedFrozen = false;
+let advanced = false;
+const params = new URLSearchParams(location.search);
+const freeze = params.has("t") ? Number(params.get("t")) : null;
 
 const accent = 0x69e7ff;
 const platform = (size: [number, number, number], position: [number, number, number], base = 0x1d3650) => {
@@ -75,9 +83,27 @@ const frame = () => {
   const now = performance.now();
   const dt = Math.min((now - last) / 1000, 0.05);
   last = now;
-  angle += dt * 0.08;
+  if (freeze === null) angle += dt * 0.08;
   camera.position.set(Math.sin(angle) * 8.5, 3.2, Math.cos(angle) * 8.5 - 3);
   camera.lookAt(0, 0.4, -3);
+  // A test discharge every 1.4 s so shot power can be tuned here too.
+  nextShot -= freeze === null ? dt : 0;
+  if (freeze !== null && !frozenShot) {
+    frozenShot = true;
+    nextShot = 0;
+  }
+  if (nextShot <= 0 && (freeze === null || !firedFrozen)) {
+    firedFrozen = freeze !== null;
+    nextShot = 1.4;
+    const start = camera.position.clone().add(new THREE.Vector3(0.5, -0.45, -0.6).applyQuaternion(camera.quaternion));
+    const end = new THREE.Vector3(3.2 + Math.random() * 0.6 - 0.3, 0.8, -4 + Math.random() * 0.6);
+    shots.muzzle(start);
+    shots.beam(start, end);
+    shots.impact(end, camera.position.clone().sub(end).normalize(), 0x9edcff);
+  }
+  shots.setPower(look.shotPower);
+  if (freeze === null) shots.update(dt);
+  else if (!advanced) { advanced = true; shots.update(freeze); }
   publishLook(look);
   nebula.update(dt, look);
   dust.update(dt, look.dust);

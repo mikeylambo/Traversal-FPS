@@ -445,6 +445,7 @@ export function updateWarpRifleModel(visual: THREE.Group, dt: number, time: numb
   const state = (visual.parent?.userData.traversalWeaponState ?? {}) as WarpRifleVisualState;
   const preview = Boolean(state.anchorReady && state.warpHeld);
   const look = activeLook();
+  const kick = (visual.parent?.userData.traversalFireKick as number | undefined) ?? 0;
   const motion = visual.userData.warpRifleMotion as { spin: number; orbit: number; shell: number; spread: number; energy: number } | undefined
     ?? (visual.userData.warpRifleMotion = { spin: 0.6, orbit: 0, shell: 0, spread: 0, energy: 0 });
 
@@ -454,7 +455,7 @@ export function updateWarpRifleModel(visual: THREE.Group, dt: number, time: numb
   const e = motion.energy;
 
   // Core rotor spins up hard; the white shell counter-rotates slowly.
-  motion.spin = approach(motion.spin, 0.6 + e * e * 9, dt, 0.12);
+  motion.spin = approach(motion.spin, 0.6 + e * e * 9 + kick * 14 * look.shotPower, dt, 0.12);
   if (parts?.corePivot) parts.corePivot.rotation.z += dt * motion.spin;
   if (parts?.coreShell) parts.coreShell.rotation.z -= dt * (0.12 + e * 0.9);
 
@@ -462,7 +463,7 @@ export function updateWarpRifleModel(visual: THREE.Group, dt: number, time: numb
     // The halo orbits the barrel as a whole, each plate floats on its own
     // phase, and a breathing wave travels around the ring.
     motion.orbit += dt * (0.28 + e * e * 5.5) * look.haloSpeed;
-    motion.spread = approach(motion.spread, e * 0.07 * look.haloSpread, dt, 0.08);
+    motion.spread = approach(motion.spread, (e * 0.07 + kick * 0.05 * look.shotPower) * look.haloSpread, dt, 0.05);
     parts.ringSegments.rotation.z = motion.orbit;
     parts.ringSegments.children.forEach((segment, index) => {
       const angle = segment.userData.baseAngle as number;
@@ -485,7 +486,7 @@ export function updateWarpRifleModel(visual: THREE.Group, dt: number, time: numb
         : state.anchorReady
           ? 3.4 + Math.sin(time * 4.4) * 0.25
           : 2.6 + Math.sin(time * 1.4) * 0.2;
-    materials.energy.emissiveIntensity *= look.rifleGlow;
+    materials.energy.emissiveIntensity *= look.rifleGlow * (1 + kick * 2.2 * look.shotPower);
   }
   if (materials?.energySoft) {
     materials.energySoft.opacity = Math.min(1, (state.transiting ? 1 : preview ? 0.95 : state.anchorReady ? 0.78 : 0.6) * look.rifleGlow);

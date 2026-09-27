@@ -90,6 +90,7 @@ export const LOOK_PARAMS = [
   { key: "haloSpeed", group: "Rifle", label: "Halo orbit", min: 0, max: 3, step: 0.05, default: 1, format: "x2" },
   { key: "haloSpread", group: "Rifle", label: "Halo spread", min: 0, max: 3, step: 0.05, default: 1, format: "x2" },
   { key: "haloFloat", group: "Rifle", label: "Halo float", min: 0, max: 3, step: 0.05, default: 1, format: "x2" },
+  { key: "shotPower", group: "Rifle", label: "Shot power", min: 0, max: 2, step: 0.05, default: 1, format: "x2" },
   { key: "rifleGlow", group: "Rifle", label: "Rifle glow", min: 0, max: 2, step: 0.05, default: 1, format: "x2" }
 ] as const satisfies readonly LookParam[];
 

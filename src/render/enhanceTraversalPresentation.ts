@@ -8,6 +8,7 @@ import { VisualLab } from "./VisualLab";
 import { TwinklingStarfield } from "./TwinklingStarfield";
 import { NebulaSky } from "../lookdev/NebulaSky";
 import { DustMotes } from "../lookdev/DustMotes";
+import { ShotFx } from "../lookdev/ShotFx";
 import { publishLook, resolveLook } from "../lookdev/lookRuntime";
 import { moodForRoom } from "./actMoods";
 import { TargetResolveFx } from "./TargetResolveFx";
@@ -23,7 +24,10 @@ type RuntimeState = {
   platformMeshes: THREE.Mesh[];
   enemies: Array<{ spec: EnemySpec; mesh: THREE.Mesh; base: THREE.Vector3; alive: boolean }>;
   roomIndex: number;
-  weapon: { vectorWritten(): void };
+  weapon: { vectorWritten(): void; muzzleWorldPosition(target?: THREE.Vector3): THREE.Vector3 };
+  addMuzzleFx: () => void;
+  addShotTrace: (end: THREE.Vector3) => void;
+  addImpactFx: (position: THREE.Vector3, color: number) => void;
   input: {
     consumePause(): boolean;
     consumeWarpFraction(): number | null;
@@ -165,7 +169,15 @@ export function enhanceTraversalPresentation(game: object, settings: TraversalSe
     for (const enemy of state.enemies) retintActor(enemy.mesh, actorColor(enemy.spec.kind));
   });
 
+  const shotFx = new ShotFx(state.scene);
+  const muzzle = new THREE.Vector3();
+  const towardCamera = (position: THREE.Vector3) => state.camera.position.clone().sub(position).normalize();
+  state.addMuzzleFx = () => shotFx.muzzle(state.weapon.muzzleWorldPosition(muzzle));
+  state.addShotTrace = (end: THREE.Vector3) => shotFx.beam(state.weapon.muzzleWorldPosition(muzzle), end);
+  state.addImpactFx = (position: THREE.Vector3, color: number) => shotFx.impact(position, towardCamera(position), color);
+
   state.addKillFx = (position: THREE.Vector3, kind: EnemySpec["kind"]) => {
+    shotFx.impact(position, towardCamera(position), actorColor(kind));
     targetResolve.resolve(position, kind);
   };
 
@@ -246,6 +258,8 @@ export function enhanceTraversalPresentation(game: object, settings: TraversalSe
       tail: look.warpTail,
       arrivalSeconds: look.warpArrival
     });
+    shotFx.setPower(look.shotPower * flashScale());
+    shotFx.update(dt);
     targetResolve.update(dt);
     starfield.update(dt, look.starTwinkle);
     nebula.update(dt, look);
