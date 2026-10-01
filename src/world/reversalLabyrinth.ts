@@ -29,7 +29,7 @@ export const REVERSAL_LABYRINTH_ROOMS: RoomSpec[] = [
     ],
     enemies: [
       { id: "reverse01-a", kind: "sentry", position: [11, 7, -20] },
-      { id: "reverse01-b", kind: "shield", position: [-12, 10, -44], originConstraint: { axis: "x", min: 2 } },
+      { id: "reverse01-b", kind: "sentry", position: [-12, 10, -44], hood: "+x" },
       { id: "reverse01-c", kind: "drifter", position: [0, 12, -58], drift: { axis: "x", amplitude: 10, speed: .9 } },
       { id: "reverse01-d", kind: "sentry", position: [8, 6, -70] },
       { id: "reverse01-e", kind: "sentry", position: [0, 3, -104] }
@@ -85,7 +85,7 @@ export const REVERSAL_LABYRINTH_ROOMS: RoomSpec[] = [
       { id: "reverse03-a", kind: "sentry", position: [-12, 6, -30] },
       { id: "reverse03-b", kind: "orbit", position: [0, 10, -48], orbit: { plane: "xz", radiusA: 11, radiusB: 6, speed: .12 } },
       { id: "reverse03-c", kind: "sentry", position: [12, 8, -59] },
-      { id: "reverse03-d", kind: "shield", position: [-8, 6, -88], originConstraint: { axis: "x", max: -2 } },
+      { id: "reverse03-d", kind: "sentry", position: [-8, 6, -88], hood: "-x" },
       { id: "reverse03-e", kind: "sentry", position: [0, 3, -120] }
     ],
     hazards: [
@@ -114,7 +114,7 @@ export const REVERSAL_LABYRINTH_ROOMS: RoomSpec[] = [
       { id: "reverse04-a", kind: "sentry", position: [11, 6, -28] },
       { id: "reverse04-prism", kind: "prism", position: [7, 8, -43], effect: { type: "shift-aperture", targetIds: ["reverse04-wall"], offset: -14 } },
       { id: "reverse04-b", kind: "orbit", position: [0, 10, -57], orbit: { plane: "xy", radiusA: 10, radiusB: 4, speed: .13 } },
-      { id: "reverse04-c", kind: "shield", position: [-11, 8, -68], originConstraint: { axis: "x", min: 3 } },
+      { id: "reverse04-c", kind: "sentry", position: [-11, 8, -68], hood: "+x" },
       { id: "reverse04-d", kind: "drifter", position: [9, 7, -96], drift: { axis: "y", amplitude: 3.5, speed: .9 } },
       { id: "reverse04-e", kind: "sentry", position: [0, 8, -110] },
       { id: "reverse04-f", kind: "sentry", position: [9, 3, -126] }
@@ -173,7 +173,7 @@ export const REVERSAL_LABYRINTH_ROOMS: RoomSpec[] = [
       { id: "reverse06-diamond", kind: "diamond", position: [-4, 5, -9], effect: { type: "activate-platform", targetIds: ["reverse06-lift"] } },
       { id: "reverse06-a", kind: "orbit", position: [0, 10, -23], orbit: { plane: "xy", radiusA: 11, radiusB: 4, speed: .14 } },
       { id: "reverse06-b", kind: "sentry", position: [12, 8, -30] },
-      { id: "reverse06-c", kind: "shield", position: [-12, 9, -62], originConstraint: { axis: "x", max: -3 } },
+      { id: "reverse06-c", kind: "sentry", position: [-12, 9, -62], hood: "-z" },
       { id: "reverse06-prism", kind: "prism", position: [-7, 10, -77], effect: { type: "shift-aperture", targetIds: ["reverse06-wall"], offset: 15 } },
       { id: "reverse06-d", kind: "drifter", position: [11, 8, -98], drift: { axis: "y", amplitude: 4, speed: .95 } },
       { id: "reverse06-e", kind: "orbit", position: [0, 11, -118], orbit: { plane: "xz", radiusA: 10, radiusB: 6, speed: .13 } },
@@ -203,7 +203,7 @@ export const REVERSAL_LABYRINTH_ROOMS: RoomSpec[] = [
     ],
     enemies: [
       { id: "reverse07-a", kind: "sentry", position: [-10, 8, -26] },
-      { id: "reverse07-b", kind: "shield", position: [10, 11, -55], originConstraint: { axis: "x", min: 3 } },
+      { id: "reverse07-b", kind: "sentry", position: [10, 11, -55], hood: "+x" },
       { id: "reverse07-c", kind: "drifter", position: [0, 13, -70], drift: { axis: "x", amplitude: 11, speed: .98 } },
       { id: "reverse07-d", kind: "sentry", position: [-10, 6, -88] },
       { id: "reverse07-e", kind: "orbit", position: [0, 9, -108], orbit: { plane: "xy", radiusA: 9, radiusB: 4, speed: .14 } },
@@ -234,7 +234,7 @@ export const REVERSAL_LABYRINTH_ROOMS: RoomSpec[] = [
       { id: "reverse08-diamond", kind: "diamond", position: [-4, 5, -7], effect: { type: "activate-platform", targetIds: ["reverse08-lift"] } },
       { id: "reverse08-a", kind: "orbit", position: [0, 10, -22], orbit: { plane: "xy", radiusA: 12, radiusB: 4, speed: .14 } },
       { id: "reverse08-b", kind: "sentry", position: [-13, 8, -30] },
-      { id: "reverse08-c", kind: "shield", position: [13, 8, -60], originConstraint: { axis: "x", max: -3 } },
+      { id: "reverse08-c", kind: "sentry", position: [13, 8, -60], hood: "-x" },
       { id: "reverse08-prism", kind: "prism", position: [7, 9, -72], effect: { type: "shift-aperture", targetIds: ["reverse08-wall"], offset: 15 } },
       { id: "reverse08-d", kind: "drifter", position: [0, 12, -87], drift: { axis: "y", amplitude: 4, speed: 1.0 } },
       { id: "reverse08-e", kind: "sentry", position: [-12, 7, -96] },

@@ -62,7 +62,7 @@ const S34: RoomSpec = {
   enemies:[
     {id:"under-01",kind:"sentry",position:[-8,1.42,-10],radius:.55},
     {id:"under-02",kind:"sentry",position:[3,1.42,-10],radius:.55},
-    {id:"under-03",kind:"shield",position:[16,2.2,-20],originConstraint:{axis:"x",max:2}},
+    {id:"under-03",kind: "sentry",position:[16,2.2,-20],hood: "-x"},
     {id:"under-04",kind:"sentry",position:[-10,2.2,-38]},
     {id:"under-05",kind:"sentry",position:[16,2.2,-44]}
   ]
@@ -81,7 +81,7 @@ const S35: RoomSpec = {
   ],
   enemies:[
     {id:"hub-n1",kind:"sentry",position:[0,3.2,-28]}, {id:"hub-n2",kind:"drifter",position:[8,6,-22],drift:{axis:"x",amplitude:5,speed:.72}},
-    {id:"hub-e1",kind:"sentry",position:[28,5.2,0]}, {id:"hub-e2",kind:"shield",position:[22,3,8],originConstraint:{axis:"x",max:8}},
+    {id:"hub-e1",kind:"sentry",position:[28,5.2,0]}, {id:"hub-e2",kind: "sentry",position:[22,3,8],hood: "-x"},
     {id:"hub-s1",kind:"sentry",position:[0,.2,28]}, {id:"hub-s2",kind:"orbit",position:[-7,5,23],orbit:{plane:"xz",radiusA:5,radiusB:4,speed:.12}},
     {id:"hub-w1",kind:"sentry",position:[-28,7.2,0]}, {id:"hub-w2",kind:"drifter",position:[-22,8,-8],drift:{axis:"y",amplitude:2.5,speed:.76}}
   ]
@@ -134,7 +134,7 @@ const S38: RoomSpec = {
   ],
   enemies:[
     {id:"ou-01",kind:"sentry",position:[-8,12.2,-10]}, {id:"ou-02",kind:"sentry",position:[-2,1.42,-14],radius:.52},
-    {id:"ou-03",kind:"sentry",position:[8,2.2,-14]}, {id:"ou-04",kind:"shield",position:[8,12.2,-30],originConstraint:{axis:"x",max:0}},
+    {id:"ou-03",kind:"sentry",position:[8,2.2,-14]}, {id:"ou-04",kind: "sentry",position:[8,12.2,-30],hood: "-x"},
     {id:"ou-05",kind:"drifter",position:[0,8,-38],drift:{axis:"y",amplitude:3,speed:.72}},
     {id:"ou-06",kind:"sentry",position:[12,12.2,-45]}
   ]
@@ -177,7 +177,7 @@ const S40: RoomSpec = {
   checkpoints:[[12,5.2,-12]],
   enemies:[
     {id:"parallax-lock",kind:"sentry",position:[12,5.2,-12]},
-    {id:"parallax-02",kind:"shield",position:[-8,5.2,-29],originConstraint:{axis:"x",min:1}},
+    {id:"parallax-02",kind: "sentry",position:[-8,5.2,-29],hood: "+x"},
     {id:"parallax-03",kind:"sentry",position:[12,5,-31]},
     {id:"parallax-04",kind:"drifter",position:[0,8,-39],drift:{axis:"x",amplitude:8,speed:.7}},
     {id:"parallax-05",kind:"sentry",position:[12,1.7,-46]},
@@ -187,13 +187,13 @@ const S40: RoomSpec = {
 
 // LOOP — a 68m-wide ring over a void around a solid core: climb the west side,
 // cross the summit, descend the east side, and close the loop at home. Every
-// Sphere answers only from the platform before it, every stepping stone falls
-// away once you leave it, and the landings are small and timed against moving
-// endpoints: miss one and the loop starts again.
+// Sphere sits in an alcove that opens only toward the platform before it, and
+// fins off the core hide each side from home, so the loop runs one way. Every
+// stepping stone falls away once you leave it, and a blade sweeps each climb.
 const S41: RoomSpec = {
   id:"sector-41-loop", title:"LOOP",
   lesson:"Forward stops meaning forward when the route closes around itself.",
-  grammar:["route-fork","reorientation","moving-endpoint","airborne-chain"],
+  grammar:["route-fork","reorientation","timing-chain","origin-matters"],
   spawn:[0,2.2,0], goal:[0,1.1,0], requiredKills:6,
   platforms:[
     {center:[0,0,0],size:[10,1,10]},
@@ -202,15 +202,20 @@ const S41: RoomSpec = {
     {center:[0,15.5,-56],size:[6,1,6]},
     {center:[32,10.5,-34],size:[5,1,5],collapse:{delay:"leave"}},
     {center:[30,4.5,-10],size:[5,1,5],collapse:{delay:"leave"}},
-    {center:[0,11,-30],size:[20,22,28]}
+    {center:[0,11,-30],size:[20,22,28]},
+    {center:[-19,9,-20],size:[14,18,1]}, {center:[19,9,-20],size:[14,18,1]}
   ],
   enemies:[
-    {id:"loop-a",kind:"sentry",position:[-30,4.7,-10],originConstraint:{axis:"z",min:-4}},
-    {id:"loop-b",kind:"drifter",position:[-32,11.2,-34],drift:{axis:"y",amplitude:2.5,speed:.7},originConstraint:{axis:"x",max:-26}},
-    {id:"loop-c",kind:"orbit",position:[0,19,-56],orbit:{plane:"xy",radiusA:5,radiusB:2,speed:.12},originConstraint:{axis:"x",max:-24}},
-    {id:"loop-d",kind:"sentry",position:[32,12.7,-34],originConstraint:{axis:"z",max:-50}},
-    {id:"loop-e",kind:"drifter",position:[30,6.7,-10],drift:{axis:"x",amplitude:4,speed:.8},originConstraint:{axis:"z",max:-28}},
-    {id:"loop-f",kind:"sentry",position:[0,2.2,0],originConstraint:{axis:"x",min:20}}
+    {id:"loop-a",kind:"sentry",position:[-30,4.7,-10],hood:"+x"},
+    {id:"loop-b",kind:"sentry",position:[-32,10.7,-34],hood:"+z"},
+    {id:"loop-c",kind:"sentry",position:[0,17.7,-56],hood:"-x"},
+    {id:"loop-d",kind:"sentry",position:[32,12.7,-34],hood:"-x"},
+    {id:"loop-e",kind:"sentry",position:[30,6.7,-10],hood:"-z"},
+    {id:"loop-f",kind:"sentry",position:[4,2.2,0],hood:"+x"}
+  ],
+  hazards:[
+    {id:"loop-sweep-w",kind:"sweep",center:[-31,8,-22],size:[8,8,0.6],drift:{axis:"z",amplitude:9,speed:0.11}},
+    {id:"loop-sweep-e",kind:"sweep",center:[31,10,-22],size:[8,8,0.6],drift:{axis:"z",amplitude:9,speed:0.13,phase:1.4}}
   ]
 };
 
@@ -229,7 +234,7 @@ const S42: RoomSpec = {
   ],
   enemies:[
     {id:"conv-low",kind:"sentry",position:[0,1.42,-12],radius:.52},
-    {id:"conv-left",kind:"sentry",position:[-24,4.2,-14]}, {id:"conv-right",kind:"shield",position:[24,7.2,-14],originConstraint:{axis:"x",max:0}},
+    {id:"conv-left",kind:"sentry",position:[-24,4.2,-14]}, {id:"conv-right",kind: "sentry",position:[24,7.2,-14],hood: "-x"},
     {id:"conv-drop",kind:"sentry",position:[0,-1.8,-32]}, {id:"conv-rise-a",kind:"drifter",position:[-18,13,-43],drift:{axis:"y",amplitude:3,speed:.8}},
     {id:"conv-rise-b",kind:"orbit",position:[18,18,-38],orbit:{plane:"yz",radiusA:4,radiusB:4,speed:.12}},
     {id:"conv-high",kind:"sentry",position:[0,22.2,-22]}, {id:"conv-alt",kind:"sentry",position:[-10,17,-29]},

@@ -1,7 +1,7 @@
 import type { RoomSpec } from "../stages";
 import {
   crawl, crouchSentry, cube, diamond, drifter, eye, field, floor, lockedGate, low, moving, orbit, ring, sentry,
-  shield, slitWallX, solid, sweep
+  hooded, slitWallX, solid, sweep
 } from "../authoring";
 
 /**
@@ -83,7 +83,7 @@ export const TIME_TRIAL_COURSES: TimeTrialCourse[] = [
       id: "tt-elevator", grammar: ["moving-endpoint", "stop-short"],
       spawn: eye(0, 0, 4), goal: ring(0, 20, -12), requiredKills: 2,
       platforms: [floor(0, 0, 4, 10, 8), moving(floor(0, 10, -4, 5, 5), "tt-elevator-deck", "y", 9, 0.1, true), floor(0, 20, -12, 8, 6)],
-      enemies: [diamond("el-diamond", [4, 3, -2], ["tt-elevator-deck"]), sentry("el-1", eye(0, 1, -4)), sentry("el-2", eye(0, 20, -11), undefined, { axis: "y", min: 14 })]
+      enemies: [diamond("el-diamond", [4, 3, -2], ["tt-elevator-deck"]), sentry("el-1", eye(0, 1, -4)), sentry("el-2", eye(0, 20, -11), undefined, "-y")]
     }
   },
 
@@ -130,7 +130,7 @@ export const TIME_TRIAL_COURSES: TimeTrialCourse[] = [
       id: "tt-freefall", grammar: ["airborne-chain", "stop-short"],
       spawn: eye(0, 30, 3), goal: ring(16, 0, -24), requiredKills: 4,
       platforms: [floor(0, 30, 3, 8, 6), floor(16, 0, -24, 10, 10)],
-      enemies: [sentry("ff-1", [8, 24, -4]), sentry("ff-2", [14, 17, -12]), sentry("ff-3", [8, 10, -20]), sentry("ff-4", eye(16, 0, -22), undefined, { axis: "y", max: 12 })]
+      enemies: [sentry("ff-1", [8, 24, -4]), sentry("ff-2", [14, 17, -12]), sentry("ff-3", [8, 10, -20]), sentry("ff-4", eye(16, 0, -22), undefined, "+y")]
     }
   },
 
@@ -140,7 +140,7 @@ export const TIME_TRIAL_COURSES: TimeTrialCourse[] = [
       id: "tt-handoff", grammar: ["airborne-chain", "moving-endpoint"],
       spawn: eye(0, 24, 3), goal: ring(24, 0, -30), requiredKills: 3,
       platforms: [floor(0, 24, 2, 8, 8), floor(24, 0, -30, 8, 8)],
-      enemies: [sentry("ho-1", [8, 21, -10]), drifter("ho-2", [16, 12, -20], "y", 1.5, 0.7), sentry("ho-3", eye(24, 0, -28), undefined, { axis: "x", min: 12 })]
+      enemies: [sentry("ho-1", [8, 21, -10]), drifter("ho-2", [16, 12, -20], "y", 1.5, 0.7), sentry("ho-3", eye(24, 0, -28), undefined, "+y")]
     }
   },
 
@@ -178,7 +178,7 @@ export const TIME_TRIAL_COURSES: TimeTrialCourse[] = [
       enemies: [
         orbit("wh-1", [0, 10, -10], "yz", 8, 8, 0.08, 0),
         orbit("wh-2", [0, 10, -10], "yz", 8, 8, 0.08, 3.1),
-        sentry("wh-3", eye(18, 12, -10), undefined, { axis: "y", min: 14 })
+        sentry("wh-3", eye(18, 12, -10), undefined, "-x")
       ]
     }
   },
@@ -195,7 +195,7 @@ export const TIME_TRIAL_COURSES: TimeTrialCourse[] = [
         moving(floor(6, 8, -26, 4, 4), "tt-piston-b", "y", 4, 0.13, false, 1.5),
         floor(0, 12, -40, 8, 6)
       ],
-      enemies: [sentry("pi-1", eye(-6, 4, -14)), sentry("pi-2", eye(6, 8, -26)), shield("pi-3", eye(0, 12, -39), { axis: "y", min: 9 })]
+      enemies: [sentry("pi-1", eye(-6, 4, -14)), sentry("pi-2", eye(6, 8, -26)), hooded("pi-3", eye(0, 12, -39), "+z")]
     }
   },
   {
@@ -234,8 +234,10 @@ export const TIME_TRIAL_COURSES: TimeTrialCourse[] = [
         sentry("br-3", eye(-6.5, 7, -31.5)), sentry("br-4", eye(0, 9, -45))
       ],
       hazards: [
-        sweep("br-a", [0, 1.5, -18], [22, 3, 0.8], "z", 19, 0.16),
-        sweep("br-b", [0, 1.5, -18], [22, 3, 0.8], "z", 19, 0.16, Math.PI)
+        // Blades run through the warp band (5.5-11.5m), not the floor: they cross
+        // every pylon top and every line between pylons, so each release is timed.
+        sweep("br-a", [0, 8.5, -18], [22, 6, 0.8], "z", 19, 0.09),
+        sweep("br-b", [0, 8.5, -18], [22, 6, 0.8], "z", 19, 0.09, Math.PI)
       ]
     }
   },
@@ -253,7 +255,7 @@ export const TIME_TRIAL_COURSES: TimeTrialCourse[] = [
       ],
       enemies: [
         sentry("st-1", eye(-8, 10, -12)), sentry("st-2", eye(2, 16, -2)),
-        sentry("st-3", eye(10, 7, -16)), shield("st-4", eye(22, 4, -22), { axis: "y", min: 8 })
+        sentry("st-3", eye(10, 7, -16)), hooded("st-4", eye(22, 4, -22), "+y")
       ]
     }
   },
@@ -303,7 +305,7 @@ export const TIME_TRIAL_COURSES: TimeTrialCourse[] = [
       ],
       enemies: [
         sentry("wv-1", eye(-18, 2, 0)), sentry("wv-2", eye(-12, 11, -9)), sentry("wv-3", eye(-2, 4, 0)),
-        sentry("wv-4", eye(4, 13, 9)), sentry("wv-5", eye(12, 6, 0), undefined, { axis: "y", max: 10 }),
+        sentry("wv-4", eye(4, 13, 9)), sentry("wv-5", eye(12, 6, 0), undefined, "-y"),
         sentry("wv-6", eye(29, 16, 0))
       ]
     }
@@ -320,7 +322,7 @@ export const TIME_TRIAL_COURSES: TimeTrialCourse[] = [
       ],
       enemies: [
         sentry("rt-1", eye(-18, 5, -18)), sentry("rt-2", eye(18, 8, -18)), sentry("rt-3", eye(18, 3, 18)),
-        sentry("rt-4", eye(3, 0, 2), undefined, { axis: "z", min: 12 })
+        sentry("rt-4", eye(3, 0, 2), undefined, "+z")
       ]
     }
   },
@@ -335,7 +337,7 @@ export const TIME_TRIAL_COURSES: TimeTrialCourse[] = [
       ],
       enemies: [
         sentry("cf-w", eye(-20, 4, 0)), sentry("cf-e", eye(20, 6, 0)), sentry("cf-s", eye(0, 2, 20)),
-        shield("cf-out", eye(0, 12, -21), { axis: "z", min: 12 })
+        hooded("cf-out", eye(0, 12, -21), "+z")
       ]
     }
   },

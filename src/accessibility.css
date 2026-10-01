@@ -70,7 +70,6 @@ body.hud-contrast-high #anchor-status {
 }
 
 body.hud-contrast-high .traversal-flash,
-body.hud-contrast-high #target-hint,
 body.hud-contrast-high #flash-message {
   background: rgba(2, 8, 15, .96) !important;
   padding: 6px 14px;

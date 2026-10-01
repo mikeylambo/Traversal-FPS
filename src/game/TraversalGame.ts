@@ -405,14 +405,6 @@ export class TraversalGame {
 
     this.targetHits += 1;
 
-    if (enemy.spec.kind === "shield" && this.camera.position.x < 2.5) {
-      this.flashMessage("SHIELD REJECT // CHANGE YOUR FIRING ORIGIN", 1800);
-      this.playShieldReject();
-      this.addImpactFx(hit.point.clone(), 0xffa665);
-      this.enforceChallengeShotBudget(now);
-      return;
-    }
-
     const deathPosition = enemy.mesh.position.clone();
     enemy.alive = false;
     enemy.mesh.visible = false;
@@ -467,12 +459,8 @@ export class TraversalGame {
     const enemy = hit
       ? this.enemies.find((candidate) => candidate.mesh === hit.object)
       : undefined;
-    const blockedShield = Boolean(
-      enemy?.spec.kind === "shield" && this.camera.position.x < 2.5
-    );
-
-    document.body.classList.toggle("target-hot", Boolean(enemy) && !blockedShield);
-    document.body.classList.toggle("target-blocked", blockedShield);
+    document.body.classList.toggle("target-hot", Boolean(enemy));
+    document.body.classList.remove("target-blocked");
   }
 
   private updateEnemies(time: number): void {
@@ -805,9 +793,7 @@ export class TraversalGame {
   }
 
   private addEnemy(spec: EnemySpec): void {
-    const color = spec.kind === "shield"
-      ? 0xffad66
-      : spec.kind === "orbit"
+    const color = spec.kind === "orbit"
         ? 0x8effd4
       : spec.kind === "drifter"
         ? 0xff78c8
@@ -1009,9 +995,7 @@ export class TraversalGame {
   }
 
   private addKillFx(position: THREE.Vector3, kind: EnemySpec["kind"]): void {
-    const color = kind === "shield"
-      ? 0xffa45e
-      : kind === "orbit"
+    const color = kind === "orbit"
         ? 0x7dffd2
       : kind === "drifter"
         ? 0xff72c5

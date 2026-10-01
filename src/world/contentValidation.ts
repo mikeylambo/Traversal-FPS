@@ -1,4 +1,5 @@
-import { isProximity, spatialActorDefinition } from "./spatialActors";
+import { spatialActorDefinition } from "./spatialActors";
+import { withHoods } from "./authoring";
 import type { EnemySpec, HazardSpec, PlatformSpec, RoomSpec, Vec3Tuple } from "./stages";
 
 export type ValidationSeverity = "error" | "warning";
@@ -29,7 +30,8 @@ const LANDING_EDGE_INSET = 0.12;
 const LANDING_VERTICAL_CUSHION = 0.72;
 const MIN_WARP_FRACTION = 0.12;
 
-export function validateRoom(room: RoomSpec): RoomValidationReport {
+export function validateRoom(authored: RoomSpec): RoomValidationReport {
+  const room = withHoods(authored);
   const issues: ContentValidationIssue[] = [];
   const push = (
     severity: ValidationSeverity,
@@ -63,7 +65,7 @@ export function validateRoom(room: RoomSpec): RoomValidationReport {
 
   const ids = new Set<string>();
   for (const enemy of room.enemies) {
-    validateEnemy(enemy, push, room.platforms);
+    validateEnemy(enemy, push);
     if (ids.has(enemy.id)) push("error", "entity.id.duplicate", `Duplicate entity id: ${enemy.id}`, enemy.id);
     ids.add(enemy.id);
   }
@@ -254,8 +256,7 @@ function validatePlatform(
 
 function validateEnemy(
   enemy: EnemySpec,
-  push: (severity: ValidationSeverity, code: string, message: string, entityId?: string) => void,
-  platforms: PlatformSpec[]
+  push: (severity: ValidationSeverity, code: string, message: string, entityId?: string) => void
 ): void {
   if (!enemy.id?.trim()) push("error", "enemy.id", "Actor id is required.");
   if (!isFiniteVec3(enemy.position)) push("error", "enemy.position", "Actor position is invalid.", enemy.id);
@@ -297,47 +298,15 @@ function validateEnemy(
     }
   }
 
-  if (enemy.originConstraint && isProximity(enemy.originConstraint)) {
+  if (enemy.originConstraint) {
     const within = enemy.originConstraint.within;
     if (!Number.isFinite(within) || within <= (enemy.radius ?? 0.72) + 1) {
       push("error", "enemy.origin.within", "Proximity range must be finite and reach past the Sphere's surface.", enemy.id);
     }
-  } else if (enemy.originConstraint) {
-    const constraint = enemy.originConstraint;
-    if (!(["x", "y", "z"] as const).includes(constraint.axis)) {
-      push("error", "enemy.origin.axis", "Origin constraint axis must be x, y, or z.", enemy.id);
-    }
-    if (constraint.min === undefined && constraint.max === undefined) {
-      push("error", "enemy.origin.range", "Origin constraint requires min and/or max.", enemy.id);
-    }
-    if (constraint.min !== undefined && !Number.isFinite(constraint.min)) {
-      push("error", "enemy.origin.min", "Origin constraint min must be finite.", enemy.id);
-    }
-    if (constraint.max !== undefined && !Number.isFinite(constraint.max)) {
-      push("error", "enemy.origin.max", "Origin constraint max must be finite.", enemy.id);
-    }
-    if (
-      constraint.min !== undefined &&
-      constraint.max !== undefined &&
-      constraint.min > constraint.max
-    ) {
-      push("error", "enemy.origin.order", "Origin constraint min cannot exceed max.", enemy.id);
-    }
-    // Standing on top of a Sphere reads as "above it"; a floor line far higher
-    // than the Sphere turns that read into a rejection (the Sector 18 trap).
-    if (constraint.axis === "y" && constraint.min !== undefined && platforms.some((p) => standsOverButBelow(p, enemy.position, constraint.min!))) {
-      push("warning", "enemy.origin.above-trap", "A floor near this Sphere stands clearly above it but under its height gate; firing from there rejects. Prefer a proximity gate or a lower line.", enemy.id);
-    }
   }
-}
-
-/** A floor within 8m whose standing eye is over the Sphere yet under the gate line. */
-function standsOverButBelow(platform: PlatformSpec, at: Vec3Tuple, line: number): boolean {
-  const eye = platform.center[1] + platform.size[1] / 2 + 1.7;
-  if (eye <= at[1] + 1.5 || eye >= line) return false;
-  const dx = Math.max(0, Math.abs(at[0] - platform.center[0]) - platform.size[0] / 2);
-  const dz = Math.max(0, Math.abs(at[2] - platform.center[2]) - platform.size[2] / 2);
-  return Math.hypot(dx, dz) <= 8;
+  if (enemy.hood && (enemy.drift || enemy.orbit)) {
+    push("error", "enemy.hood.moving", "An alcove cannot follow a moving actor; use a reach or plain Sphere.", enemy.id);
+  }
 }
 
 function validateHazard(

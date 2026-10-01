@@ -1,3 +1,4 @@
+import { withHoods } from "./authoring";
 import { evaluateActorOrigin, spatialActorDefinition } from "./spatialActors";
 import type { EnemySpec, HazardSpec, PlatformSpec, RoomSpec, Vec3Tuple } from "./stages";
 
@@ -211,7 +212,8 @@ function pathHitsLethal(h: Lethal, from: V, to: V): boolean {
   return segmentHitsBox(a, b, h.box, 0);
 }
 
-export function solveRoom(room: RoomSpec, options: SolveOptions = {}): SolveResult {
+export function solveRoom(authored: RoomSpec, options: SolveOptions = {}): SolveResult {
+  const room = withHoods(authored);
   const allowCrouch = options.allowCrouch ?? true;
   const allowReposition = options.allowReposition ?? true;
   const allowChain = options.allowAirborneChain ?? true;

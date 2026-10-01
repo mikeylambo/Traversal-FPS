@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { withHoods } from "../world/authoring";
 import type { ContentRuntime } from "../game/ContentRuntime";
 import {
   ROOMS,
@@ -60,7 +61,7 @@ export function installTraversalEditor(game: object, content: ContentRuntime): v
       <div class="editor-grid">
         <button type="button" data-editor="add-platform">PLATFORM</button>
         <button type="button" data-editor="add-sentry">SENTRY</button>
-        <button type="button" data-editor="add-shield">SHIELD</button>
+        <button type="button" data-editor="add-shield">ALCOVE</button>
         <button type="button" data-editor="add-drifter">DRIFTER X</button>
         <button type="button" data-editor="add-field">LETHAL FIELD</button>
         <button type="button" data-editor="add-sweep">SWEEP</button>
@@ -201,7 +202,7 @@ export function installTraversalEditor(game: object, content: ContentRuntime): v
       return reload();
     }
     if (action === "add-shield") {
-      addEnemy({ id: nextId("shield"), kind: "shield", position: tuple(pointAhead(10)) });
+      addEnemy({ id: nextId("alcove"), kind: "sentry", position: tuple(pointAhead(10)), hood: "+x" });
       return reload();
     }
     if (action === "add-drifter") {
@@ -524,6 +525,9 @@ export function installTraversalEditor(game: object, content: ContentRuntime): v
   }
 
   function reload(): void {
+    // Rebuild alcoves so moved or added hooded actors carry their shell along.
+    const current = room();
+    current.platforms = withHoods({ ...current, platforms: current.platforms.filter((p) => !p.id?.startsWith("hood:")) }).platforms;
     state.loadRoom(state.roomIndex);
     refreshUI();
   }

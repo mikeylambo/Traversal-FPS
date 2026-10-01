@@ -2,7 +2,7 @@ import type { CampaignMapDefinition } from "./campaign";
 import type { HazardSpec, RoomSpec } from "./stages";
 import {
   apertureX, crawl, crouchSentry, cube, diamond, drifter, eye, field, floor, gated, low, moving, orbit, prism,
-  ring, sanctum, sentry, shield, slabWithHole, slitWallX, solid, sweep
+  ring, sanctum, sentry, hooded, slabWithHole, slitWallX, solid, sweep
 } from "./authoring";
 
 /**
@@ -29,15 +29,15 @@ const S11: RoomSpec = {
   enemies: [
     sentry("relay-01", [-20, 22, -8]),
     drifter("relay-02", [-2, 20, -12], "x", 3, 0.7),
-    sentry("relay-03", [-12, 15.5, -26], undefined, { axis: "x", max: -18 }),
+    sentry("relay-03", [-12, 15.5, -26], undefined, "+z"),
     sentry("relay-04", [6, 9, -40]),
     orbit("relay-05", [-4, 6, -52], "xy", 2, 1.2, 0.14),
-    sentry("relay-06", [-10, 3.5, -69], undefined, { axis: "z", max: -35 })
+    sentry("relay-06", [-10, 3.5, -69], undefined, "+z")
   ]
 };
 
 // GATES — lateral gallery. Bay A (Cube) -> window -> Bay B (Prism) -> lethal
-// aperture -> Bay C -> Bay D (Shield from the left). Each tool opens one bay.
+// aperture -> Bay C -> Bay D (alcove opening left). Each tool opens one bay.
 const S12_WINDOW: HazardSpec = {
   id: "gates-window",
   kind: "sightline-gate",
@@ -69,7 +69,7 @@ const S12: RoomSpec = {
     sentry("gates-01", eye(-6, 3, 1)),
     prism("gates-prism", [0, 9, -3], ["gates-aperture"], -38),
     sentry("gates-02", eye(-8, 1, -18)),
-    shield("gates-03", eye(16, 4, -18), { axis: "x", max: -2 }),
+    hooded("gates-03", eye(16, 4, -18), "-x"),
     drifter("gates-04", [19, 7.5, -15], "y", 1.2, 0.8)
   ],
   hazards: [
@@ -104,7 +104,7 @@ const S13: RoomSpec = {
   enemies: [
     sentry("fork-anchor", eye(0, 12, 24)),
     crouchSentry("fork-low", -14, 0, -4),
-    sentry("fork-perch-left", eye(-14, 9, -32), undefined, { axis: "x", max: -10 }),
+    sentry("fork-perch-left", eye(-14, 9, -32), undefined, "-x"),
     sentry("fork-float-right", [18, 11, 4]),
     sentry("fork-perch-right", eye(15, 11, -10)),
     orbit("fork-high", [0, 21, -4], "xz", 1.5, 1, 0.12),
@@ -135,7 +135,7 @@ const S14: RoomSpec = {
     prism("refr-prism", [14, 3.5, -28], ["refr-w3"], -18),
     sentry("refr-02", eye(-12, 3, -50)),
     orbit("refr-orbit", [-2, 9, -58], "xz", 3, 2, 0.12),
-    shield("refr-03", eye(4, 6, -66), { axis: "x", max: -1 })
+    hooded("refr-03", eye(4, 6, -66), "-x")
   ],
   hazards: [
     apertureX("refr-w1", -22, 22, -4, 10, -8, -6, 3.5),
@@ -231,7 +231,7 @@ const S16: RoomSpec = {
     crouchSentry("comp-01", -7, 16, -7),
     drifter("comp-02", [-4, 12, -2], "x", 3, 0.7),
     prism("comp-prism", [8, 11, -10], ["comp-door"], -26),
-    shield("comp-03", eye(-7, 8, 8), { axis: "x", min: 2 }),
+    hooded("comp-03", eye(-7, 8, 8), "+x"),
     orbit("comp-04", [6, 4.5, 6], "xz", 2.5, 2, 0.12),
     diamond("comp-diamond", [-8, 2, 11], ["comp-pod"]),
     sentry("comp-05", eye(8, 0, 9)),
@@ -268,7 +268,7 @@ const S17: RoomSpec = {
     drifter("pulse-02", [-5, 10, 4], "y", 2, 0.8),
     sentry("pulse-03", eye(-18, 4, -6)),
     crouchSentry("pulse-04", -12, 4, -6),
-    sentry("pulse-05", eye(5, 0.5, -8), undefined, { axis: "y", max: 7 })
+    sentry("pulse-05", eye(5, 0.5, -8), undefined, "-y")
   ],
   hazards: [
     field("pulse-membrane", -5.5, -4.5, -2, 16, -14, 2, { period: 2.6, openFor: 1.0 })

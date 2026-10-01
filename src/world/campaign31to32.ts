@@ -2,7 +2,7 @@ import type { CampaignMapDefinition } from "./campaign";
 import type { HazardSpec, RoomSpec } from "./stages";
 import {
   apertureX, crawl, crouchSentry, cube, diamond, drifter, eye, floor, low, moving, orbit, prism, ring,
-  sentry, shield, solid, sweep
+  sentry, hooded, solid, sweep
 } from "./authoring";
 
 /** Act IV openers, rebuilt: synthesis across stacked space, then the wall. */
@@ -47,7 +47,7 @@ const S31: RoomSpec = {
     prism("syn-prism", [24, 6, -2], ["syn-aperture"], -25),
     drifter("syn-05", [22, 7, 2], "y", 1, 0.7),
     orbit("syn-06", [0, 14, -8], "xz", 6, 4, 0.08),
-    shield("syn-07", eye(27, 10, -16), { axis: "z", max: -8 })
+    hooded("syn-07", eye(27, 10, -16), "-z")
   ],
   hazards: [
     S31_GATE,
@@ -93,7 +93,7 @@ const S32: RoomSpec = {
     cube("vec-cube", [-10, 4, -30], ["vec-slit"]),
     orbit("vec-05", [0, 10, -28], "xz", 6, 4, 0.08),
     drifter("vec-06", [12, 8, -24], "y", 2, 0.6),
-    crouchSentry("vec-final", 0, 0, -38, { axis: "y", max: 3 })
+    crouchSentry("vec-final", 0, 0, -38, "+z")
   ],
   hazards: [
     S32_SLIT_GATE,

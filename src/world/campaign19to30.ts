@@ -2,7 +2,7 @@ import type { CampaignMapDefinition } from "./campaign";
 import type { RoomSpec } from "./stages";
 import { sanctum,
   apertureX, crawl, crouchSentry, cube, diamond, drifter, eye, field, floor, gated, lockedGate, low, moving, orbit,
-  prism, ring, sentry, shield, slabWithHole, slitWallX, slitWallZ, solid, sweep
+  prism, ring, sentry, hooded, slabWithHole, slitWallX, slitWallZ, solid, sweep
 } from "./authoring";
 
 /**
@@ -31,7 +31,7 @@ const S19: RoomSpec = {
   ],
   enemies: [
     sentry("commit-n2", eye(-14, 24, 6)),
-    shield("commit-s2", eye(-14, 24, -6), { axis: "z", max: -3 }),
+    hooded("commit-s2", eye(-14, 24, -6), "-z"),
     sentry("commit-n3", eye(-3, 16, 5)),
     drifter("commit-s3", [-3, 18.5, -6], "x", 1, 0.6),
     orbit("commit-n4", [8, 10.2, 6], "xz", 1, 0.8, 0.12),
@@ -106,7 +106,7 @@ const S21: RoomSpec = {
     diamond("cw-diamond", [0, 3, 1], ["cw-lift"]),
     sentry("cw-lift-anchor", [0, 5.7, -8]),
     sentry("cw-west", eye(-12, 20, -8)),
-    shield("cw-east", eye(12, 30, -8), { axis: "x", max: -8 }),
+    hooded("cw-east", eye(12, 30, -8), "-x"),
     drifter("cw-float-a", [-4, 14, -2], "y", 3, 0.5),
     orbit("cw-float-b", [2, 25, -6], "xz", 3, 2, 0.1)
   ]
@@ -140,16 +140,18 @@ const S22: RoomSpec = {
     pillar(-4, -20, 12),
     pillar(12, -20, 15),
     pillar(-12, -32, 22),
-    pillar(6, -33, 12)
+    pillar(6, -33, 12),
+    // An eave off the summit pillar: only the high east pillar fires over it.
+    solid(-7.5, -6.5, 15, 21.3, -38, -16)
   ],
   enemies: [
     cube("blind-cube", [16, 8, -36], ["blind-gate"]),
     sentry("blind-01", eye(4, 6, -8)),
     sentry("blind-02", eye(-12, 9, -10)),
     sentry("blind-03", eye(-4, 12, -20)),
-    shield("blind-04", eye(12, 15, -20), { axis: "y", min: 13 }),
+    hooded("blind-04", eye(12, 15, -20), "-x"),
     sentry("blind-05", eye(6, 12, -33)),
-    sentry("blind-06", eye(-12, 22, -33), undefined, { axis: "y", min: 15 }),
+    sentry("blind-06", eye(-12, 22, -33), undefined, "+x"),
     drifter("blind-07", [0, 8, -26], "x", 5, 0.5)
   ],
   hazards: [S22_GATE]
@@ -210,7 +212,7 @@ const S25: RoomSpec = {
     sentry("min-01", eye(-10, 4, -12)),
     sentry("min-02", eye(8, 2, -16)),
     sentry("min-03", eye(18, 8, -8)),
-    shield("min-04", eye(-4, 10, -28), { axis: "x", max: -6 }),
+    hooded("min-04", eye(-4, 10, -28), "-x"),
     sentry("min-05", eye(14, 12, -36)),
     sentry("min-06", eye(26, 6, -18)),
     sentry("min-07", eye(29, 14, -30)),
@@ -220,8 +222,9 @@ const S25: RoomSpec = {
 };
 
 // ORBIT — a vertical wheel of Spheres turning in front of the summit pillar. The
-// wheel only answers from the lift side, and the lift sleeps until the west
-// Diamond wakes it: go west, wake it, ride it, and fire as the wheel comes round.
+// wheel's Spheres are maces with a short reach that only the lift's path crosses,
+// the summit answers only from the top of the lift's stroke, and the lift sleeps
+// until the west Diamond wakes it: wake it, ride it, fire as the wheel comes round.
 const S26: RoomSpec = {
   id: "sector-26-orbit",
   title: "ORBIT",
@@ -237,13 +240,13 @@ const S26: RoomSpec = {
     solid(-3, 3, 0, 26, -36, -30)
   ],
   enemies: [
-    { ...orbit("wheel-a", [0, 14, -20], "xy", 10, 10, 0.06, 0), originConstraint: { axis: "x", min: 10 } },
-    { ...orbit("wheel-b", [0, 14, -20], "xy", 10, 10, 0.06, 2.1), originConstraint: { axis: "x", min: 10 } },
-    { ...orbit("wheel-c", [0, 14, -20], "xy", 10, 10, 0.06, 4.2), originConstraint: { axis: "x", min: 10 } },
+    { ...orbit("wheel-a", [3, 14, -20], "xy", 10, 10, 0.06, 0), originConstraint: { within: 5.5 } },
+    { ...orbit("wheel-b", [3, 14, -20], "xy", 10, 10, 0.06, 2.1), originConstraint: { within: 5.5 } },
+    { ...orbit("wheel-c", [3, 14, -20], "xy", 10, 10, 0.06, 4.2), originConstraint: { within: 5.5 } },
     sentry("orbit-west", eye(-16, 10, -20)),
     diamond("orbit-diamond", [-16, 13, -23], ["orbit-lift"]),
     sentry("orbit-east", eye(16, 16, -20)),
-    shield("orbit-summit", eye(0, 26, -31), { axis: "x", min: 8 })
+    { ...hooded("orbit-summit", eye(0, 26, -31), "+x"), originConstraint: { within: 16 } }
   ]
 };
 
@@ -277,7 +280,7 @@ const S24: RoomSpec = {
     crouchSentry("press-01", 0, 0, -4),
     sentry("press-02", eye(-17, 8, -8)),
     prism("press-prism", [10, 4, -20], ["press-door"], -40),
-    shield("press-03", eye(17, 8, -30), { axis: "y", min: 8 }),
+    hooded("press-03", eye(17, 8, -30), "+y"),
     crouchSentry("press-04", -10, 0, -36),
     diamond("press-diamond", [-17, 0.9, -38], ["press-lift"]),
     drifter("press-05", [0, 6, -35], "x", 6, 0.5),
@@ -372,7 +375,7 @@ const S28: RoomSpec = {
     cube("state-cube-west", [-16, 3, -20], ["state-gate-east"]),
     sentry("state-home-a", eye(4, 0, -4)),
     sentry("state-e1", eye(12, 0, 1)),
-    shield("state-e2", eye(14, 0, -28), { axis: "z", max: -20 }),
+    hooded("state-e2", eye(14, 0, -28), "-z"),
     sentry("state-home-b", eye(-4, 0, -5))
   ],
   hazards: [hallGate("state-gate-west", -6.75), hallGate("state-gate-east", 6.75)]
@@ -414,7 +417,7 @@ const S29: RoomSpec = {
     sentry("circ-02", eye(16, 3, -36)),
     sentry("circ-03", eye(8, 6, -43)),
     prism("circ-prism-w", [-8, 9, -44], ["circ-w"], -10),
-    shield("circ-04", eye(-18, 4, -36), { axis: "y", min: 7 }),
+    hooded("circ-04", eye(-18, 4, -36), "+y"),
     orbit("circ-05", [0, 5, -22], "xz", 6, 8, 0.07),
     sentry("circ-06", eye(-18, 4, -10))
   ],
@@ -445,17 +448,21 @@ const S30: RoomSpec = {
     moving(floor(-18, 8, -24, 4, 4), "kin-w", "y", 5, 0.1, true),
     moving(floor(0, 6, -32, 5, 5), "kin-c", "y", 8, 0.07, true),
     moving(floor(18, 10, -24, 4, 4), "kin-e", "y", 6, 0.09, true),
-    floor(0, 18, -41, 8, 6)
+    floor(0, 18, -41, 8, 6),
+    // The spine splits the hall below 14m, and the screen hides the east piston
+    // from the spawn: the only ways across are the orbit and a raised piston.
+    solid(-3, 3, 0, 14, -27, -18),
+    solid(4, 26, 0, 24, -18.5, -17.5)
   ],
   enemies: [
     sentry("kin-w1", eye(-18, 2, -8)),
     diamond("kin-diamond-w", [-18, 10, -18], ["kin-w"]),
-    sentry("kin-w2", eye(-18, 8, -24), undefined, { axis: "x", max: -12 }),
-    { ...diamond("kin-diamond-e", [22, 16, -30], ["kin-e"]), originConstraint: { axis: "y", min: 13 } },
-    { ...orbit("kin-orbit", [0, 12, -32], "xz", 10, 2, 0.08), originConstraint: { axis: "x", max: -12 } },
-    sentry("kin-e1", eye(18, 10, -24), undefined, { axis: "z", max: -28 }),
-    { ...diamond("kin-diamond-c", [9, 21, -36], ["kin-c"]), originConstraint: { axis: "y", min: 15 } },
-    { ...drifter("kin-return", [0, 12, -32], "x", 2.5, 0.6), originConstraint: { axis: "x", min: 14 } },
+    sentry("kin-w2", eye(-18, 8, -24), undefined, "+z"),
+    { ...diamond("kin-diamond-e", [-14, 16, -27], ["kin-e"]), originConstraint: { within: 6 } },
+    orbit("kin-orbit", [0, 12, -32], "xz", 10, 2, 0.08),
+    sentry("kin-e1", eye(18, 10, -24), undefined, "-x"),
+    { ...diamond("kin-diamond-c", [12, 19, -26], ["kin-c"]), originConstraint: { within: 7 } },
+    drifter("kin-return", [0, 12, -32], "x", 2.5, 0.6),
     sentry("kin-crown", [0, 20.2, -38.5], undefined, { within: 9 })
   ]
 };

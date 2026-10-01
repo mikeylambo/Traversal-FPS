@@ -37,7 +37,7 @@ export const MAP_03_FIELD: RoomSpec[] = [
       { center: [12.5, 4.5, -115], size: [6, 9, 1.4] }
     ],
     enemies: [
-      { id: "occlusion-origin", kind: "shield", position: [10, 2.2, -3] },
+      { id: "occlusion-origin", kind: "sentry", position: [10, 2.2, -3], hood: "+z" },
       { id: "occlusion-slot", kind: "sentry", position: [-15, 5.3, -36], radius: 0.52 },
       { id: "occlusion-high", kind: "sentry", position: [16, 6.7, -61], radius: 0.58 },
 
@@ -68,7 +68,7 @@ export const MAP_03_COURSE: RoomSpec[] = [
       { center: [0, 0, 5], size: [18, 1, 11] },
       { center: [7, 0, -23], size: [9, 1, 9] }
     ],
-    enemies: [{ id: "m3-angle", kind: "shield", position: [7, 2.2, -21] }]
+    enemies: [{ id: "m3-angle", kind: "sentry", position: [7, 2.2, -21], hood: "+x" }]
   },
   {
     id: "map-03-02",

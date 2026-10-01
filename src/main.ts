@@ -52,6 +52,7 @@ import { installOnboardingRuntime } from "./game/OnboardingRuntime";
 import { installSettingsFocusRetention } from "./game/SettingsFocusRuntime";
 import { installControlsRuntime } from "./game/ControlsRuntime";
 import { installUISounds } from "./game/UISoundRuntime";
+import { installMenuScroll } from "./game/MenuScrollRuntime";
 import { installAccessibilityRuntime } from "./game/AccessibilityRuntime";
 import { installSpatialActorRuntime } from "./game/SpatialActorRuntime";
 import { TraversalProgression, ACHIEVEMENTS } from "./game/Progression";
@@ -124,7 +125,7 @@ const traversalModes = [
   {
     id: "time-trial",
     label: "Time Trial",
-    description: "16-course optimization suite. Find the fastest route.",
+    description: `${TIME_TRIAL_ENTRIES.length}-course optimization suite. Find the fastest route.`,
     leaderboardKey: "time",
     rules: {
       grading: false,
@@ -343,7 +344,7 @@ app.flow.onActivate = (screenId: string, choiceId: string) => {
       app.ui.updateScreen("stage-select", {
         title: "Time Trial",
         choices: [
-          { id: "suite-time-trial", label: "Full Run // 01–16", description: "Every course, back to back." },
+          { id: "suite-time-trial", label: `Full Run // 01–${String(TIME_TRIAL_ENTRIES.length).padStart(2, "0")}`, description: "Every course, back to back." },
           ...TIME_TRIAL_ENTRIES.map((entry, index) => ({
             id: `tt-course-${index}`,
             label: `${courseNumber(index)} // ${entry.label}`,
@@ -355,7 +356,7 @@ app.flow.onActivate = (screenId: string, choiceId: string) => {
       app.ui.updateScreen("stage-select", {
         title: "Challenge",
         choices: [
-          { id: "suite-challenge", label: "Full Run // 01–24", description: "Precision → Logic → Flow → Synthesis." },
+          { id: "suite-challenge", label: `Full Run // 01–${String(CHALLENGE_ENTRIES.length).padStart(2, "0")}`, description: "Precision → Logic → Flow → Synthesis." },
           ...CHALLENGE_ENTRIES.map((entry, index) => ({
             id: `ch-chamber-${index}`,
             label: `${courseNumber(index)} // ${entry.label}`,
@@ -407,6 +408,7 @@ app.flow.onBack = (screenId: string) => {
 };
 
 installUISounds(app.flow, uiRoot);
+installMenuScroll(uiRoot);
 installSettingsFocusRetention(app.flow, app.ui, uiRoot);
 installControlsRuntime(app.flow, app.ui as any);
 

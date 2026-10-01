@@ -55,9 +55,9 @@ export const INTERIOR_PILOT: RoomSpec = {
     crouchSentry("vault-tunnel", 0, 0, -7.5),
     // Climb anchor: only a vector from the shaft's near edge clears the slab.
     // Both anchors accept shots from below only: they are ways up, not targets.
-    gated(sentry("vault-climb", [0, 8.5, -21]), { axis: "y", max: 3 }),
+    gated(sentry("vault-climb", [0, 8.5, -21]), "-y"),
     // Return anchor above the far lip; accepts shots from below only.
-    gated(sentry("vault-return", [0, 9.5, -14]), { axis: "y", max: 3 }),
+    gated(sentry("vault-return", [0, 9.5, -14]), "-y"),
     sentry("vault-gallery", eye(4, TOP, -35))
   ]
 };

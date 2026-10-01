@@ -181,7 +181,7 @@ export const CAMPAIGN_MAPS: CampaignMapDefinition[] = [
     id: "map-03",
     label: "SECTOR 03 // OCCLUSION",
     subtitle: "Positioning and reorientation become the puzzle before the trigger is pulled.",
-    focus: ["Origin", "Reorientation", "Shielding", "Low Profile"],
+    focus: ["Origin", "Reorientation", "Alcoves", "Low Profile"],
     implemented: false,
     campaignRooms: [],
     courseRooms: []

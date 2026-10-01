@@ -4,7 +4,8 @@ import { CAMPAIGN_MAPS } from "../src/world/campaign";
 import { registerCampaign02 } from "../src/world/registerCampaign02";
 import { registerCampaign03 } from "../src/world/registerCampaign03";
 import { registerCampaign04 } from "../src/world/registerCampaign04";
-import { evaluateActorOrigin, originGuidance } from "../src/world/spatialActors";
+import { evaluateActorOrigin } from "../src/world/spatialActors";
+import { withHoods } from "../src/world/authoring";
 import { ROOMS, type RoomSpec } from "../src/world/stages";
 import { validateRoom, validateRoomCatalog } from "../src/world/contentValidation";
 import { solveRoom } from "../src/world/routeSolver";
@@ -142,25 +143,25 @@ async function testProgression(): Promise<void> {
 
 function testSpatialActors(): void {
   registerCampaign04();
-  const rejected = evaluateActorOrigin("shield", undefined, [0, 2.2, 0], [5, 2.2, -8]);
-  const accepted = evaluateActorOrigin("shield", undefined, [3, 2.2, 0], [5, 2.2, -8]);
-  equal(rejected.allowed, false, "shield default origin gate preserves current left-side rejection");
-  equal(accepted.allowed, true, "shield default origin gate preserves current valid right-side shot");
-
-  const authored = evaluateActorOrigin("sentry", { axis: "z", max: -5 }, [0, 2.2, -8], [0, 2.2, -20]);
-  const authoredRejected = evaluateActorOrigin("sentry", { axis: "z", max: -5 }, [0, 2.2, 0], [0, 2.2, -20]);
-  equal(authored.allowed, true, "origin constraints can be authored on non-shield actors");
-  equal(authoredRejected.allowed, false, "authored generic origin constraint rejects invalid origin");
-
   // Proximity gates measure from the Sphere's live centre, in any direction.
   const mace = { within: 6 };
   equal(evaluateActorOrigin("sentry", mace, [0, 9.7, -37], [2.5, 5.7, -37]).allowed, true, "proximity gate answers from close range, even from above");
   equal(evaluateActorOrigin("sentry", mace, [0, 16.7, -33], [2.5, 5.7, -37]).allowed, false, "proximity gate rejects a distant origin");
   equal(evaluateActorOrigin("drifter", mace, [10, 0, 0], [5, 0, 0]).allowed, true, "proximity follows a moving Sphere");
-  const guide = originGuidance("sentry", mace, [0, 0, 10], [0, 0, 0]);
-  assert(guide?.kind === "proximity" && Math.abs(guide.distance - 4) < 1e-6 && guide.move[2] === -1, "proximity guidance points at the Sphere with the metres left");
-  const axisGuide = originGuidance("sentry", { axis: "y", min: 13 }, [0, 9.7, 0], [0, 5.7, 0]);
-  assert(axisGuide?.axis === "y" && axisGuide.move[1] === 1 && Math.abs(axisGuide.distance - 3.3) < 1e-6, "axis guidance points across the threshold with the metres left");
+  equal(evaluateActorOrigin("sentry", undefined, [99, 0, 0], [0, 0, 0]).allowed, true, "an ungated Sphere answers from anywhere");
+
+  // Alcoves: the "which side" rule is geometry. Only the mouth sees the Sphere.
+  const alcoveRoom: RoomSpec = {
+    id: "regression-alcove", title: "ALCOVE", lesson: "Fixture", grammar: [],
+    spawn: [-8, 2.2, 0], goal: [8, 1.1, 0], requiredKills: 1,
+    platforms: [{ center: [-8, 0, 0], size: [6, 1, 6] }, { center: [8, 0, 0], size: [6, 1, 6] }],
+    enemies: [{ id: "cup", kind: "sentry", position: [8, 2.2, 0], hood: "+x" }]
+  };
+  const shell = withHoods(alcoveRoom);
+  equal(shell.platforms.filter((p) => p.id?.startsWith("hood:cup")).length, 4, "a side alcove over a floor is back wall, two cheeks and a roof");
+  equal(withHoods(shell).platforms.length, shell.platforms.length, "alcove generation is idempotent");
+  equal(solveRoom(alcoveRoom).solved, false, "an alcove facing away from the only firing floor cannot be shot");
+  equal(solveRoom({ ...alcoveRoom, enemies: [{ ...alcoveRoom.enemies[0]!, hood: "-x" }] }).solved, true, "an alcove facing the firing floor can be shot");
 
   const orbitMap = CAMPAIGN_MAPS.find((map) => map.id === "map-04");
   assert(orbitMap?.implemented, "Crosscurrent is registered as playable content");
@@ -195,13 +196,14 @@ function testContentValidation(): void {
     platforms: [{ center: [0, 0, 0], size: [10, 1, 10] }],
     enemies: [{
       id: "bad-origin",
-      kind: "sentry",
+      kind: "drifter",
       position: [0, 2.2, -5],
-      originConstraint: { axis: "x", min: 4, max: 2 }
+      drift: { axis: "x", amplitude: 2, speed: 0.5 },
+      hood: "+x"
     }]
   };
   const report = validateRoom(invalidActorRoom);
-  assert(report.issues.some((issue) => issue.code === "enemy.origin.order"), "Content Doctor rejects inverted actor origin ranges");
+  assert(report.issues.some((issue) => issue.code === "enemy.hood.moving"), "Content Doctor rejects an alcove on a moving actor");
 }
 
 function testRouteSolverAndSuites(): void {
@@ -225,14 +227,7 @@ function testRouteSolverAndSuites(): void {
   const buried: RoomSpec = { ...base, platforms: [...base.platforms, { center: [0, 18, 0], size: [1.2, 34, 13] }] };
   assert(validateRoom(buried).issues.some((issue) => issue.code === "geometry.spawn-clearance"), "Content Doctor rejects a spawn inside geometry");
 
-  // A roof over a Sphere whose height gate sits above the roof is the Sector 18 trap.
-  const roofTrap: RoomSpec = {
-    ...base,
-    platforms: [...base.platforms, { center: [0, 7.7, -24], size: [8, 0.6, 8] }],
-    enemies: [{ id: "vault", kind: "sentry", position: [0, 2.2, -24], originConstraint: { axis: "y", min: 13 } }]
-  };
-  assert(validateRoom(roofTrap).issues.some((issue) => issue.code === "enemy.origin.above-trap"), "Content Doctor flags a height gate a roof over the Sphere cannot satisfy");
-  const mace: RoomSpec = { ...roofTrap, enemies: [{ id: "vault", kind: "sentry", position: [0, 2.2, -24], originConstraint: { within: 0.5 } }] };
+  const mace: RoomSpec = { ...base, enemies: [{ id: "vault", kind: "sentry", position: [0, 2.2, -24], originConstraint: { within: 0.5 } }] };
   assert(validateRoom(mace).issues.some((issue) => issue.code === "enemy.origin.within"), "Content Doctor rejects a proximity range inside the Sphere");
 
   // Dropping is one-way: a Sphere only visible from below cannot be spent from above.
@@ -241,7 +236,7 @@ function testRouteSolverAndSuites(): void {
     spawn: [0, 8.2, 0],
     goal: [0, 7.1, 0],
     platforms: [{ center: [0, 6, 0], size: [6, 1, 6] }, { center: [0, 0, 0], size: [30, 1, 30] }],
-    enemies: [{ id: "low", kind: "sentry", position: [0, 2.2, -12], originConstraint: { axis: "y", max: 4 } }]
+    enemies: [{ id: "low", kind: "sentry", position: [0, 2.2, -12], originConstraint: { within: 4 } }]
   };
   equal(solveRoom(ledge).solved, false, "solver treats drops as one-way");
 

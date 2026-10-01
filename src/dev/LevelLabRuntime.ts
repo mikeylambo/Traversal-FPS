@@ -10,7 +10,6 @@ import {
 import { buildReversalLabyrinth } from "../world/reversalLabyrinth";
 import type { RoomSpec } from "../world/stages";
 import { validateRoom } from "../world/contentValidation";
-import { isProximity } from "../world/spatialActors";
 import type { ContentRuntime } from "../game/ContentRuntime";
 
 type LabFamily = "campaign" | "time-trial" | "challenge" | "reversal";
@@ -390,7 +389,7 @@ export function installLevelLab(game: object, content: ContentRuntime, shell: Sh
         path.userData.labCategory = "paths";
         debugGroup.add(path);
       }
-      if (e.originConstraint && isProximity(e.originConstraint)) {
+      if (e.originConstraint) {
         const centre = new THREE.Vector3(...e.position);
         const r = e.originConstraint.within;
         const points = Array.from({ length: 65 }, (_, k) => {
@@ -403,14 +402,11 @@ export function installLevelLab(game: object, content: ContentRuntime, shell: Sh
         );
         range.userData.labCategory = "origin";
         debugGroup.add(range);
-      } else if (e.originConstraint) {
+      } else if (e.hood) {
+        // The alcove's mouth: the side the Sphere answers from.
         const start = new THREE.Vector3(...e.position);
         const end = start.clone();
-        const c = e.originConstraint;
-        const sign = typeof c.min === "number" ? -1 : 1;
-        if (c.axis === "x") end.x += 7 * sign;
-        else if (c.axis === "y") end.y += 7 * sign;
-        else end.z += 7 * sign;
+        end[e.hood[1] as "x" | "y" | "z"] += e.hood[0] === "+" ? 7 : -7;
         debugGroup.add(line(start, end, 0xffe06a, "origin"));
       }
     }
@@ -898,7 +894,7 @@ function roomStats(room: RoomSpec) {
   return {
     platforms: room.platforms.length,
     actors: room.enemies.length,
-    vectors: room.enemies.filter((e) => ["sentry", "drifter", "shield", "orbit"].includes(e.kind)).length,
+    vectors: room.enemies.filter((e) => ["sentry", "drifter", "orbit"].includes(e.kind)).length,
     utility: room.enemies.filter((e) => ["cube", "diamond", "prism"].includes(e.kind)).length,
     hazards: room.hazards?.length ?? 0,
     spanX: b.maxX - b.minX,

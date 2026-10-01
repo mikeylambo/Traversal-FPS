@@ -2,7 +2,8 @@ import { devToolsEnabled } from "../dev/devTools";
 import { INTERIOR_PILOT_ROOMS } from "../world/interiorPilot";
 import { installBrowserLifecycle, mountBrowserDevConsole } from "@slu/web-shell";
 import { CAMPAIGN_MAPS, type CampaignMapDefinition } from "../world/campaign";
-import { buildChallengeChamber, buildChallengeSuite, buildTimeTrialCourse, buildTimeTrialSuite } from "../world/modeSuites";
+import { withHoods } from "../world/authoring";
+import { buildChallengeChamber, buildChallengeSuite, buildTimeTrialCourse, buildTimeTrialSuite, TIME_TRIAL_ENTRIES } from "../world/modeSuites";
 import { CONTROLS_ROOM } from "../world/onboarding";
 import { buildReversalLabyrinth } from "../world/reversalLabyrinth";
 import { SPATIAL_ACTOR_TRAINING } from "../world/trainingSpatial";
@@ -58,7 +59,7 @@ export function installContentRuntime(shell: any): ContentRuntime {
   });
   telemetry.record("playtest.ready", {
     campaignMaps: CAMPAIGN_MAPS.length,
-    timeTrials: 16,
+    timeTrials: TIME_TRIAL_ENTRIES.length,
     challenges: 24,
     reversalRooms: 8
   });
@@ -134,7 +135,7 @@ export function installContentRuntime(shell: any): ContentRuntime {
 
   const reloadSelected = () => {
     const next = selectRooms();
-    ROOMS.splice(0, ROOMS.length, ...next);
+    ROOMS.splice(0, ROOMS.length, ...next.map(withHoods));
     telemetry.setContext({
       modeId: shell.modes.active()?.id ?? "unknown",
       difficultyId: shell.difficulty.active()?.id ?? "unknown",
@@ -232,7 +233,7 @@ export function installContentRuntime(shell: any): ContentRuntime {
       activeForm = "training";
       selectedTrainingPath = "grammar";
       selectedModeSuite = null;
-      ROOMS.splice(0, ROOMS.length, ...loadGrammarRooms());
+      ROOMS.splice(0, ROOMS.length, ...loadGrammarRooms().map(withHoods));
       telemetry.record("content.loaded", { contentId: activeId, contentForm: activeForm, roomCount: ROOMS.length, parKills: ROOMS.reduce((sum, room) => sum + room.requiredKills, 0) });
     }
   };

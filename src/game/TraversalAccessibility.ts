@@ -114,7 +114,6 @@ export function utilityRoleColor(kind: UtilityKind, profile = traversalAccessibi
 
 export function actorColor(kind: EnemyKind, profile = traversalAccessibility().colorProfile): number {
   const palette = ACTOR_PALETTE[profile];
-  if (kind === "shield") return palette.shield;
   if (kind === "drifter") return palette.drifter;
   if (kind === "cube" || kind === "diamond" || kind === "prism") return utilityRoleColor(kind, profile);
   return palette.sphere;

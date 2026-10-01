@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { emitTraversalAudio } from "../audio/TraversalAudio";
 import { actorColor } from "./TraversalAccessibility";
-import { evaluateActorOrigin, isProximity, originGuidance, resolveOriginConstraint, type OriginGuidance, type ProximityConstraint } from "../world/spatialActors";
+import { evaluateActorOrigin, resolveOriginConstraint, type ProximityConstraint } from "../world/spatialActors";
 import { ROOMS, type EnemySpec } from "../world/stages";
 import { installActorGeometryRuntime } from "./ActorGeometryRuntime";
 import { installRoomAccentAccessibilityRuntime } from "./RoomAccentAccessibilityRuntime";
@@ -107,9 +107,7 @@ export function installSpatialActorRuntime(game: object): void {
     const at = vectorTuple(enemy.mesh.position);
     const originRule = evaluateActorOrigin(enemy.spec.kind, enemy.spec.originConstraint, origin, at);
     if (!originRule.allowed) {
-      const guidance = originGuidance(enemy.spec.kind, enemy.spec.originConstraint, origin, at);
-      const hint = guidance ? describeGuidance(guidance, state.camera).text : originRule.message;
-      state.flashMessage(hint ?? "TARGET REJECT // CHANGE YOUR FIRING ORIGIN", 1800);
+      // Out of reach: the mace's spikes already say so. No text, just the bounce.
       state.playShieldReject();
       state.addImpactFx(hit.point.clone(), 0xffa665);
       state.enforceChallengeShotBudget(now);
@@ -174,16 +172,9 @@ export function installSpatialActorRuntime(game: object): void {
     const enemy = hit
       ? state.enemies.find((candidate) => candidate.mesh === hit.object)
       : undefined;
-    const guidance = enemy
-      ? originGuidance(enemy.spec.kind, enemy.spec.originConstraint, vectorTuple(state.camera.position), vectorTuple(enemy.mesh.position))
-      : null;
-    const blocked = Boolean(guidance);
-
+    const blocked = Boolean(enemy && !evaluateActorOrigin(enemy.spec.kind, enemy.spec.originConstraint, vectorTuple(state.camera.position), vectorTuple(enemy.mesh.position)).allowed);
     document.body.classList.toggle("target-hot", Boolean(enemy) && !blocked);
     document.body.classList.toggle("target-blocked", blocked);
-    // Say where to fire from while aiming, before a shot is wasted: which way
-    // (relative to the view, with an arrow on screen) and how far.
-    renderTargetHint(guidance ? describeGuidance(guidance, state.camera) : null);
     document.body.classList.toggle("target-utility", Boolean(enemy && UTILITY_KINDS.has(enemy.spec.kind)));
   };
 
@@ -197,86 +188,13 @@ export function installSpatialActorRuntime(game: object): void {
   installRoomAccentAccessibilityRuntime(game);
 }
 
-type HintNodes = { root: HTMLElement; arrow: HTMLElement; text: HTMLElement };
-let hintNodes: HintNodes | null = null;
-let hintText = "";
-
-function targetHint(): HintNodes {
-  if (hintNodes?.root.isConnected) return hintNodes;
-  const root = document.getElementById("target-hint") ?? document.body.appendChild(document.createElement("div"));
-  root.id = "target-hint";
-  root.replaceChildren();
-  const arrow = root.appendChild(document.createElement("span"));
-  arrow.className = "hint-arrow";
-  const text = root.appendChild(document.createElement("span"));
-  text.className = "hint-text";
-  hintNodes = { root, arrow, text };
-  hintText = "";
-  return hintNodes;
-}
-
-function renderTargetHint(hint: GuidanceCopy | null): void {
-  const nodes = targetHint();
-  const text = hint?.text ?? "";
-  if (text !== hintText) {
-    hintText = text;
-    nodes.text.textContent = text;
-  }
-  nodes.root.classList.toggle("has-text", Boolean(text));
-  nodes.root.classList.toggle("has-arrow", hint?.angle != null);
-  if (hint?.angle != null) nodes.arrow.style.transform = `rotate(${hint.angle.toFixed(1)}deg)`;
-}
-
-type GuidanceCopy = { text: string; angle: number | null };
-const scratch = { forward: new THREE.Vector3(), right: new THREE.Vector3(), move: new THREE.Vector3(), a: new THREE.Vector3(), b: new THREE.Vector3() };
-
-/**
- * World guidance -> words relative to where the player is looking, plus the
- * on-screen angle of the move. "Right" means the player's right, not +X: after
- * turning round on a loop, a world-axis word would point the wrong way.
- */
-function describeGuidance(guidance: OriginGuidance, camera: THREE.PerspectiveCamera): GuidanceCopy {
-  const { forward, right, move, a, b } = scratch;
-  move.set(...guidance.move);
-  camera.getWorldDirection(forward);
-
-  let words: string;
-  if (guidance.kind === "proximity") words = "GET CLOSER";
-  else if (guidance.axis === "y") words = guidance.move[1] > 0 ? "GO HIGHER" : "GO LOWER";
-  else {
-    a.copy(forward).setY(0);
-    if (a.lengthSq() < 1e-6) a.set(0, 0, -1);
-    a.normalize();
-    right.set(-a.z, 0, a.x);
-    const side = move.dot(right);
-    const ahead = move.dot(a);
-    words = Math.abs(side) >= Math.abs(ahead)
-      ? side > 0 ? "MOVE RIGHT" : "MOVE LEFT"
-      : ahead > 0 ? "MOVE FORWARD" : "MOVE BACK";
-  }
-  const metres = Math.max(1, Math.ceil(guidance.distance));
-
-  // Project a short step of the move from a point just ahead of the eye. When
-  // the move runs along the view (closer, forward, back) there is no honest
-  // on-screen direction, so the arrow steps aside and the words carry it.
-  a.copy(camera.position).addScaledVector(forward, 4);
-  b.copy(a).addScaledVector(move, 1);
-  a.project(camera);
-  b.project(camera);
-  const dx = (b.x - a.x) * camera.aspect;
-  const dy = b.y - a.y;
-  const angle = Math.hypot(dx, dy) < 0.05 ? null : THREE.MathUtils.radToDeg(Math.atan2(dx, dy));
-  return { text: `${words} · ${metres}M`, angle };
-}
-
 function decorateActorVisuals(enemies: ActiveEnemy[], camera: THREE.Camera): void {
   for (const enemy of enemies) {
     if (enemy.mesh.userData.traversalActorVisual) continue;
     enemy.mesh.userData.traversalActorVisual = true;
 
     const constraint = resolveOriginConstraint(enemy.spec.kind, enemy.spec.originConstraint);
-    if (constraint && isProximity(constraint)) decorateProximityGate(enemy, constraint, camera);
-    else if (constraint) decorateOriginGate(enemy, camera);
+    if (constraint) decorateProximityGate(enemy, constraint, camera);
     if (enemy.spec.kind === "drifter") decorateDrifter(enemy);
     if (enemy.spec.kind === "orbit") decorateOrbit(enemy);
   }
@@ -299,69 +217,6 @@ function decorateOrbit(enemy: ActiveEnemy): void {
   if (orbit.plane === "xy") ring.rotation.x = Math.PI * 0.5;
   if (orbit.plane === "yz") ring.rotation.y = Math.PI * 0.5;
   enemy.mesh.add(ring);
-}
-
-/** Axis families read differently at a glance: lateral, vertical, depth. */
-const GATE_COLORS = { x: 0xffb46b, y: 0xb99bff, z: 0xff7fb8 } as const;
-
-/**
- * An origin-gated Sphere sits in a cage while you stand where its shots would
- * bounce, and the cage opens the moment you cross into the firing zone. The
- * boundary itself is drawn as a large ring in the world that lights up once you
- * are over it. Moving is the explanation; no arrows, no reading required.
- */
-function decorateOriginGate(enemy: ActiveEnemy, camera: THREE.Camera): void {
-  const constraint = resolveOriginConstraint(enemy.spec.kind, enemy.spec.originConstraint);
-  if (!constraint || isProximity(constraint)) return;
-  const radius = enemy.spec.radius ?? 0.72;
-  const axis = constraint.axis;
-  const threshold = constraint.min ?? constraint.max;
-  const allowedSign = constraint.min !== undefined ? 1 : -1;
-  const allowed = axisVector(axis).multiplyScalar(allowedSign);
-  const color = GATE_COLORS[axis];
-  const additive = (opacity: number, extra: THREE.MeshBasicMaterialParameters = {}) => new THREE.MeshBasicMaterial({
-    color, transparent: true, opacity, blending: THREE.AdditiveBlending, depthWrite: false, ...extra
-  });
-
-  const cageFill = new THREE.Mesh(new THREE.IcosahedronGeometry(radius * 1.32, 1), additive(0.22, { side: THREE.DoubleSide }));
-  const cageWire = new THREE.Mesh(new THREE.IcosahedronGeometry(radius * 1.36, 1), additive(0.85, { wireframe: true }));
-  const cage = new THREE.Group();
-  cage.add(cageFill, cageWire);
-  enemy.mesh.add(cage);
-
-  const boundary = threshold === undefined ? null : new THREE.Mesh(
-    new THREE.RingGeometry(1.35, 1.6, 48),
-    additive(0.3, { side: THREE.DoubleSide })
-  );
-  if (boundary && threshold !== undefined) {
-    // Lives in the room, not on the (spinning) Sphere, so it stays flat on the line.
-    boundary.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), allowed);
-    enemy.mesh.parent?.add(boundary);
-    boundary.onBeforeRender = () => {
-      boundary.position.copy(enemy.mesh.position);
-      boundary.position[axis] = threshold;
-      const offset = Math.abs(threshold - enemy.mesh.position[axis]);
-      const inside = evaluateActorOrigin(enemy.spec.kind, enemy.spec.originConstraint, vectorTuple(camera.position), vectorTuple(enemy.mesh.position)).allowed;
-      // Hidden via opacity: an invisible object never gets this callback again.
-      const shown = enemy.mesh.visible && offset > radius * 1.6 && offset < 40;
-      (boundary.material as THREE.MeshBasicMaterial).opacity = shown ? (inside ? 0.75 : 0.3) : 0;
-    };
-  }
-
-  let open = 0;
-  let last = performance.now();
-  cageWire.onBeforeRender = () => {
-    const now = performance.now();
-    const dt = Math.min(0.1, (now - last) / 1000);
-    last = now;
-    const inside = evaluateActorOrigin(enemy.spec.kind, enemy.spec.originConstraint, vectorTuple(camera.position), vectorTuple(enemy.mesh.position)).allowed;
-    open = THREE.MathUtils.clamp(open + (inside ? dt : -dt) * 5, 0, 1);
-    // The cage swells and fades as it opens, like it is being released.
-    cage.scale.setScalar(1 + open * 0.45);
-    (cageFill.material as THREE.MeshBasicMaterial).opacity = 0.22 * (1 - open);
-    (cageWire.material as THREE.MeshBasicMaterial).opacity = 0.85 * (1 - open) + 0.02;
-    cage.rotation.y += dt * (0.4 + open * 2);
-  };
 }
 
 const PROXIMITY_COLOR = 0xff8f7a;

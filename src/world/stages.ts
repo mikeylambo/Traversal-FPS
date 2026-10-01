@@ -1,8 +1,11 @@
 import type { PuzzleGrammarId } from "./puzzleGrammar";
 import type { OriginConstraint } from "./spatialActors";
+import { withHoods } from "./authoring";
 
 export type Vec3Tuple = [number, number, number];
-export type EnemyKind = "sentry" | "drifter" | "shield" | "orbit" | "cube" | "diamond" | "prism";
+export type EnemyKind = "sentry" | "drifter" | "orbit" | "cube" | "diamond" | "prism";
+/** Which side an alcove opens to: the Sphere answers only shots through its mouth. */
+export type HoodSide = "+x" | "-x" | "+y" | "-y" | "+z" | "-z";
 export type HazardKind = "lethal-field" | "sweep" | "sightline-gate" | "aperture-wall";
 
 export type PuzzleEffect =
@@ -43,6 +46,11 @@ export interface EnemySpec {
     phase?: number;
   };
   originConstraint?: OriginConstraint;
+  /**
+   * The Sphere sits in a solid alcove open on this side (geometry is added by
+   * withHoods). Where you must stand is shown by the shape, never by text.
+   */
+  hood?: HoodSide;
   effect?: PuzzleEffect;
 }
 
@@ -124,7 +132,7 @@ export const ROOMS: RoomSpec[] = [
   {
     id: "room-04",
     title: "ORIGIN MATTERS",
-    lesson: "The shield rejects frontal shots. Move right before the kill so the warp starts there.",
+    lesson: "The Sphere sits in an alcove. Move to where you can see into it, then fire: the warp starts from there.",
     grammar: ["origin-matters"],
     spawn: [-5, 2.2, 6],
     goal: [7, 1.1, -28],
@@ -133,7 +141,7 @@ export const ROOMS: RoomSpec[] = [
       { center: [0, 0, 5], size: [18, 1, 11] },
       { center: [7, 0, -25], size: [9, 1, 11] }
     ],
-    enemies: [{ id: "r4-shield", kind: "shield", position: [5, 2.2, -21] }]
+    enemies: [{ id: "r4-shield", kind: "sentry", position: [5, 2.2, -21], hood: "+x" }]
   },
   {
     id: "room-05",
@@ -209,3 +217,6 @@ export const ROOMS: RoomSpec[] = [
     ]
   }
 ];
+
+// Alcove geometry for the hand-authored training rooms above.
+ROOMS.splice(0, ROOMS.length, ...ROOMS.map(withHoods));

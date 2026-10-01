@@ -1,5 +1,11 @@
-import type { EnemySpec, HazardSpec, PlatformSpec, PuzzleEffect, Vec3Tuple } from "./stages";
-import type { OriginConstraint } from "./spatialActors";
+import type { EnemySpec, HazardSpec, HoodSide, PlatformSpec, PuzzleEffect, RoomSpec, Vec3Tuple } from "./stages";
+import type { ProximityConstraint } from "./spatialActors";
+
+/** A Sphere's firing rule: a reach (mace) or the side its alcove opens to. */
+export type Gate = ProximityConstraint | HoodSide;
+
+const gate = (value?: Gate): Partial<EnemySpec> =>
+  value === undefined ? {} : typeof value === "string" ? { hood: value } : { originConstraint: value };
 
 /**
  * Authoring vocabulary for hand-built rooms. Everything is expressed relative to
@@ -59,12 +65,12 @@ export const ring = (x: number, top: number, z: number): Vec3Tuple => [x, top + 
  * A Sphere that fits a crawl lane: centred 0.8m above the floor (inside the
  * crouched-arrival snap window) with a 0.45 radius so it clears a 1.3m roof.
  */
-export function crouchSentry(id: string, x: number, top: number, z: number, originConstraint?: OriginConstraint): EnemySpec {
-  return sentry(id, [x, top + 0.8, z], 0.45, originConstraint);
+export function crouchSentry(id: string, x: number, top: number, z: number, rule?: Gate): EnemySpec {
+  return sentry(id, [x, top + 0.8, z], 0.45, rule);
 }
 
-export function sentry(id: string, position: Vec3Tuple, radius?: number, originConstraint?: OriginConstraint): EnemySpec {
-  return { id, kind: "sentry", position, ...(radius ? { radius } : {}), ...(originConstraint ? { originConstraint } : {}) };
+export function sentry(id: string, position: Vec3Tuple, radius?: number, rule?: Gate): EnemySpec {
+  return { id, kind: "sentry", position, ...(radius ? { radius } : {}), ...gate(rule) };
 }
 
 export function drifter(id: string, position: Vec3Tuple, axis: "x" | "y", amplitude: number, speed: number): EnemySpec {
@@ -75,13 +81,83 @@ export function orbit(id: string, position: Vec3Tuple, plane: "xy" | "xz" | "yz"
   return { id, kind: "orbit", position, orbit: { plane, radiusA, radiusB, speed, phase } };
 }
 
-export function shield(id: string, position: Vec3Tuple, constraint: OriginConstraint): EnemySpec {
-  return { id, kind: "shield", position, originConstraint: constraint };
+/** A Sphere in an alcove that opens toward `side`. */
+export function hooded(id: string, position: Vec3Tuple, side: HoodSide): EnemySpec {
+  return { id, kind: "sentry", position, hood: side };
 }
 
-/** Origin gate on any Sphere, e.g. "fire from above" = { axis: "y", min }. */
-export function gated(enemy: EnemySpec, constraint: OriginConstraint): EnemySpec {
-  return { ...enemy, originConstraint: constraint };
+/** A firing rule on any actor: a reach, or an alcove side. */
+export function gated(enemy: EnemySpec, rule: Gate): EnemySpec {
+  return { ...enemy, ...gate(rule) };
+}
+
+const HOOD_HALF = 1.25;
+const HOOD_WALL = 0.3;
+const HOOD_MOUTH = 0.5;
+const HOOD_BACK = 1.15;
+
+/**
+ * Builds the alcove for every hooded actor: a shell of walls around it, open on
+ * one side, with the actor just inside the mouth so it reads at a glance and is
+ * hittable only through the opening. A side alcove over a floor uses that floor
+ * (you can walk out of the mouth after warping in); otherwise it gets its own
+ * sill. Idempotent, so rooms can pass through it more than once.
+ */
+export function withHoods(room: RoomSpec): RoomSpec {
+  const hooded = (room.enemies ?? []).filter((enemy) => enemy.hood);
+  if (!hooded.length || !Array.isArray(room.platforms) || room.platforms.some((p) => p.id?.startsWith("hood:"))) return room;
+  const extra: PlatformSpec[] = [];
+  for (const enemy of hooded) extra.push(...hoodShell(enemy, enemy.hood!, room.platforms));
+  return { ...room, platforms: [...room.platforms, ...extra] };
+}
+
+function hoodShell(enemy: EnemySpec, side: HoodSide, platforms: PlatformSpec[]): PlatformSpec[] {
+  const c = enemy.position;
+  const a = side[1] === "x" ? 0 : side[1] === "y" ? 1 : 2;
+  const sign = side[0] === "+" ? 1 : -1;
+  const h = HOOD_HALF, t = HOOD_WALL;
+  // Extents per axis as [min, max]; the open axis runs from behind the back wall to the mouth.
+  const along: [number, number] = sign > 0 ? [c[a] - HOOD_BACK - t, c[a] + HOOD_MOUTH] : [c[a] - HOOD_MOUTH, c[a] + HOOD_BACK + t];
+  const box = (ext: [number, number][], n: number): PlatformSpec => ({
+    id: `hood:${enemy.id}:${n}`,
+    center: [(ext[0]![0] + ext[0]![1]) / 2, (ext[1]![0] + ext[1]![1]) / 2, (ext[2]![0] + ext[2]![1]) / 2],
+    size: [ext[0]![1] - ext[0]![0], ext[1]![1] - ext[1]![0], ext[2]![1] - ext[2]![0]]
+  });
+  const span = (axis: number, inner = h): [number, number] => [c[axis]! - inner - t, c[axis]! + inner + t];
+  const out: PlatformSpec[] = [];
+  const set = (axis: number, value: [number, number], ext: [number, number][]) => { ext[axis] = value; return ext; };
+  const backFace: [number, number] = sign > 0 ? [along[0], along[0] + t] : [along[1] - t, along[1]];
+
+  if (a === 1) {
+    // Cup (open up) or canopy (open down): four walls, and the closed end.
+    const xs = span(0), zs = span(2);
+    out.push(box(set(1, backFace, [xs, [0, 0], zs]), 0));
+    out.push(box([[xs[0], xs[0] + t], along, zs], 1), box([[xs[1] - t, xs[1]], along, zs], 2));
+    out.push(box([[xs[0] + t, xs[1] - t], along, [zs[0], zs[0] + t]], 3), box([[xs[0] + t, xs[1] - t], along, [zs[1] - t, zs[1]]], 4));
+    return out;
+  }
+
+  // Side alcove: back wall, two cheeks, roof, and a sill unless a floor is already under it.
+  const q = a === 0 ? 2 : 0;
+  const under = platforms.find((p) => {
+    const top = p.center[1] + p.size[1] / 2;
+    return !p.motion && top <= c[1] - 0.4 && top >= c[1] - 2.4 &&
+      Math.abs(c[0] - p.center[0]) <= p.size[0] / 2 && Math.abs(c[2] - p.center[2]) <= p.size[2] / 2;
+  });
+  const bottom = under ? under.center[1] + under.size[1] / 2 : c[1] - h;
+  const ys: [number, number] = [bottom, c[1] + h];
+  const qs = span(q);
+  const ext = (alongAxis: [number, number], yRange: [number, number], qRange: [number, number]): [number, number][] => {
+    const e: [number, number][] = [[0, 0], yRange, [0, 0]];
+    e[a] = alongAxis;
+    e[q] = qRange;
+    return e;
+  };
+  out.push(box(ext(backFace, ys, [qs[0] + t, qs[1] - t]), 0));
+  out.push(box(ext(along, ys, [qs[0], qs[0] + t]), 1), box(ext(along, ys, [qs[1] - t, qs[1]]), 2));
+  out.push(box(ext(along, [ys[1], ys[1] + t], qs), 3));
+  if (!under) out.push(box(ext(along, [ys[0] - t, ys[0]], qs), 4));
+  return out;
 }
 
 function utility(kind: "cube" | "diamond" | "prism", id: string, position: Vec3Tuple, effect: PuzzleEffect): EnemySpec {

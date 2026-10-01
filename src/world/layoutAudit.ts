@@ -1,4 +1,5 @@
 import { spatialActorDefinition } from "./spatialActors";
+import { withHoods } from "./authoring";
 import type { PlatformSpec, RoomSpec } from "./stages";
 
 /**
@@ -50,7 +51,8 @@ export interface SimilarityPair {
 const PLAN = 8;
 const WALL_HEIGHT = 2.4;
 
-export function describeLayout(room: RoomSpec): LayoutDescriptor {
+export function describeLayout(authored: RoomSpec): LayoutDescriptor {
+  const room = withHoods(authored);
   const floors = room.platforms.filter((p) => p.size[1] <= WALL_HEIGHT && p.size[0] * p.size[2] >= 3);
   const walls = room.platforms.filter((p) => p.size[1] > WALL_HEIGHT);
   const points = [room.spawn, room.goal, ...room.platforms.map((p) => p.center)];
@@ -87,7 +89,7 @@ export function describeLayout(room: RoomSpec): LayoutDescriptor {
     required: room.requiredKills,
     fullClear: spheres.length > 0 && room.requiredKills >= spheres.length,
     movingActors: room.enemies.filter((e) => e.drift || e.orbit).length,
-    originGated: room.enemies.filter((e) => e.originConstraint || e.kind === "shield").length,
+    originGated: room.enemies.filter((e) => e.originConstraint || e.hood).length,
     utility: room.enemies.filter((e) => ["cube", "diamond", "prism"].includes(e.kind)).length,
     hazards: room.hazards?.length ?? 0,
     goalVisibleFromSpawn: lineClear([room.spawn[0], room.spawn[1], room.spawn[2]], room.goal, room.platforms),
