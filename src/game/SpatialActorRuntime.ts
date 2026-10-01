@@ -223,8 +223,8 @@ const PROXIMITY_COLOR = 0xff8f7a;
 
 /**
  * A proximity Sphere is a mace: spikes out while you are too far away, folded
- * into the body once you are inside its reach. Three thin great circles trace
- * that reach in the world and brighten when you cross into it.
+ * into the body once you are inside its reach. The spikes are the whole signal;
+ * no rings or text clutter the view.
  */
 function decorateProximityGate(enemy: ActiveEnemy, constraint: ProximityConstraint, camera: THREE.Camera): void {
   const radius = enemy.spec.radius ?? 0.72;
@@ -248,33 +248,20 @@ function decorateProximityGate(enemy: ActiveEnemy, constraint: ProximityConstrai
   }
   enemy.mesh.add(spikes);
 
-  const reachMaterial = new THREE.MeshBasicMaterial({
-    color: PROXIMITY_COLOR, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false
-  });
-  const reach = new THREE.Group();
-  const circle = new THREE.TorusGeometry(constraint.within, 0.028, 4, 128);
-  for (const [x, y] of [[0, 0], [Math.PI / 2, 0], [0, Math.PI / 2]] as const) {
-    const ring = new THREE.Mesh(circle, reachMaterial);
-    ring.rotation.set(x, y, 0);
-    // Always ticked: the lead ring drives the spikes too, even off-screen.
-    ring.frustumCulled = false;
-    reach.add(ring);
-  }
-  // Lives in the room, not on the spinning Sphere, so the reach reads as fixed.
-  enemy.mesh.parent?.add(reach);
+  // Initial pose, so the first frame never shows spikes at the origin.
+  for (const spike of spikes.children) spike.position.copy(spike.userData.dir as THREE.Vector3).multiplyScalar(radius * 0.92);
 
   let open = 0;
   let last = performance.now();
-  const lead = reach.children[0] as THREE.Mesh;
+  const lead = spikes.children[0] as THREE.Mesh;
+  // Ticked off-screen too, so the fold state is right the moment you look back.
+  lead.frustumCulled = false;
   lead.onBeforeRender = () => {
     const now = performance.now();
     const dt = Math.min(0.1, (now - last) / 1000);
     last = now;
-    reach.position.copy(enemy.mesh.position);
     const inside = evaluateActorOrigin(enemy.spec.kind, constraint, vectorTuple(camera.position), vectorTuple(enemy.mesh.position)).allowed;
     open = THREE.MathUtils.clamp(open + (inside ? dt : -dt) * 5, 0, 1);
-    // Hidden via opacity: an invisible object never gets this callback again.
-    reachMaterial.opacity = enemy.mesh.visible ? 0.16 + open * 0.34 : 0;
     // Spikes sink into the body and shrink as you come within reach.
     for (const spike of spikes.children) {
       spike.position.copy(spike.userData.dir as THREE.Vector3).multiplyScalar(radius * (0.92 - open * 0.55));

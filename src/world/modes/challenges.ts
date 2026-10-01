@@ -21,6 +21,9 @@ export interface ChallengeChamber {
 /** A stepping stone that falls away once you leave it. */
 const pad = (x: number, top: number, z: number, w = 2.5, d = 2.5): PlatformSpec => ({ ...floor(x, top, z, w, d), collapse: { delay: "leave" } });
 
+/** A stepping stone that falls `delay` seconds after you first land on it. */
+const timed = (x: number, top: number, z: number, delay: number, w = 2.5, d = 2.5): PlatformSpec => ({ ...floor(x, top, z, w, d), collapse: { delay } });
+
 /** A ladder rung: an alcove opening across the gap, answering only from close range. */
 const rung = (id: string, x: number, top: number, z: number) =>
   ({ ...hooded(id, eye(x, top, z), x < 0 ? "+x" : "-x"), originConstraint: { within: 14 } });
@@ -43,24 +46,27 @@ export const CHALLENGE_CHAMBERS: ChallengeChamber[] = [
   },
 
   {
-    // Crouch under two roofs, thread a crawl slit across a void, then catch a
-    // drifting Sphere over the ring's tiny pad. No pad survives being left.
+    // Crouch under two roofs, thread a crawl slit past a blade, then catch a
+    // drifting Sphere over the ring's tiny pad. Each crawl pad falls 2.5s after
+    // you land on it, so every shot is read before the jump, not after.
     label: "UNDERCUT", family: "PRECISION", inspiredBy: "map-34",
     room: {
       id: "ch-undercut", grammar: ["low-profile", "stop-short", "moving-endpoint"],
       spawn: eye(-14, 4, 0), goal: ring(24, 3, 0), requiredKills: 3,
       platforms: [
         floor(-14, 4, 0, 5, 5),
-        pad(4, 0, 0, 3, 3), crawl(2.5, 5.5, -1.5, 1.5, 0),
+        timed(4, 0, 0, 2.5, 3, 3), crawl(2.5, 5.5, -1.5, 1.5, 0),
         ...slitWallZ(-5, 5, 9, 0, 10),
-        pad(14, 0, 0, 3, 3), crawl(12.5, 14.6, -1.5, 1.5, 0),
+        timed(14, 0, 0, 2.5, 3, 3), crawl(12.5, 14.6, -1.5, 1.5, 0),
         floor(24, 3, 0, 3, 3)
       ],
       enemies: [
         crouchSentry("uc-1", 4, 0, 0), crouchSentry("uc-2", 14, 0, 0),
         drifter("uc-3", [24, 4.7, 0], "x", 3, 0.55),
         sentry("uc-decoy", [-14, 8, -9])
-      ]
+      ],
+      // A blade sweeps the crawl line between the first pad and the slit.
+      hazards: [sweep("uc-blade", [6.7, 1, 0], [0.6, 2.4, 5], "z", 5, 0.17)]
     }
   },
 
@@ -77,21 +83,24 @@ export const CHALLENGE_CHAMBERS: ChallengeChamber[] = [
   {
     // Two walls of alcoves face each other across a void. Every rung is a mace
     // that answers only from the rung just below it on the far side: climb by
-    // zig-zagging across the gap, on pads that fall away behind you.
+    // zig-zagging across the gap. Rungs fall 3s after you land, and a blade rides
+    // up and down the gap, so every crossing is a timed decision.
     label: "LADDER", family: "PRECISION", inspiredBy: "map-33",
     room: {
       id: "ch-ladder", grammar: ["origin-matters", "reorientation", "airborne-chain"],
       spawn: eye(0, 0, 10), goal: ring(0, 20, -12), requiredKills: 7,
       platforms: [
         floor(0, 0, 10, 5, 5),
-        pad(-6, 2, 0), pad(6, 5, -5), pad(-6, 8, -5), pad(6, 11, 0), pad(-6, 14, 0), pad(6, 17, -5),
+        timed(-6, 2, 0, 3), timed(6, 5, -5, 3), timed(-6, 8, -5, 3), timed(6, 11, 0, 3), timed(-6, 14, 0, 3), timed(6, 17, -5, 3),
         floor(0, 20, -12, 3, 3)
       ],
       enemies: [
         rung("ld-w1", -6, 2, 0), rung("ld-e1", 6, 5, -5), rung("ld-w2", -6, 8, -5),
         rung("ld-e2", 6, 11, 0), rung("ld-w3", -6, 14, 0), rung("ld-e3", 6, 17, -5),
         sentry("ld-top", [0, 23, -12], undefined, { within: 12 })
-      ]
+      ],
+      // A horizontal blade rises and falls through the gap, across every rung line.
+      hazards: [sweep("ld-blade", [0, 10, -2.5], [8, 0.5, 12], "y", 8, 0.11)]
     }
   },
 
@@ -225,13 +234,14 @@ export const CHALLENGE_CHAMBERS: ChallengeChamber[] = [
 
   {
     // Three drifters down a void, each only in view from the pad before it, a
-    // pulsing curtain across the last line. Every landing is a timing call.
+    // pulsing curtain across the last line, and pads that fall 2.5s after you
+    // land. Every landing is a timing call made before you arrive.
     label: "DRIFT", family: "FLOW", inspiredBy: "map-02",
     room: {
       id: "ch-drift", grammar: ["moving-endpoint", "stop-short", "timing-chain"],
       spawn: eye(0, 14, 6), goal: ring(0, 0, -24), requiredKills: 3,
       platforms: [
-        floor(0, 14, 6, 5, 5), pad(-10, 9, -6), pad(10, 4, -14), floor(0, 0, -24, 3, 3),
+        floor(0, 14, 6, 5, 5), timed(-10, 9, -6, 2.5), timed(10, 4, -14, 2.5), floor(0, 0, -24, 3, 3),
         solid(2, 16, 0, 14, -10.5, -9.5), solid(-14, 1.5, -2, 12, -20.5, -19.5)
       ],
       enemies: [
@@ -241,7 +251,7 @@ export const CHALLENGE_CHAMBERS: ChallengeChamber[] = [
         drifter("dr-decoy-a", [-5, 12.5, 0], "x", 5, 0.7),
         drifter("dr-decoy-b", [0, 7, -10], "y", 3, 0.55)
       ],
-      hazards: [field("dr-curtain", -4, 14, -1, 9, -19.5, -18.5, { period: 2.8, openFor: 1.1 })]
+      hazards: [field("dr-curtain", -4, 14, -1, 9, -19.5, -18.5, { period: 2.2, openFor: 0.9 })]
     }
   },
 
@@ -254,13 +264,13 @@ export const CHALLENGE_CHAMBERS: ChallengeChamber[] = [
       id: "ch-carousel", grammar: ["moving-endpoint", "stop-short", "reorientation"],
       spawn: eye(0, 6, 0), goal: ring(-9, 12.3, -16), requiredKills: 3,
       platforms: [
-        floor(0, 6, 0, 3, 3), pad(9, 6, 0, 2, 2), pad(9, 8.3, -16, 2, 2), floor(-9, 12.3, -16, 2.5, 2.5),
+        floor(0, 6, 0, 4, 4), pad(9, 6, 0, 3.5, 3.5), pad(9, 8.3, -16, 3.5, 3.5), floor(-9, 12.3, -16, 3, 3),
         solid(-14, 6, 0, 22, -6.5, -5.5), solid(-14, 5, 0, 26, -10.5, -9.5)
       ],
       enemies: [
-        orbit("ca-1", [0, 7.7, 0], "xz", 9, 9, 0.07),
-        orbit("ca-2", [9, 10, -10], "yz", 6, 6, 0.08),
-        orbit("ca-3", [0, 14, -16], "xy", 9, 9, 0.06)
+        orbit("ca-1", [11.5, 7.7, 0], "xz", 3, 3, 0.13),
+        orbit("ca-2", [9, 10, -13.5], "yz", 3, 3, 0.12),
+        orbit("ca-3", [-6.5, 14, -16], "xy", 3, 3, 0.12)
       ]
     }
   },
@@ -277,13 +287,22 @@ export const CHALLENGE_CHAMBERS: ChallengeChamber[] = [
 
 
   {
+    // Board a sleeping lift, wake it, and ride it through a full stroke: one mace
+    // folds in reach only at the bottom, one only at the top, and the ring's
+    // Sphere answers only from the top. Below the lift, the floor is lethal.
     label: "LIFT", family: "FLOW", inspiredBy: "map-21",
     room: {
-      id: "ch-lift", grammar: ["moving-endpoint", "origin-matters"],
-      spawn: eye(0, 4, 18), goal: ring(0, 4, -20), requiredKills: 2,
-      platforms: [floor(0, 4, 18, 6, 6), moving(floor(0, 4, 0, 4, 4), "ch-lift-deck", "z", 11, 0.07, true), floor(0, 4, -18, 6, 6)],
-      enemies: [diamond("li-diamond", [3, 7, 14], ["ch-lift-deck"]), sentry("li-1", eye(0, 4, 0)), sentry("li-2", eye(0, 4, -17), undefined, "+z"), sentry("li-decoy", [3, 9, 0])],
-      hazards: [field("li-floor", -4, 4, -1, 2, -22, 22)]
+      id: "ch-lift", grammar: ["moving-endpoint", "origin-matters", "timing-chain"],
+      spawn: eye(0, 0, 12), goal: ring(0, 14, -14), requiredKills: 4,
+      platforms: [floor(0, 0, 12, 5, 5), moving(floor(0, 4, 0, 3, 3), "ch-lift-deck", "y", 7, 0.1, true), floor(0, 14, -14, 4, 4)],
+      enemies: [
+        diamond("li-diamond", [6, 6, 6], ["ch-lift-deck"]),
+        sentry("li-1", eye(0, 4, 0)),
+        sentry("li-low", [-4, -0.5, 1], undefined, { within: 4.5 }),
+        sentry("li-high", [4, 12, -1], undefined, { within: 4.5 }),
+        sentry("li-ring", eye(0, 14, -13), undefined, { within: 14 })
+      ],
+      hazards: [field("li-floor", -12, 12, -8, -5, -22, 8)]
     }
   },
 
@@ -294,7 +313,7 @@ export const CHALLENGE_CHAMBERS: ChallengeChamber[] = [
       id: "ch-sweep", grammar: ["timing-chain", "airborne-chain"],
       spawn: eye(-10, 0, 10), goal: ring(0, 4, 0), requiredKills: 2,
       platforms: [floor(0, 0, 0, 24, 24), floor(0, 4, 0, 4, 4), solid(8, 10, 0, 7, -10, -8)],
-      enemies: [sentry("se-1", eye(9, 7, -9)), sentry("se-2", eye(0, 4, 1), undefined, "+y"), sentry("se-decoy", [-8, 3, -8])],
+      enemies: [sentry("se-1", eye(9, 7, -9)), sentry("se-2", eye(0, 4, 1)), sentry("se-decoy", [-8, 3, -8])],
       hazards: [sweep("se-blade", [0, 1.5, 0], [24, 3, 0.8], "z", 11, 0.12), sweep("se-blade-2", [0, 1.5, 0], [0.8, 3, 24], "x", 11, 0.17, 1)]
     }
   },
@@ -335,17 +354,20 @@ export const CHALLENGE_CHAMBERS: ChallengeChamber[] = [
 
   {
     // A compass of alcoves, each opening toward the one before it, climbing as
-    // it turns: home, north, east, south, west, home. Pads fall away behind you.
+    // it turns: home, north, east, south, west, home. Pads fall 3s after you
+    // land, and two blades sweep the compass across every leg.
     label: "FOUR POINT", family: "SYNTHESIS", inspiredBy: "map-35",
     room: {
       id: "ch-four-point", grammar: ["route-fork", "reorientation", "origin-matters"],
       spawn: eye(0, 0, 0), goal: ring(0, 0, 0), requiredKills: 5,
-      platforms: [floor(0, 0, 0, 8, 8), pad(0, 3, -16, 4, 4), pad(16, 7, 0, 4, 4), pad(0, 11, 16, 4, 4), pad(-16, 15, 0, 4, 4)],
+      platforms: [floor(0, 0, 0, 8, 8), timed(0, 3, -16, 3, 4, 4), timed(16, 7, 0, 3, 4, 4), timed(0, 11, 16, 3, 4, 4), timed(-16, 15, 0, 3, 4, 4)],
       enemies: [
         hooded("fp-n", eye(0, 3, -16), "+z"), hooded("fp-e", eye(16, 7, 0), "-z"),
         hooded("fp-s", eye(0, 11, 16), "+x"), hooded("fp-w", eye(-16, 15, 0), "+z"),
         hooded("fp-home", eye(-2, 0, -2), "-x")
-      ]
+      ],
+      // Two blades sweep the compass, crossing every leg of the turn.
+      hazards: [sweep("fp-blade-ns", [8, 9, 0], [0.6, 18, 34], "x", 9, 0.09), sweep("fp-blade-ew", [0, 9, 8], [34, 18, 0.6], "z", 9, 0.11, 1.6)]
     }
   },
   {

@@ -93,12 +93,13 @@ export function gated(enemy: EnemySpec, rule: Gate): EnemySpec {
 
 const HOOD_HALF = 1.25;
 const HOOD_WALL = 0.3;
-const HOOD_MOUTH = 0.5;
+// Deeper than a Sphere radius (0.72), so no part of it peeks past the mouth.
+const HOOD_MOUTH = 0.95;
 const HOOD_BACK = 1.15;
 
 /**
  * Builds the alcove for every hooded actor: a shell of walls around it, open on
- * one side, with the actor just inside the mouth so it reads at a glance and is
+ * one side, with the actor fully inside the mouth so it reads at a glance and is
  * hittable only through the opening. A side alcove over a floor uses that floor
  * (you can walk out of the mouth after warping in); otherwise it gets its own
  * sill. Idempotent, so rooms can pass through it more than once.

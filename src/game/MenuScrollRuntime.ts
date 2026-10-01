@@ -2,7 +2,8 @@
  * Controller menu scrolling. The Shell moves a virtual focus (data-focused) with
  * the d-pad and stick, which never scrolls the panel, so long lists (sector
  * select, 25 Time Trial entries) hid the selection off-screen. Keep whatever is
- * focused inside its scrolling panel, and let the right stick scroll freely.
+ * focused inside its scrolling panel, repeat a held d-pad / stick, and let the
+ * right stick scroll freely.
  */
 export function installMenuScroll(root: HTMLElement): void {
   const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
@@ -29,6 +30,18 @@ export function installMenuScroll(root: HTMLElement): void {
   }).observe(root, { subtree: true, attributes: true, attributeFilter: ["data-focused"] });
   root.addEventListener("focusin", (event) => reveal(event.target as Element));
 
+  // Hold to repeat: the Shell steps once per press; after a short hold, keep
+  // stepping by sending the same arrow the keyboard would, accelerating slightly.
+  let heldDirection = 0;
+  let heldSince = 0;
+  let nextStep = 0;
+  const step = (direction: number) => {
+    const key = direction > 0 ? "ArrowDown" : "ArrowUp";
+    const target = document.activeElement instanceof HTMLElement && root.contains(document.activeElement) ? document.activeElement : root;
+    target.dispatchEvent(new KeyboardEvent("keydown", { key, code: key, bubbles: true, cancelable: true }));
+    target.dispatchEvent(new KeyboardEvent("keyup", { key, code: key, bubbles: true, cancelable: true }));
+  };
+
   // Right stick: free scroll for panels whose content is not all focusable.
   let last = performance.now();
   const tick = (now: number) => {
@@ -36,6 +49,16 @@ export function installMenuScroll(root: HTMLElement): void {
     last = now;
     if (!document.body.classList.contains("playing")) {
       const pad = [...(navigator.getGamepads?.() ?? [])].find((entry) => entry?.connected);
+      const leftY = pad?.axes[1] ?? 0;
+      const direction = pad?.buttons[13]?.pressed || leftY > 0.7 ? 1 : pad?.buttons[12]?.pressed || leftY < -0.7 ? -1 : 0;
+      if (direction !== heldDirection) {
+        heldDirection = direction;
+        heldSince = now;
+        nextStep = now + 350;
+      } else if (direction !== 0 && now >= nextStep) {
+        step(direction);
+        nextStep = now + (now - heldSince > 1500 ? 55 : 90);
+      }
       const y = pad?.axes[3] ?? 0;
       if (Math.abs(y) > 0.25) {
         const panel = root.querySelector<HTMLElement>(".slu-panel");

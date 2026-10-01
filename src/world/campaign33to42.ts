@@ -117,7 +117,7 @@ const S37: RoomSpec = {
   enemies:[
     {id:"cross-n",kind:"sentry",position:[0,4,-24]}, {id:"cross-e",kind:"sentry",position:[24,7,0]},
     {id:"cross-s",kind:"sentry",position:[0,-1,24]}, {id:"cross-w",kind:"sentry",position:[-24,10,0]},
-    {id:"cross-mid",kind:"orbit",position:[0,8,0],orbit:{plane:"xz",radiusA:9,radiusB:9,speed:.1}},
+    {id:"cross-mid",kind:"orbit",position:[0,8,0],orbit:{plane:"xz",radiusA:9,radiusB:9,speed:.065}},
     {id:"cross-out",kind:"sentry",position:[0,2.2,-40]}
   ]
 };
@@ -188,7 +188,8 @@ const S40: RoomSpec = {
 // LOOP — a 68m-wide ring over a void around a solid core: climb the west side,
 // cross the summit, descend the east side, and close the loop at home. Every
 // Sphere sits in an alcove that opens only toward the platform before it, and
-// fins off the core hide each side from home, so the loop runs one way. Every
+// fins off the core hide each side from home, so the loop runs one way; the
+// last line home runs straight through the ring. Every
 // stepping stone falls away once you leave it, and a blade sweeps each climb.
 const S41: RoomSpec = {
   id:"sector-41-loop", title:"LOOP",
@@ -211,7 +212,7 @@ const S41: RoomSpec = {
     {id:"loop-c",kind:"sentry",position:[0,17.7,-56],hood:"-x"},
     {id:"loop-d",kind:"sentry",position:[32,12.7,-34],hood:"-x"},
     {id:"loop-e",kind:"sentry",position:[30,6.7,-10],hood:"-z"},
-    {id:"loop-f",kind:"sentry",position:[4,2.2,0],hood:"+x"}
+    {id:"loop-f",kind:"sentry",position:[-4,2.2,0],hood:"+x"}
   ],
   hazards:[
     {id:"loop-sweep-w",kind:"sweep",center:[-31,8,-22],size:[8,8,0.6],drift:{axis:"z",amplitude:9,speed:0.11}},

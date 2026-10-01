@@ -1,6 +1,6 @@
-import type { RoomSpec } from "../stages";
+import type { PlatformSpec, RoomSpec } from "../stages";
 import {
-  crawl, crouchSentry, cube, diamond, drifter, eye, field, floor, lockedGate, low, moving, orbit, ring, sentry,
+  crawl, crouchSentry, cube, diamond, drifter, eye, field, floor, lockedGate, low, moving, orbit, ring, sanctum, sentry,
   hooded, slitWallX, solid, sweep
 } from "../authoring";
 
@@ -23,6 +23,22 @@ function slalomWall(z: number, lowTop: number, highTop: number, winX0: number, w
   ];
 }
 
+/** A stepping stone that falls away once you leave it. */
+const pad = (x: number, top: number, z: number, w = 3, d = 3): PlatformSpec => ({ ...floor(x, top, z, w, d), collapse: { delay: "leave" } });
+
+/** A lethal plane with one square hole, centred where a warp line crosses it. */
+function holePlane(id: string, x: number, y: number, z: number) {
+  const h = 2.4;
+  return [field(`${id}-w`, x - 11, x - h, y, y + 0.4, z - 11, z + 11), field(`${id}-e`, x + h, x + 11, y, y + 0.4, z - 11, z + 11),
+    field(`${id}-n`, x - h, x + h, y, y + 0.4, z - 11, z - h), field(`${id}-s`, x - h, x + h, y, y + 0.4, z + h, z + 11)];
+}
+
+/** FREEFALL's dive: the spawn eye, then each Sphere, with one plane between each pair. */
+const FF: [number, number, number][] = [[0, 35.7, 3], [3, 22, -4], [9, 14, -12], [15, 7, -20]];
+const FF_PLANES = [27, 18, 10];
+
+function lockedWall(): PlatformSpec { return solid(-12, -8, 0, 20, -31, -29); }
+
 export interface TimeTrialCourse {
   label: string;
   inspiredBy?: string;
@@ -32,21 +48,27 @@ export interface TimeTrialCourse {
 
 export const TIME_TRIAL_COURSES: TimeTrialCourse[] = [
   {
-    label: "DOWNHILL", inspiredBy: "map-01", goldSeconds: 9,
+    // 01 DOWNHILL: a descending zig-zag of maces, each in reach only from the pad
+    // before it; the last hangs past the finish over the void, so the final warp
+    // is a Stop Short onto the pad.
+    label: "DOWNHILL", inspiredBy: "map-01", goldSeconds: 10,
     room: {
-      id: "tt-downhill", grammar: ["direct-anchor", "airborne-chain"],
-      spawn: eye(0, 16, 5), goal: ring(4, 0, -55), requiredKills: 4,
-      platforms: [floor(0, 16, 4, 8, 8), floor(-8, 12, -12, 5, 5), floor(6, 8, -26, 5, 5), floor(-6, 4, -40, 5, 5), floor(4, 0, -54, 8, 8)],
-      enemies: [sentry("dh-1", eye(-8, 12, -12)), sentry("dh-2", eye(6, 8, -26)), sentry("dh-3", eye(-6, 4, -40)), sentry("dh-4", eye(4, 0, -53))]
+      id: "tt-downhill", grammar: ["direct-anchor", "stop-short", "reorientation"],
+      spawn: eye(0, 16, 5), goal: ring(4, 0, -54), requiredKills: 4,
+      platforms: [floor(0, 16, 4, 8, 8), floor(-8, 12, -12, 4, 4), floor(6, 8, -26, 4, 4), floor(-6, 4, -40, 4, 4), floor(4, 0, -54, 8, 8)],
+      enemies: [sentry("dh-1", eye(-8, 12, -12), undefined, { within: 19 }), sentry("dh-2", eye(6, 8, -26), undefined, { within: 19 }),
+        sentry("dh-3", eye(-6, 4, -40), undefined, { within: 19 }), sentry("dh-4", [10, 0.5, -60], undefined, { within: 27 })]
     }
   },
   {
-    label: "DRIFT WINDOW", inspiredBy: "map-02", goldSeconds: 11,
+    // 02 DRIFT WINDOW: around two blocks, each drifter only in view from the pad before it.
+    label: "DRIFT WINDOW", inspiredBy: "map-02", goldSeconds: 12,
     room: {
-      id: "tt-drift-window", grammar: ["moving-endpoint", "stop-short"],
-      spawn: eye(-20, 0, 12), goal: ring(22, 4, -32), requiredKills: 3,
-      platforms: [floor(-20, 0, 10, 8, 8), floor(-6, 2, -4, 4, 4), floor(8, 3, -18, 4, 4), floor(22, 4, -32, 8, 8)],
-      enemies: [drifter("dw-1", eye(-6, 2, -4), "y", 2.5, 0.5), drifter("dw-2", eye(8, 3, -18), "x", 4, 0.62), drifter("dw-3", eye(21, 4, -30), "y", 2, 0.74)]
+      id: "tt-drift-window", grammar: ["moving-endpoint", "stop-short", "reorientation"],
+      spawn: eye(-20, 0, 10), goal: ring(0, 6, -34), requiredKills: 3,
+      platforms: [floor(-20, 0, 10, 8, 8), floor(-20, 3, -12, 4, 4), floor(0, 5, -12, 4, 4), floor(0, 6, -34, 8, 6),
+        solid(-16, -4, 0, 20, -8, 4), solid(-16, -4, 0, 20, -30, -18)],
+      enemies: [drifter("dw-1", eye(-20, 3, -12), "y", 2.5, 0.6), drifter("dw-2", eye(0, 5, -12), "x", 3, 0.7), drifter("dw-3", eye(0, 6, -32), "y", 2, 0.8)]
     }
   },
 
@@ -57,7 +79,7 @@ export const TIME_TRIAL_COURSES: TimeTrialCourse[] = [
       id: "tt-back-angle", grammar: ["reorientation", "origin-matters"],
       spawn: eye(0, 0, 1), goal: ring(0, 4, -21), requiredKills: 2,
       platforms: [floor(0, 0, 0, 12, 8), solid(-14, 14, 0, 6, -8, -6.5), floor(0, 12, 26, 5, 5), floor(0, 4, -20, 10, 8)],
-      enemies: [sentry("ba-1", eye(0, 12, 25)), sentry("ba-2", eye(0, 4, -19)), drifter("ba-decoy", [8, 7, -2], "y", 2, 0.6)]
+      enemies: [sentry("ba-1", eye(0, 12, 25), undefined, "-z"), sentry("ba-2", eye(0, 4, -19), undefined, "+z"), drifter("ba-decoy", [8, 7, -2], "y", 2, 0.6)]
     }
   },
 
@@ -93,64 +115,86 @@ export const TIME_TRIAL_COURSES: TimeTrialCourse[] = [
       id: "tt-corner-cut", grammar: ["route-fork", "stop-short"],
       spawn: eye(0, 0, 3), goal: ring(30, 0, -28), requiredKills: 3,
       platforms: [floor(0, 0, -12, 8, 32), floor(18, 0, -28, 28, 8), floor(12, 2, -12, 2, 2)],
-      enemies: [sentry("cc-1", eye(0, 0, -24)), sentry("cc-2", eye(12, 2, -12)), sentry("cc-3", eye(28, 0, -28)), orbit("cc-4", [16, 6, -8], "xz", 3, 3, 0.1)]
+      enemies: [sentry("cc-1", eye(0, 0, -24), undefined, "+z"), sentry("cc-2", eye(12, 2, -12), undefined, "-x"), sentry("cc-3", eye(28, 0, -28), undefined, "-x"), orbit("cc-4", [16, 6, -8], "xz", 3, 3, 0.1)]
     }
   },
   {
-    label: "SWITCHYARD", inspiredBy: "map-09", goldSeconds: 10,
+    // 07 SWITCHYARD: the Cube that opens the final gate sits behind the yard, so the
+    // fast line is shoot it on the way out, not on the way back.
+    label: "SWITCHYARD", inspiredBy: "map-09", goldSeconds: 11,
     room: {
-      id: "tt-switchyard", grammar: ["origin-matters", "reorientation"],
-      spawn: eye(0, 0, 3), goal: ring(0, 6, -35), requiredKills: 3,
-      platforms: [floor(0, 0, 0, 10, 10), floor(-10, 3, -16, 6, 6), floor(10, 3, -16, 6, 6), floor(0, 6, -34, 8, 6)],
-      enemies: [cube("sy-cube", [0, 3, -10], ["sy-gate"]), sentry("sy-1", eye(-10, 3, -16)), sentry("sy-2", eye(10, 3, -16)), sentry("sy-3", eye(0, 6, -33))],
-      hazards: [lockedGate("sy-gate", -4, 4, 5, 12, -28)]
+      id: "tt-switchyard", grammar: ["origin-matters", "reorientation", "route-fork"],
+      spawn: eye(0, 0, 3), goal: ring(0, 6, -38), requiredKills: 3,
+      platforms: [floor(0, 0, 0, 10, 10), floor(-12, 3, -16, 5, 5), floor(12, 5, -22, 5, 5), floor(0, 6, -38, 8, 6),
+        solid(-4, 4, 0, 14, -14, -10), lockedWall()],
+      enemies: [cube("sy-cube", [-15, 6, -21], ["sy-gate"]), hooded("sy-1", eye(-12, 3, -16), "+x"), hooded("sy-2", eye(12, 5, -22), "-x"), hooded("sy-3", eye(0, 6, -37), "+z")],
+      hazards: [{ id: "sy-gate", kind: "sightline-gate", center: [0, 10, -30], size: [16, 20, 0.45], cycle: { period: 999, openFor: 0.05, phase: 1 } }]
     }
   },
   {
-    label: "OUT AND BACK", inspiredBy: "map-10", goldSeconds: 14,
+    // 08 OUT AND BACK: out round the wall and home again on pads that fall away
+    // behind you, with a blade sweeping the home stretch.
+    label: "OUT AND BACK", inspiredBy: "map-10", goldSeconds: 15,
     room: {
-      id: "tt-out-and-back", grammar: ["route-fork", "reorientation"],
+      id: "tt-out-and-back", grammar: ["route-fork", "reorientation", "timing-chain"],
       spawn: eye(0, 8, 2), goal: ring(3, 8, -2), requiredKills: 4,
-      platforms: [floor(0, 8, 0, 10, 8), floor(-14, 4, -14, 5, 5), floor(0, 0, -28, 5, 5), floor(14, 4, -14, 5, 5), solid(-4, 4, 0, 14, -18, -10)],
-      enemies: [sentry("ob-1", eye(-14, 4, -14)), sentry("ob-2", eye(0, 0, -28)), sentry("ob-3", eye(14, 4, -14)), sentry("ob-home", eye(-3, 8, 1))]
+      platforms: [floor(0, 8, 0, 10, 8), pad(-14, 4, -14, 4, 4), pad(0, 0, -28, 4, 4), pad(14, 4, -14, 4, 4), solid(-4, 4, 0, 14, -18, -10)],
+      enemies: [hooded("ob-1", eye(-14, 4, -14), "+z"), hooded("ob-2", eye(0, 0, -28), "-x"), hooded("ob-3", eye(14, 4, -14), "-z"), hooded("ob-home", eye(-3, 8, 1), "+x")],
+      hazards: [sweep("ob-blade", [9, 7, -7], [0.6, 8, 10], "x", 5, 0.12)]
     }
   },
   {
-    label: "CORKSCREW", inspiredBy: "map-33", goldSeconds: 12,
+    // 09 CORKSCREW: up a spiral of small pads round a core while a horizontal blade
+    // rises and falls through every level: never wait on a pad.
+    label: "CORKSCREW", inspiredBy: "map-33", goldSeconds: 13,
     room: {
-      id: "tt-corkscrew", grammar: ["reorientation", "airborne-chain"],
+      id: "tt-corkscrew", grammar: ["reorientation", "airborne-chain", "timing-chain"],
       spawn: eye(0, 0, 8), goal: ring(0, 21, -6), requiredKills: 4,
-      platforms: [floor(0, 0, 8, 12, 8), solid(-1.5, 1.5, 0, 20, -7.5, -4.5), floor(10, 5, -6, 5, 5), floor(0, 10, -16, 5, 5), floor(-10, 15, -6, 5, 5), floor(0, 20.5, -6, 8, 8)],
-      enemies: [sentry("cs-1", eye(10, 5, -6)), sentry("cs-2", eye(0, 10, -16)), sentry("cs-3", eye(-10, 15, -6)), sentry("cs-4", eye(-3, 20.5, -6))]
+      platforms: [floor(0, 0, 8, 12, 8), solid(-1.5, 1.5, 0, 20, -7.5, -4.5), pad(10, 5, -6), pad(0, 10, -16), pad(-10, 15, -6), floor(0, 20.5, -6, 8, 8)],
+      enemies: [sentry("cs-1", eye(10, 5, -6), undefined, { within: 18 }), sentry("cs-2", eye(0, 10, -16), undefined, { within: 16 }),
+        sentry("cs-3", eye(-10, 15, -6), undefined, { within: 16 }), sentry("cs-4", eye(-3, 20.5, -6), undefined, { within: 10 })],
+      hazards: [sweep("cs-rise", [0, 11, -6], [26, 0.5, 26], "y", 8.5, 0.08)]
     }
   },
   {
-    label: "FREEFALL", inspiredBy: "map-36", goldSeconds: 8,
+    // 10 FREEFALL: a dive through three lethal planes, each with one hole on the
+    // line to the next Sphere: every warp threads the gap below it.
+    label: "FREEFALL", inspiredBy: "map-36", goldSeconds: 9,
     room: {
       id: "tt-freefall", grammar: ["airborne-chain", "stop-short"],
-      spawn: eye(0, 30, 3), goal: ring(16, 0, -24), requiredKills: 4,
-      platforms: [floor(0, 30, 3, 8, 6), floor(16, 0, -24, 10, 10)],
-      enemies: [sentry("ff-1", [8, 24, -4]), sentry("ff-2", [14, 17, -12]), sentry("ff-3", [8, 10, -20]), sentry("ff-4", eye(16, 0, -22), undefined, "+y")]
+      spawn: eye(0, 34, 3), goal: ring(16, 0, -24), requiredKills: 4,
+      platforms: [floor(0, 34, 3, 8, 6), floor(16, 0, -24, 10, 10)],
+      enemies: [sentry("ff-1", FF[1]!, undefined, { within: 16 }), sentry("ff-2", FF[2]!, undefined, { within: 13 }), sentry("ff-3", FF[3]!, undefined, { within: 13 }), sentry("ff-4", eye(16, 0, -22), undefined, { within: 7 })],
+      hazards: FF_PLANES.flatMap((y, i) => {
+        const a = FF[i]!, b = FF[i + 1]!, t = (a[1] - 0.72 - y) / (a[1] - b[1]);
+        return holePlane(`ff-${i}`, a[0] + (b[0] - a[0]) * t, y, a[2] + (b[2] - a[2]) * t);
+      })
     }
   },
 
   {
-    label: "HANDOFF", inspiredBy: "map-11", goldSeconds: 7,
+    // 11 RELAY (replaces HANDOFF): a horizontal relay across a wide void, two
+    // drifters handing you off mid-air around a tall fin, then a stop-short landing.
+    label: "RELAY RUN", inspiredBy: "map-11", goldSeconds: 10,
     room: {
-      id: "tt-handoff", grammar: ["airborne-chain", "moving-endpoint"],
-      spawn: eye(0, 24, 3), goal: ring(24, 0, -30), requiredKills: 3,
-      platforms: [floor(0, 24, 2, 8, 8), floor(24, 0, -30, 8, 8)],
-      enemies: [sentry("ho-1", [8, 21, -10]), drifter("ho-2", [16, 12, -20], "y", 1.5, 0.7), sentry("ho-3", eye(24, 0, -28), undefined, "+y")]
+      id: "tt-relay-run", grammar: ["airborne-chain", "moving-endpoint", "reorientation"],
+      spawn: eye(-28, 6, 0), goal: ring(28, 6, 0), requiredKills: 4,
+      platforms: [floor(-28, 6, 0, 6, 6), floor(28, 6, 0, 6, 6), pad(0, 10.3, 14), solid(-1, 1, 0, 24, -10, 10), solid(-16, -14, 0, 20, -4, 12), solid(14, 16, 0, 20, -12, 4)],
+      enemies: [drifter("rr-1", [-15, 9, -9], "x", 3, 0.9), drifter("rr-2", [0, 12, 14], "y", 3, 1.0), drifter("rr-3", [15, 9, 9], "x", 3, 0.9), sentry("rr-4", [33, 7.2, 1], undefined, { within: 21 })]
     }
   },
 
   {
-    label: "GALLERY SPRINT", inspiredBy: "map-39", goldSeconds: 10,
+    // 12 GALLERY SPRINT: a sprint along a gallery of baffles. Every Sphere hangs over
+    // the void just past its pad and behind the next baffle, so each warp is a Stop
+    // Short you can only line up from the pad before.
+    label: "GALLERY SPRINT", inspiredBy: "map-39", goldSeconds: 11,
     room: {
       id: "tt-gallery-sprint", grammar: ["stop-short", "reorientation"],
       spawn: eye(-30, 0, 0), goal: ring(34, 0, -4), requiredKills: 4,
-      platforms: [floor(-30, 0, 0, 8, 8), floor(-12, 2, -6, 5, 5), floor(4, 0, 4, 5, 5), floor(20, 3, -8, 5, 5), floor(34, 0, -4, 8, 8)],
-      enemies: [sentry("gs-1", eye(-12, 2, -6)), sentry("gs-2", eye(4, 0, 4)), sentry("gs-3", eye(20, 3, -8)), sentry("gs-4", eye(33, 0, -4))]
+      platforms: [floor(-30, 0, 0, 8, 8), floor(-12, 2, -6, 4, 4), floor(4, 0, 4, 4, 4), floor(20, 3, -8, 4, 4), floor(34, 0, -4, 6, 6),
+        solid(-21, -20, 0, 14, -2, 10), solid(-4, -3, 0, 14, -14, -2), solid(12, 13, 0, 14, 0, 12), solid(27, 28, 0, 14, -16, -6)],
+      enemies: [sentry("gs-1", [-6, 3.2, -9]), sentry("gs-2", [10, 1.2, 7]), sentry("gs-3", [26, 4.2, -11]), sentry("gs-4", [40, 1.2, -5])]
     }
   },
   {
@@ -170,74 +214,67 @@ export const TIME_TRIAL_COURSES: TimeTrialCourse[] = [
 
 
   {
-    label: "WHEEL", inspiredBy: "map-26", goldSeconds: 12,
+    // 14 WHEEL: a fast wheel of two Spheres in front of a wall; the far pad is only in
+    // view through the wheel's hub window, so the shot is timed to the wheel.
+    label: "WHEEL", inspiredBy: "map-26", goldSeconds: 11,
     room: {
-      id: "tt-wheel", grammar: ["moving-endpoint", "airborne-chain"],
+      id: "tt-wheel", grammar: ["moving-endpoint", "airborne-chain", "reorientation"],
       spawn: eye(-18, 0, -10), goal: ring(20, 12, -10), requiredKills: 3,
-      platforms: [floor(-18, 0, -10, 8, 10), floor(20, 12, -10, 8, 8)],
-      enemies: [
-        orbit("wh-1", [0, 10, -10], "yz", 8, 8, 0.08, 0),
-        orbit("wh-2", [0, 10, -10], "yz", 8, 8, 0.08, 3.1),
-        sentry("wh-3", eye(18, 12, -10), undefined, "-x")
-      ]
+      platforms: [floor(-18, 0, -10, 8, 10), floor(20, 12, -10, 6, 6),
+        solid(4, 5, 0, 24, -20, -12), solid(4, 5, 0, 24, -8, 0), solid(4, 5, 0, 8, -12, -8), solid(4, 5, 12, 24, -12, -8)],
+      enemies: [orbit("wh-1", [0, 10, -10], "yz", 7, 7, 0.14, 0), orbit("wh-2", [0, 10, -10], "yz", 7, 7, 0.14, 3.1), hooded("wh-3", eye(19, 12, -10), "-x")]
     }
   },
 
 
   {
-    label: "PISTONS", inspiredBy: "map-30", goldSeconds: 11,
+    // 15 SHUTTLE (replaces PISTONS): board a sideways shuttle and ride it. The two
+    // maces beside the ends of its run only fold in reach as you pass, and the
+    // finish mace only answers from the east end of the ride.
+    label: "SHUTTLE", inspiredBy: "map-30", goldSeconds: 14,
     room: {
-      id: "tt-pistons", grammar: ["moving-endpoint", "stop-short"],
-      spawn: eye(0, 0, 3), goal: ring(0, 12, -40), requiredKills: 3,
-      platforms: [
-        floor(0, 0, 2, 8, 8),
-        moving(floor(-6, 4, -14, 4, 4), "tt-piston-a", "y", 4, 0.15),
-        moving(floor(6, 8, -26, 4, 4), "tt-piston-b", "y", 4, 0.13, false, 1.5),
-        floor(0, 12, -40, 8, 6)
-      ],
-      enemies: [sentry("pi-1", eye(-6, 4, -14)), sentry("pi-2", eye(6, 8, -26)), hooded("pi-3", eye(0, 12, -39), "+z")]
+      id: "tt-shuttle", grammar: ["moving-endpoint", "origin-matters", "timing-chain"],
+      spawn: eye(0, 0, 8), goal: ring(14, 10, -24), requiredKills: 4,
+      platforms: [floor(0, 0, 8, 8, 6), moving(floor(0, 3, -6, 5, 4), "tt-shuttle-car", "x", 14, 0.09), floor(14, 10, -24, 6, 6)],
+      enemies: [sentry("sh-0", eye(0, 3, -6)), sentry("sh-1", [-14, 6.7, -12], undefined, { within: 8 }),
+        sentry("sh-2", [14, 6.7, -12], undefined, { within: 8 }), sentry("sh-3", eye(14, 10, -23), undefined, { within: 19 })]
     }
   },
   {
-    label: "GAUNTLET", inspiredBy: "map-32", goldSeconds: 18,
+    // 16 GAUNTLET: crawl, climb, chain and finish, on pads that fall away, through a
+    // blade band, to a finish that answers only from the orbit's reach.
+    label: "GAUNTLET", inspiredBy: "map-32", goldSeconds: 20,
     room: {
       id: "tt-gauntlet", grammar: ["low-profile", "airborne-chain", "stop-short", "reorientation"],
       spawn: eye(0, 0, 4), goal: ring(0, 10, -60), requiredKills: 6,
       platforms: [
         floor(0, 0, 0, 10, 12),
         solid(-12, -1.5, 0, 14, -8, -6.5), solid(1.5, 12, 0, 14, -8, -6.5), solid(-1.5, 1.5, 0, 0.8, -8, -6.5), solid(-1.5, 1.5, 1.35, 14, -8, -6.5),
-        floor(0, 0, -16, 6, 6),
-        floor(-10, 6, -28, 5, 5), floor(10, 6, -40, 5, 5),
-        floor(0, 10, -60, 8, 8)
+        pad(0, 0, -16, 5, 5), pad(-10, 6, -28, 4, 4), pad(10, 6, -40, 4, 4), floor(0, 10, -60, 8, 8)
       ],
       enemies: [
-        crouchSentry("ga-1", 0, 0, -16), sentry("ga-2", eye(-10, 6, -28)), drifter("ga-3", [0, 9, -34], "x", 4, 0.6),
-        sentry("ga-4", eye(10, 6, -40)), orbit("ga-5", [0, 13, -50], "xz", 3, 2, 0.1), sentry("ga-6", eye(0, 10, -58))
-      ]
+        crouchSentry("ga-1", 0, 0, -16), hooded("ga-2", eye(-10, 6, -28), "+z"), drifter("ga-3", [0, 9, -34], "x", 4, 0.9),
+        hooded("ga-4", eye(10, 6, -40), "-x"), orbit("ga-5", [0, 13, -50], "xz", 3, 2, 0.12), sentry("ga-6", eye(0, 10, -58), undefined, { within: 12 })
+      ],
+      hazards: [sweep("ga-band", [0, 9, -34], [26, 6, 0.8], "z", 7, 0.11)]
     }
   },
 
   // ------------------------------------------------------------ v0.16 courses
   {
-    label: "BLADE RUN", inspiredBy: "map-18", goldSeconds: 11,
+    // 17 BLADE RUN: pylons over the void; two blades sweep the length of the warp
+    // band and a third cuts across it. Every Sphere answers only from the pylon before.
+    label: "BLADE RUN", inspiredBy: "map-18", goldSeconds: 12,
     room: {
       id: "tt-blade-run", grammar: ["airborne-chain", "timing-chain"],
       spawn: eye(0, 2, 8), goal: ring(0, 9, -46), requiredKills: 4,
-      platforms: [
-        floor(0, 2, 8, 8, 6),
-        floor(0, 0, -18, 22, 40),
-        solid(-8, -5, 0, 6, -9, -6), solid(5, 8, 0, 8, -21, -18), solid(-8, -5, 0, 7, -33, -30),
-        floor(0, 9, -46, 8, 6)
-      ],
-      enemies: [
-        sentry("br-1", eye(-6.5, 6, -7.5)), sentry("br-2", eye(6.5, 8, -19.5)),
-        sentry("br-3", eye(-6.5, 7, -31.5)), sentry("br-4", eye(0, 9, -45))
-      ],
+      platforms: [floor(0, 2, 8, 8, 6), solid(-8, -5, -20, 6, -9, -6), solid(5, 8, -20, 8, -21, -18), solid(-8, -5, -20, 7, -33, -30), floor(0, 9, -46, 8, 6)],
+      enemies: [sentry("br-1", eye(-6.5, 6, -7.5), undefined, { within: 18 }), sentry("br-2", eye(6.5, 8, -19.5), undefined, { within: 18 }),
+        sentry("br-3", eye(-6.5, 7, -31.5), undefined, { within: 18 }), sentry("br-4", eye(0, 9, -45), undefined, { within: 16 })],
       hazards: [
-        // Blades run through the warp band (5.5-11.5m), not the floor: they cross
-        // every pylon top and every line between pylons, so each release is timed.
-        sweep("br-a", [0, 8.5, -18], [22, 6, 0.8], "z", 19, 0.09),
-        sweep("br-b", [0, 8.5, -18], [22, 6, 0.8], "z", 19, 0.09, Math.PI)
+        sweep("br-a", [0, 8.5, -18], [22, 6, 0.8], "z", 19, 0.1),
+        sweep("br-b", [0, 8.5, -18], [22, 6, 0.8], "z", 19, 0.1, Math.PI),
+        sweep("br-c", [0, 8.5, -20], [0.8, 6, 30], "x", 9, 0.13, 1.2)
       ]
     }
   },
@@ -254,8 +291,8 @@ export const TIME_TRIAL_COURSES: TimeTrialCourse[] = [
         solid(18, 26, -20, 4, -28, -20)
       ],
       enemies: [
-        sentry("st-1", eye(-8, 10, -12)), sentry("st-2", eye(2, 16, -2)),
-        sentry("st-3", eye(10, 7, -16)), hooded("st-4", eye(22, 4, -22), "+y")
+        sentry("st-1", eye(-8, 10, -12), undefined, "-x"), sentry("st-2", eye(2, 16, -2), undefined, "-x"),
+        sentry("st-3", eye(10, 7, -16), undefined, "+z"), hooded("st-4", eye(22, 4, -22), "-x")
       ]
     }
   },
@@ -304,9 +341,9 @@ export const TIME_TRIAL_COURSES: TimeTrialCourse[] = [
         floor(30, 16, 0, 8, 8)
       ],
       enemies: [
-        sentry("wv-1", eye(-18, 2, 0)), sentry("wv-2", eye(-12, 11, -9)), sentry("wv-3", eye(-2, 4, 0)),
-        sentry("wv-4", eye(4, 13, 9)), sentry("wv-5", eye(12, 6, 0), undefined, "-y"),
-        sentry("wv-6", eye(29, 16, 0))
+        sentry("wv-1", eye(-18, 2, 0), undefined, "-x"), sentry("wv-2", eye(-12, 11, -9), undefined, "-y"), sentry("wv-3", eye(-2, 4, 0), undefined, "-x"),
+        sentry("wv-4", eye(4, 13, 9), undefined, "-y"), sentry("wv-5", eye(12, 6, 0), undefined, "+z"),
+        sentry("wv-6", eye(29, 16, 0), undefined, "-x")
       ]
     }
   },
@@ -321,24 +358,21 @@ export const TIME_TRIAL_COURSES: TimeTrialCourse[] = [
         floor(-18, 5, -18, 6, 6), floor(18, 8, -18, 6, 6), floor(18, 3, 18, 6, 6)
       ],
       enemies: [
-        sentry("rt-1", eye(-18, 5, -18)), sentry("rt-2", eye(18, 8, -18)), sentry("rt-3", eye(18, 3, 18)),
+        sentry("rt-1", eye(-18, 5, -18), undefined, "+z"), sentry("rt-2", eye(18, 8, -18), undefined, "-x"), sentry("rt-3", eye(18, 3, 18), undefined, "-z"),
         sentry("rt-4", eye(3, 0, 2), undefined, "+z")
       ]
     }
   },
   {
-    label: "CROSSFIRE", inspiredBy: "map-37", goldSeconds: 12,
+    // 23 CROSSFIRE: you start shut in a hub with one west doorway; three spokes, each
+    // alcove opening toward the spoke before it, so the only order is a loop:
+    // west, south, east, then out.
+    label: "CROSSFIRE", inspiredBy: "map-37", goldSeconds: 13,
     room: {
-      id: "tt-crossfire", grammar: ["route-fork", "origin-matters"],
+      id: "tt-crossfire", grammar: ["route-fork", "origin-matters", "reorientation"],
       spawn: eye(0, 0, 0), goal: ring(0, 12, -22), requiredKills: 4,
-      platforms: [
-        floor(0, 0, 0, 10, 10), floor(-20, 4, 0, 6, 6), floor(20, 6, 0, 6, 6), floor(0, 2, 20, 6, 6),
-        floor(0, 12, -22, 8, 6)
-      ],
-      enemies: [
-        sentry("cf-w", eye(-20, 4, 0)), sentry("cf-e", eye(20, 6, 0)), sentry("cf-s", eye(0, 2, 20)),
-        hooded("cf-out", eye(0, 12, -21), "+z")
-      ]
+      platforms: [...sanctum(0, 0, 0, 10, 10, "w"), pad(-20, 4, 0, 5, 5), pad(20, 6, 0, 5, 5), pad(0, 2, 20, 5, 5), floor(0, 12, -22, 8, 6)],
+      enemies: [hooded("cf-w", eye(-20, 4, 0), "+x"), hooded("cf-s", eye(0, 2, 20), "-x"), hooded("cf-e", eye(20, 6, 0), "+z"), hooded("cf-out", eye(0, 12, -21), "+x")]
     }
   },
   {

@@ -85,7 +85,7 @@ export const REVERSAL_LABYRINTH_ROOMS: RoomSpec[] = [
       { id: "reverse03-a", kind: "sentry", position: [-12, 6, -30] },
       { id: "reverse03-b", kind: "orbit", position: [0, 10, -48], orbit: { plane: "xz", radiusA: 11, radiusB: 6, speed: .12 } },
       { id: "reverse03-c", kind: "sentry", position: [12, 8, -59] },
-      { id: "reverse03-d", kind: "sentry", position: [-8, 6, -88], hood: "-x" },
+      { id: "reverse03-d", kind: "sentry", position: [-8, 6, -88], hood: "+z" },
       { id: "reverse03-e", kind: "sentry", position: [0, 3, -120] }
     ],
     hazards: [

@@ -478,7 +478,8 @@ export class TraversalGame {
 
       if (enemy.spec.orbit) {
         const orbit = enemy.spec.orbit;
-        const angle = time * orbit.speed * this.enemySpeedScalar + (orbit.phase ?? 0);
+        // Orbit speed is laps per second, like platform and hazard motion.
+        const angle = time * orbit.speed * Math.PI * 2 * this.enemySpeedScalar + (orbit.phase ?? 0);
         const a = Math.cos(angle) * orbit.radiusA;
         const b = Math.sin(angle) * orbit.radiusB;
         enemy.mesh.position.copy(enemy.base);

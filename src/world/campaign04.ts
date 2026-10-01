@@ -51,12 +51,12 @@ export const MAP_04_FIELD: RoomSpec[] = [
       { id: "cross-break", kind: "sentry", position: [0, 4.2, -80], radius: 0.62 },
 
       // Orbit's base is its locus; the endpoint continuously changes altitude and angle.
-      { id: "cross-orbit-intro", kind: "orbit", position: [0, 5.2, -91], radius: 0.64, orbit: { plane: "xy", radiusA: 8, radiusB: 3.2, speed: 0.72 } },
-      { id: "cross-orbit-transfer", kind: "orbit", position: [7, 7, -106], radius: 0.62, orbit: { plane: "yz", radiusA: 4.5, radiusB: 6, speed: 0.64, phase: 1.6 } },
+      { id: "cross-orbit-intro", kind: "orbit", position: [0, 5.2, -91], radius: 0.64, orbit: { plane: "xy", radiusA: 8, radiusB: 3.2, speed: 0.1146 } },
+      { id: "cross-orbit-transfer", kind: "orbit", position: [7, 7, -106], radius: 0.62, orbit: { plane: "yz", radiusA: 4.5, radiusB: 6, speed: 0.1019, phase: 1.6 } },
 
       // Junction offers an outer/static route and a faster orbit route.
       { id: "cross-junction-left", kind: "drifter", position: [-15, 7.7, -124], drift: { axis: "y", amplitude: 2, speed: 0.68 } },
-      { id: "cross-junction-orbit", kind: "orbit", position: [0, 7, -132], radius: 0.68, orbit: { plane: "xy", radiusA: 13, radiusB: 4.5, speed: 0.58, phase: 0.8 } },
+      { id: "cross-junction-orbit", kind: "orbit", position: [0, 7, -132], radius: 0.68, orbit: { plane: "xy", radiusA: 13, radiusB: 4.5, speed: 0.0923, phase: 0.8 } },
       { id: "cross-junction-right", kind: "sentry", position: [15, 8.2, -124], radius: 0.58 },
       { id: "cross-counterflow", kind: "sentry", position: [-2, -0.2, -151], radius: 0.5 },
       { id: "cross-final", kind: "sentry", position: [0, 3.2, -178], radius: 0.68 }
@@ -84,15 +84,15 @@ export const MAP_04_COURSE: RoomSpec[] = [
     id: "map-04-02", title: "ORBIT", lesson: "The endpoint changes the line and arrival angle together. Choose the useful arc.",
     grammar: ["moving-endpoint", "stop-short", "origin-matters"], spawn: [0, 2.2, 8], goal: [8, 1.1, -25], requiredKills: 1,
     platforms: [{ center: [0, 0, 7], size: [11, 1, 11] }, { center: [0, 0, -11], size: [5, 1, 5] }, { center: [8, 0, -25], size: [9, 1, 9] }],
-    enemies: [{ id: "m4-orbit", kind: "orbit", position: [0, 5, -20], orbit: { plane: "xy", radiusA: 9, radiusB: 3, speed: 0.72 } }]
+    enemies: [{ id: "m4-orbit", kind: "orbit", position: [0, 5, -20], orbit: { plane: "xy", radiusA: 9, radiusB: 3, speed: 0.1146 } }]
   },
   {
     id: "map-04-03", title: "ALIGNMENT", lesson: "Two cycles briefly create one route. Read their relationship, not either target alone.",
     grammar: ["moving-endpoint", "airborne-chain", "reorientation"], spawn: [-8, 2.2, 7], goal: [8, 1.1, -36], requiredKills: 2,
     platforms: [{ center: [-8, 0, 6], size: [10, 1, 10] }, { center: [0, 3, -14], size: [5, 1, 5] }, { center: [8, 0, -36], size: [10, 1, 10] }],
     enemies: [
-      { id: "m4-align-a", kind: "orbit", position: [-1, 6, -13], orbit: { plane: "xy", radiusA: 7, radiusB: 2.5, speed: 0.64 } },
-      { id: "m4-align-b", kind: "orbit", position: [6, 6, -31], orbit: { plane: "yz", radiusA: 3.5, radiusB: 5, speed: 0.58, phase: 1.4 } }
+      { id: "m4-align-a", kind: "orbit", position: [-1, 6, -13], orbit: { plane: "xy", radiusA: 7, radiusB: 2.5, speed: 0.1019 } },
+      { id: "m4-align-b", kind: "orbit", position: [6, 6, -31], orbit: { plane: "yz", radiusA: 3.5, radiusB: 5, speed: 0.0923, phase: 1.4 } }
     ]
   },
   {
@@ -101,7 +101,7 @@ export const MAP_04_COURSE: RoomSpec[] = [
     platforms: [{ center: [-8, 0, 6], size: [10, 1, 10] }, { center: [8, 0, -39], size: [11, 1, 10] }, { center: [0, 2, -17], size: [6, 1, 6] }],
     enemies: [
       { id: "m4-crossing-a", kind: "drifter", position: [0, 6, -17], drift: { axis: "y", amplitude: 3, speed: 0.72 } },
-      { id: "m4-crossing-b", kind: "orbit", position: [6, 6, -34], orbit: { plane: "xy", radiusA: 5, radiusB: 3, speed: 0.68, phase: 0.7 } }
+      { id: "m4-crossing-b", kind: "orbit", position: [6, 6, -34], orbit: { plane: "xy", radiusA: 5, radiusB: 3, speed: 0.1082, phase: 0.7 } }
     ],
     hazards: [{ id: "m4-crossing-sweep", kind: "sweep", center: [0, 4.5, -26], size: [0.5, 9, 20], drift: { axis: "x", amplitude: 12, speed: 0.35, phase: 0.4 } }]
   },
@@ -115,7 +115,7 @@ export const MAP_04_COURSE: RoomSpec[] = [
     ],
     enemies: [
       { id: "m4-final-left", kind: "drifter", position: [-10, 4.2, -14], drift: { axis: "y", amplitude: 2, speed: 0.65 } },
-      { id: "m4-final-orbit", kind: "orbit", position: [2, 7, -27], orbit: { plane: "xy", radiusA: 8, radiusB: 3, speed: 0.62 } },
+      { id: "m4-final-orbit", kind: "orbit", position: [2, 7, -27], orbit: { plane: "xy", radiusA: 8, radiusB: 3, speed: 0.0987 } },
       { id: "m4-final-safe", kind: "sentry", position: [10, 6.2, -27] },
       { id: "m4-final-low", kind: "drifter", position: [-7, 3.2, -44], drift: { axis: "x", amplitude: 3, speed: 0.78 } },
       { id: "m4-final-exit", kind: "sentry", position: [0, 2.8, -61] }

@@ -7,6 +7,7 @@ import { registerCampaign02 } from "../src/world/registerCampaign02";
 import { registerCampaign03 } from "../src/world/registerCampaign03";
 import { registerCampaign04 } from "../src/world/registerCampaign04";
 import { solveRoom } from "../src/world/routeSolver";
+import { motionTimings } from "../src/world/humanTiming";
 import { INTERIOR_PILOT_ROOMS } from "../src/world/interiorPilot";
 import type { RoomSpec } from "../src/world/stages";
 
@@ -68,6 +69,18 @@ for (const entry of entries) {
     const severity = entry.blocking ? "ERROR" : "WARN ";
     if (entry.blocking) errors += 1;
     console.log(`[${severity}] ${entry.key} :: route.unsolved :: ${result.reason}`);
+  }
+}
+
+// Human timing: a moving Sphere a person cannot reasonably catch (a lap slower
+// than SLOW_PERIOD, or a landing window under TIGHT_WINDOW) fails the build,
+// even when the solver can prove an exact-moment route through it.
+for (const entry of entries) {
+  if (!entry.blocking) continue;
+  for (const timing of motionTimings(entry.room)) {
+    if (timing.verdict === "OK") continue;
+    errors += 1;
+    console.log(`[ERROR] ${entry.key} :: motion.${timing.verdict.toLowerCase()} :: ${timing.actor} cycles in ${timing.period}s, lands safely for ${timing.window}s per cycle`);
   }
 }
 

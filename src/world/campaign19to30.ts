@@ -179,7 +179,7 @@ const S23: RoomSpec = {
   enemies: RING_ANGLES.slice(1).map((_, i) => orbit(
     `pursuit-${String(i + 1).padStart(2, "0")}`,
     [0, ringTop(i + 1) + 1.7, -20],
-    "xz", 16, 16, 0.05, i * 0.9
+    "xz", 16, 16, 0.07, i * 0.9
   ))
 };
 
@@ -221,32 +221,31 @@ const S25: RoomSpec = {
   ]
 };
 
-// ORBIT — a vertical wheel of Spheres turning in front of the summit pillar. The
-// wheel's Spheres are maces with a short reach that only the lift's path crosses,
-// the summit answers only from the top of the lift's stroke, and the lift sleeps
-// until the west Diamond wakes it: wake it, ride it, fire as the wheel comes round.
+// ORBIT — you are the moving part. Take the west perch, wake the lift with its
+// Diamond, then ride: maces beside the lift's path fold their spikes only while
+// the ride carries you into reach (one low, one high), and the summit's orbiting
+// Sphere answers only from the top of the stroke. Static targets, moving origin.
 const S26: RoomSpec = {
   id: "sector-26-orbit",
   title: "ORBIT",
-  lesson: "Motion is the frame of reference. Diamond changes the platform cycle; orbiting Spheres decide when it matters.",
-  grammar: ["moving-endpoint", "airborne-chain", "origin-matters", "reorientation"],
+  lesson: "Motion is the frame of reference. Diamond changes the platform cycle; the ride decides what is in reach.",
+  grammar: ["moving-endpoint", "origin-matters", "reorientation", "timing-chain"],
   spawn: eye(0, 0, 2),
-  goal: ring(0, 26, -33),
-  requiredKills: 6,
+  goal: ring(0, 24, -31),
+  requiredKills: 5,
   platforms: [
     floor(0, 0, 2, 12, 8),
     floor(-16, 10, -20, 5, 5),
-    moving(floor(16, 16, -20, 5, 5), "orbit-lift", "y", 8, 0.07, true),
-    solid(-3, 3, 0, 26, -36, -30)
+    moving(floor(14, 14, -20, 5, 5), "orbit-lift", "y", 8, 0.07, true),
+    solid(-3, 3, 0, 24, -34, -28)
   ],
   enemies: [
-    { ...orbit("wheel-a", [3, 14, -20], "xy", 10, 10, 0.06, 0), originConstraint: { within: 5.5 } },
-    { ...orbit("wheel-b", [3, 14, -20], "xy", 10, 10, 0.06, 2.1), originConstraint: { within: 5.5 } },
-    { ...orbit("wheel-c", [3, 14, -20], "xy", 10, 10, 0.06, 4.2), originConstraint: { within: 5.5 } },
     sentry("orbit-west", eye(-16, 10, -20)),
     diamond("orbit-diamond", [-16, 13, -23], ["orbit-lift"]),
-    sentry("orbit-east", eye(16, 16, -20)),
-    { ...hooded("orbit-summit", eye(0, 26, -31), "+x"), originConstraint: { within: 16 } }
+    sentry("orbit-east", eye(14, 14, -20)),
+    sentry("orbit-low", [9, 10, -20], undefined, { within: 4 }),
+    sentry("orbit-high", [9, 19, -20], undefined, { within: 4 }),
+    { ...orbit("orbit-summit", [0, 25.7, -31], "xz", 2, 2, 0.16), originConstraint: { within: 17 } }
   ]
 };
 

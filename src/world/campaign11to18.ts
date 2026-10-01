@@ -268,7 +268,7 @@ const S17: RoomSpec = {
     drifter("pulse-02", [-5, 10, 4], "y", 2, 0.8),
     sentry("pulse-03", eye(-18, 4, -6)),
     crouchSentry("pulse-04", -12, 4, -6),
-    sentry("pulse-05", eye(5, 0.5, -8), undefined, "-y")
+    sentry("pulse-05", eye(5, 0.5, -8))
   ],
   hazards: [
     field("pulse-membrane", -5.5, -4.5, -2, 16, -14, 2, { period: 2.6, openFor: 1.0 })

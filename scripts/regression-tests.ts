@@ -6,6 +6,7 @@ import { registerCampaign03 } from "../src/world/registerCampaign03";
 import { registerCampaign04 } from "../src/world/registerCampaign04";
 import { evaluateActorOrigin } from "../src/world/spatialActors";
 import { withHoods } from "../src/world/authoring";
+import { motionTimings } from "../src/world/humanTiming";
 import { ROOMS, type RoomSpec } from "../src/world/stages";
 import { validateRoom, validateRoomCatalog } from "../src/world/contentValidation";
 import { solveRoom } from "../src/world/routeSolver";
@@ -229,6 +230,17 @@ function testRouteSolverAndSuites(): void {
 
   const mace: RoomSpec = { ...base, enemies: [{ id: "vault", kind: "sentry", position: [0, 2.2, -24], originConstraint: { within: 0.5 } }] };
   assert(validateRoom(mace).issues.some((issue) => issue.code === "enemy.origin.within"), "Content Doctor rejects a proximity range inside the Sphere");
+
+  // Human timing: orbit speed is laps per second; a slow lap or a sliver of a
+  // landing window is flagged even though the solver can prove an exact moment.
+  const lap = (speed: number, radius: number, w: number): RoomSpec => ({
+    ...base,
+    platforms: [{ center: [0, 0, 0], size: [8, 1, 8] }, { center: [radius, 0, -24], size: [w, 1, w] }],
+    enemies: [{ id: "o", kind: "orbit", position: [0, 2.2, -24], orbit: { plane: "xz", radiusA: radius, radiusB: radius, speed } }]
+  });
+  equal(motionTimings(lap(0.06, 3, 3))[0]!.verdict, "SLOW", "a 16s+ orbit lap is flagged as slow");
+  equal(motionTimings(lap(0.12, 9, 2))[0]!.verdict, "TIGHT", "a sub-0.7s landing window is flagged as tight");
+  equal(motionTimings(lap(0.12, 3, 3))[0]!.verdict, "OK", "a short lap over a fair pad is fine");
 
   // Dropping is one-way: a Sphere only visible from below cannot be spent from above.
   const ledge: RoomSpec = {

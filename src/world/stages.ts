@@ -37,7 +37,9 @@ export interface EnemySpec {
   kind: EnemyKind;
   position: Vec3Tuple;
   radius?: number;
+  /** speed: radians per second (period = 2π / speed). */
   drift?: { axis: "x" | "y"; amplitude: number; speed: number };
+  /** speed: laps per second (period = 1 / speed). */
   orbit?: {
     plane: "xy" | "xz" | "yz";
     radiusA: number;
