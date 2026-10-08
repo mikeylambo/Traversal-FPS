@@ -33,7 +33,13 @@ export const MODEL_SLOTS: ModelSlot[] = [
   { key: "exit.gravity-ring.default", file: "gravity-ring.glb", enabled: false, length: 2.6, tier: "standard" },
   { key: "actor.cube.default", file: "cube-shell.glb", enabled: false, length: 1.6 },
   { key: "actor.diamond.default", file: "diamond-shell.glb", enabled: false, length: 2.2 },
-  { key: "actor.prism.default", file: "prism-shell.glb", enabled: false, length: 2.4 }
+  { key: "actor.prism.default", file: "prism-shell.glb", enabled: false, length: 2.4 },
+  // Campaign architecture (src/render/ActEnvironment.ts sizes each instance itself).
+  { key: "environment.act-i.pylon", file: "act1-pylon.glb", enabled: false, length: 1, tier: "background" },
+  { key: "environment.act-ii.drum", file: "act2-drum.glb", enabled: false, length: 1, rotation: [0, 0, Math.PI / 2], tier: "background" },
+  { key: "environment.act-iii.piston", file: "act3-piston.glb", enabled: false, length: 1, tier: "background" },
+  { key: "environment.act-iv.ring", file: "act4-ring.glb", enabled: false, length: 1, tier: "background" },
+  { key: "environment.finale.frame", file: "finale-frame.glb", enabled: false, length: 1, tier: "background" }
 ];
 
 const FORWARD_YAW: Record<NonNullable<ModelSlot["forward"]>, number> = { "-z": 0, "+z": Math.PI, "+x": Math.PI / 2, "-x": -Math.PI / 2 };

@@ -53,6 +53,7 @@ import { installSettingsFocusRetention } from "./game/SettingsFocusRuntime";
 import { installControlsRuntime } from "./game/ControlsRuntime";
 import { installUISounds } from "./game/UISoundRuntime";
 import { installMenuScroll } from "./game/MenuScrollRuntime";
+import { installConstructMenu } from "./render/ConstructMenu";
 import { installAccessibilityRuntime } from "./game/AccessibilityRuntime";
 import { installSpatialActorRuntime } from "./game/SpatialActorRuntime";
 import { TraversalProgression, ACHIEVEMENTS } from "./game/Progression";
@@ -415,6 +416,15 @@ app.flow.onBack = (screenId: string) => {
 
 installUISounds(app.flow, uiRoot);
 installMenuScroll(uiRoot);
+installConstructMenu(uiRoot, () => {
+  const snapshot = progression.snapshot();
+  const cleared = new Set<number>();
+  for (const id of snapshot.completedMaps) {
+    const match = /^map-(\d+)$/.exec(id);
+    if (match) cleared.add(Number(match[1]));
+  }
+  return { cleared, campaignComplete: snapshot.campaign.completed, reverseComplete: snapshot.achievements.includes("reverse-clear") };
+});
 installSettingsFocusRetention(app.flow, app.ui, uiRoot);
 installControlsRuntime(app.flow, app.ui as any);
 

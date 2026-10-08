@@ -8,6 +8,7 @@
  *   &cam=x,y,z,yaw,pitch   freeze the camera there (radians) for a screenshot
  *   &t=12                  advance the room clock this many seconds first
  *   &kill=id,id            resolve these actors on load (to stage consequences)
+ *   &kills=N               pretend N Spheres are already down (finale gate progress)
  *   &clean=1               hide HUD, dev overlays and the rifle for a scene shot
  *
  * window.__harness exposes the game for scripted captures.
@@ -122,6 +123,7 @@ void shell.loadLevel().then(() => {
     const effect = (enemy.spec as { effect?: unknown }).effect;
     if (effect) window.dispatchEvent(new CustomEvent("traversal:puzzle-actor", { detail: { roomId: "", actorId: id, kind, effect } }));
   }
+  if (params.has("kills")) (game as unknown as { roomKills: number }).roomKills = Number(params.get("kills"));
   const advance = Number(params.get("t") ?? 0);
   const freeze = () => {
     const cam = params.get("cam");
