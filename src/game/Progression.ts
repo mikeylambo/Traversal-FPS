@@ -30,6 +30,8 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
   { id: "gold-line", label: "GOLD LINE", description: "Beat a Time Trial course's Gold time." },
   { id: "all-gold", label: "ALL GOLD", description: "Beat Gold on every Time Trial course." },
   { id: "exact-all", label: "EXACT", description: "Clear all 24 Challenge chambers." },
+  { id: "challenge-perfect", label: "PERFECT", description: "Earn Perfect on a Challenge chamber." },
+  { id: "perfect-all", label: "FLAWLESS", description: "Earn Perfect on every Challenge chamber." },
   { id: "reverse-clear", label: "THE REVERSE", description: "Complete The Reverse." }
 ];
 
@@ -63,8 +65,13 @@ export interface TraversalProgressData {
   sectors: Record<string, SectorProgress>;
   timeTrialMedals: Record<string, string>;
   challengeClears: string[];
+  /** Best grade per Challenge chamber: "good" | "great" | "perfect". */
+  challengeGrades: Record<string, ChallengeGrade>;
   secretsFound: string[];
 }
+
+export type ChallengeGrade = "good" | "great" | "perfect";
+export const GRADE_RANK: Record<ChallengeGrade, number> = { good: 1, great: 2, perfect: 3 };
 
 type LegacyProgressData = Partial<Pick<
   TraversalProgressData,
@@ -102,6 +109,7 @@ function emptyProgress(): TraversalProgressData {
     sectors: {},
     timeTrialMedals: {},
     challengeClears: [],
+    challengeGrades: {},
     secretsFound: []
   };
 }
@@ -259,6 +267,15 @@ export class TraversalProgression {
     await this.persist();
   }
 
+  /** Keeps the best grade; returns true when this one improved it. */
+  async recordChallengeGrade(challengeId: string, grade: ChallengeGrade): Promise<boolean> {
+    const previous = this.data.challengeGrades[challengeId];
+    if (previous && GRADE_RANK[previous] >= GRADE_RANK[grade]) return false;
+    this.data.challengeGrades[challengeId] = grade;
+    await this.persist();
+    return true;
+  }
+
   async recordSecret(secretId: string): Promise<void> {
     if (this.data.secretsFound.includes(secretId)) return;
     this.data.secretsFound.push(secretId);
@@ -301,6 +318,7 @@ function normalizeProgress(saved: TraversalProgressData): TraversalProgressData 
     sectors: saved.sectors ?? {},
     timeTrialMedals: saved.timeTrialMedals ?? {},
     challengeClears: saved.challengeClears ?? [],
+    challengeGrades: saved.challengeGrades ?? {},
     secretsFound: saved.secretsFound ?? []
   };
 }

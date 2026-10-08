@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#06121f" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/interface-minimal.css" />
+  <link rel="stylesheet" href="/src/mobile-playtest.css" />
+  <link rel="stylesheet" href="/src/mobile-menu.css" />
+  <link rel="stylesheet" href="/src/mobile-combat-v2.css" />
+  <link rel="stylesheet" href="/src/mobile-combat-fixes.css" />
+  <link rel="stylesheet" href="/src/mobile-combat-final.css?v=20260909-2" />
+  <link rel="stylesheet" href="/src/mobile-ui-polish.css?v=20260909-1" />
+  <link rel="stylesheet" href="/src/mobile-warp-readout-fix.css?v=20260910-1" />
+  <title>Traversal Harness</title>
+</head>
+<body>
+  <div id="game">
+    <canvas id="game-canvas"></canvas>
+
+    <div id="warp-fx" aria-hidden="true">
+      <div class="warp-vignette"></div>
+      <div class="warp-streaks"></div>
+    </div>
+
+    <div id="hud" aria-live="polite">
+      <div class="hud-grid" aria-hidden="true"></div>
+
+      <section id="mission-panel" class="hud-frame hud-frame-left">
+        <span id="mission-eyebrow" class="hud-eyebrow"></span>
+        <strong id="room-label"></strong>
+        <span id="room-objective"></span>
+      </section>
+
+      <section id="metric-panel" class="hud-frame hud-frame-right">
+        <span id="mode-label" class="hud-eyebrow"></span>
+        <strong id="run-primary"></strong>
+        <span id="run-stats"></span>
+      </section>
+
+      <button id="visual-lab-toggle" type="button" aria-expanded="false">LOOKDEV</button>
+
+      <div id="tutorial-card">
+        <div class="tutorial-rail" aria-hidden="true"></div>
+        <span id="tutorial-room"></span>
+        <strong id="tutorial-text"></strong>
+        <span class="tutorial-skip">T // DISMISS</span>
+      </div>
+
+      <div id="vector-console">
+        <div id="anchor-status"></div>
+        <div id="warp-gauge" aria-hidden="true">
+          <div class="warp-gauge-head">
+            <span>WARP</span>
+            <strong id="warp-percent">100%</strong>
+          </div>
+          <div class="warp-gauge-track">
+            <span class="warp-gauge-fill" id="warp-fill"></span>
+            <span class="warp-gauge-marker"></span>
+            <i></i><i></i><i></i><i></i><i></i>
+          </div>
+          <div id="warp-hint">HOLD RMB // WHEEL TO PLACE // RELEASE TO COMMIT</div>
+        </div>
+      </div>
+
+      <div id="capture-hint">CLICK TO CAPTURE MOUSE</div>
+
+      <div id="reticle" aria-hidden="true">
+        <span class="reticle-outer"></span>
+        <span class="reticle-ring"></span>
+        <span class="reticle-bracket reticle-bracket-tl"></span>
+        <span class="reticle-bracket reticle-bracket-tr"></span>
+        <span class="reticle-bracket reticle-bracket-bl"></span>
+        <span class="reticle-bracket reticle-bracket-br"></span>
+        <span class="reticle-axis reticle-axis-h"></span>
+        <span class="reticle-axis reticle-axis-v"></span>
+        <span class="reticle-dot"></span>
+      </div>
+    </div>
+
+    <aside id="visual-lab" aria-label="Rendering Lookdev"></aside>
+
+    <div id="mobile-controls" aria-label="Touch controls">
+      <div id="mobile-tools" class="mobile-tools">
+        <button id="mobile-tools-toggle" class="mobile-small mobile-tools-toggle" type="button" aria-expanded="false" aria-controls="mobile-tools-panel">TOOLS</button>
+        <div id="mobile-tools-panel" class="mobile-tools-panel" aria-hidden="true">
+          <button id="mobile-pause" class="mobile-small mobile-pause" type="button">PAUSE</button>
+          <button id="mobile-skip" class="mobile-small mobile-skip" type="button">SKIP</button>
+          <button id="mobile-reset" class="mobile-small mobile-reset" type="button">RESET</button>
+          <button id="mobile-gyro" class="mobile-small mobile-gyro" type="button">GYRO OFF</button>
+        </div>
+      </div>
+
+      <div id="move-stick" class="touch-stick" aria-label="Move joystick">
+        <span id="move-stick-knob"></span>
+      </div>
+      <div id="look-pad" aria-label="Drag to look"><span>LOOK</span></div>
+
+      <button id="mobile-fire" class="mobile-action fire" type="button">FIRE</button>
+      <button id="mobile-warp" class="mobile-action warp" type="button">WARP</button>
+      <button id="mobile-crouch" class="mobile-action crouch" type="button">CROUCH</button>
+
+      <label id="mobile-range-wrap">
+        <span>RANGE</span>
+        <input id="mobile-range" type="range" min="12" max="100" value="100" step="1" />
+      </label>
+    </div>
+
+    <div id="rotate-phone">ROTATE TO LANDSCAPE FOR TRAVERSAL</div>
+  </div>
+
+  <div id="ui"></div>
+  
+  <script type="module" src="/tools/harness/harness.ts"></script>
+  
+  
+</body>
+</html>

@@ -93,6 +93,13 @@ for (const pair of similarityPairs(descriptors)) {
 }
 
 writeFileSync(CACHE, `${JSON.stringify(next, null, 2)}\n`);
+
+// Challenge par: the proven route's warp count is the Perfect line. Written for
+// the game to read; regenerated whenever a chamber changes.
+const par = Object.fromEntries(entries
+  .filter((entry) => entry.key.startsWith("challenge:") && next[entry.key]?.solved)
+  .map((entry) => [entry.room.id, next[entry.key]!.warps]));
+writeFileSync(new URL("../src/world/generated/challengePar.json", import.meta.url), `${JSON.stringify(par, null, 2)}\n`);
 const solved = Object.values(next).filter((c) => c.solved).length;
 console.log(`Route certify: ${solved}/${entries.length} rooms proven clearable (${solvedFresh} re-solved) // ${errors} errors`);
 if (errors > 0) {

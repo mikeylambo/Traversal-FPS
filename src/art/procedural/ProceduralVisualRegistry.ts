@@ -30,6 +30,8 @@ export interface ProceduralVisualRegistration {
 }
 
 const registry = new Map<ProceduralVisualKey, ProceduralVisualRegistration>();
+/** Anchors currently showing each key, so a late-loading model can replace them. */
+const mounted = new Map<ProceduralVisualKey, Set<WeakRef<THREE.Object3D>>>();
 
 export function registerProceduralVisual(
   key: ProceduralVisualKey,
@@ -68,7 +70,29 @@ export function mountRegisteredVisual(
   visual.userData.traversalVisualKey = key;
   visual.userData.traversalVisualTier = registration.tier ?? "standard";
   anchor.userData.traversalProceduralVisual = visual;
+  anchor.userData.traversalVisualOverrides = overrides;
+  if (anchor.userData.traversalVisualTracked !== key) {
+    anchor.userData.traversalVisualTracked = key;
+    const anchors = mounted.get(key) ?? new Set();
+    anchors.add(new WeakRef(anchor));
+    mounted.set(key, anchors);
+  }
   return visual;
+}
+
+/**
+ * Swap a key's registration and re-mount it on every anchor already showing it
+ * (a GLB that finished loading after the rifle or a room was built).
+ */
+export function replaceProceduralVisual(key: ProceduralVisualKey, registration: ProceduralVisualRegistration): void {
+  registry.set(key, registration);
+  for (const ref of [...(mounted.get(key) ?? [])]) {
+    const anchor = ref.deref();
+    if (!anchor) continue;
+    const current = anchor.userData.traversalProceduralVisual as THREE.Object3D | undefined;
+    if (current?.userData.traversalVisualKey !== key) continue;
+    mountRegisteredVisual(anchor, key, anchor.userData.traversalVisualOverrides ?? {});
+  }
 }
 
 export function updateRegisteredVisual(

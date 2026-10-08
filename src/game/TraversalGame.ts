@@ -1,4 +1,6 @@
 import * as THREE from "three";
+import CHALLENGE_PAR from "../world/generated/challengePar.json";
+import type { ChallengeGrade } from "./Progression";
 import { pauseRoomClock, resetRoomClock, resumeRoomClock, roomTime } from "./RoomClock";
 import {
   emitTraversalAudio,
@@ -99,6 +101,10 @@ export class TraversalGame {
   private enemySpeedScalar = 1;
   private gravityScalar = 1;
   private goalRadius = 2.3;
+  /** Cube/Diamond/Prism hits this run: free shots, never misses. */
+  private utilityHits = 0;
+  /** Set when a Challenge run finishes, for progression and achievements. */
+  private lastChallengeGrade: { grade: ChallengeGrade; roomIds: string[] } | null = null;
 
   constructor(
     private readonly canvas: HTMLCanvasElement,
@@ -183,6 +189,8 @@ export class TraversalGame {
     this.targetHits = 0;
     this.warps = 0;
     this.roomRestarts = 0;
+    this.utilityHits = 0;
+    this.lastChallengeGrade = null;
     this.runComplete = false;
     this.runStartedAt = performance.now();
     this.loadRoom(0);
@@ -623,7 +631,15 @@ export class TraversalGame {
         }
       ];
     } else if (this.modeId === "challenge") {
+      const grade = this.challengeGrade();
+      this.lastChallengeGrade = { grade: grade.grade, roomIds: ROOMS.map((room) => room.id) };
       resultChoices = [
+        {
+          id: "result-grade",
+          label: `Grade // ${grade.grade.toUpperCase()}`,
+          description: grade.detail,
+          disabled: true
+        },
         {
           id: "result-route",
           label: "Clean Route // PASS",
@@ -695,6 +711,22 @@ export class TraversalGame {
       ]
     });
     this.flow.showResults();
+  }
+
+  /**
+   * Challenge grade. Clearing is already exact, so the grade is how cleanly:
+   * Good clears it; Great never restarts or dies; Perfect also never misses
+   * and needs no more warps than the proven route.
+   */
+  private challengeGrade(): { grade: ChallengeGrade; detail: string } {
+    const misses = Math.max(0, this.shots - this.totalKills - this.utilityHits);
+    const par = ROOMS.reduce((sum, room) => sum + ((CHALLENGE_PAR as Record<string, number>)[room.id] ?? Number.POSITIVE_INFINITY), 0);
+    const clean = this.roomRestarts === 0;
+    const perfect = clean && misses === 0 && this.warps <= par;
+    const grade: ChallengeGrade = perfect ? "perfect" : clean ? "great" : "good";
+    const parText = Number.isFinite(par) ? `${this.warps} warps / ${par} route` : `${this.warps} warps`;
+    const restarts = `${this.roomRestarts} restart${this.roomRestarts === 1 ? "" : "s"}`;
+    return { grade, detail: `${restarts} · ${misses} miss${misses === 1 ? "" : "es"} · ${parText}` };
   }
 
   private routeGrade(extraKills: number): string {

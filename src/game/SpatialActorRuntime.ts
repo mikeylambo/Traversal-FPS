@@ -26,6 +26,7 @@ type RuntimeState = {
   targetHits: number;
   roomKills: number;
   totalKills: number;
+  utilityHits: number;
   exactKills: boolean;
   weapon: { fire(): void };
   warp: { write(origin: THREE.Vector3, target: THREE.Vector3): void };
@@ -120,6 +121,7 @@ export function installSpatialActorRuntime(game: object): void {
 
     if (UTILITY_KINDS.has(enemy.spec.kind)) {
       state.roomShots = Math.max(0, state.roomShots - 1);
+      state.utilityHits += 1;
       state.addImpactFx(hitPosition, utilityImpactColor(enemy.spec.kind));
       // Utility resolves get their own timbre rather than the sphere confirm: the
       // flash message and this sound are the only two signals that the kill changed

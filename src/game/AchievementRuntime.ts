@@ -2,6 +2,7 @@ import { emitTraversalAudio } from "../audio/TraversalAudio";
 import type { ContentRuntime } from "./ContentRuntime";
 import { ACHIEVEMENTS, type AchievementDefinition, type TraversalProgression } from "./Progression";
 import { CHALLENGE_ENTRIES, TIME_TRIAL_ENTRIES } from "../world/modeSuites";
+import type { ChallengeGrade } from "./Progression";
 import { ROOMS } from "../world/stages";
 
 const UTILITY_KINDS = new Set(["cube", "diamond", "prism"]);
@@ -14,6 +15,8 @@ interface RuntimeState {
   totalKills: number;
   shots: number;
   roomRestarts: number;
+  utilityHits: number;
+  lastChallengeGrade: { grade: ChallengeGrade; roomIds: string[] } | null;
   runStartedAt: number;
   warp: {
     selectionPercent(): number;
@@ -103,7 +106,7 @@ export function installAchievementRuntime(
     const elapsed = Math.max(0, (performance.now() - state.runStartedAt) / 1000);
     const modeId = state.modeId;
     const contentId = content.selectedContentId();
-    const clean = state.roomRestarts === 0 && state.shots === state.totalKills;
+    const clean = state.roomRestarts === 0 && state.shots === state.totalKills + state.utilityHits;
     const adjusted = elapsed + state.timePenalty();
     const kills = state.totalKills;
     const hostiles = ROOMS.reduce((sum, room) => sum + room.enemies.filter((enemy) => !UTILITY_KINDS.has(enemy.kind)).length, 0);
@@ -133,6 +136,14 @@ export function installAchievementRuntime(
     }
     if (modeId === "challenge" && suite.suite === "challenge") {
       const cleared = suite.index === null ? CHALLENGE_ENTRIES : [CHALLENGE_ENTRIES[suite.index]!];
+      const grade = state.lastChallengeGrade?.grade;
+      if (grade) {
+        void Promise.all(cleared.map((entry) => progression.recordChallengeGrade(entry.id, grade))).then(() => {
+          if (grade === "perfect") void progression.unlock("challenge-perfect");
+          const grades = progression.snapshot().challengeGrades;
+          if (CHALLENGE_ENTRIES.every((entry) => grades[entry.id] === "perfect")) void progression.unlock("perfect-all");
+        });
+      }
       void Promise.all(cleared.map((entry) => progression.recordChallengeClear(entry.id))).then(() => {
         if (progression.snapshot().challengeClears.length >= CHALLENGE_ENTRIES.length) void progression.unlock("exact-all");
       });

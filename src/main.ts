@@ -70,6 +70,12 @@ import { CAMPAIGN_MAPS } from "./world/campaign";
 import { CHALLENGE_ENTRIES, TIME_TRIAL_ENTRIES } from "./world/modeSuites";
 
 const courseNumber = (index: number) => String(index + 1).padStart(2, "0");
+/** Best grade earned on a chamber, for the Challenge list. */
+const challengeBadge = (id: string) => {
+  const snapshot = progression.snapshot();
+  const grade = snapshot.challengeGrades[id];
+  return grade ? ` // ${grade.toUpperCase()}` : snapshot.challengeClears.includes(id) ? " // GOOD" : "";
+};
 import { REVERSAL_LABYRINTH_ROOMS } from "./world/reversalLabyrinth";
 import { registerCampaign02 } from "./world/registerCampaign02";
 import { registerCampaign03 } from "./world/registerCampaign03";
@@ -360,7 +366,7 @@ app.flow.onActivate = (screenId: string, choiceId: string) => {
           ...CHALLENGE_ENTRIES.map((entry, index) => ({
             id: `ch-chamber-${index}`,
             label: `${courseNumber(index)} // ${entry.label}`,
-            description: `${entry.family}${progression.snapshot().challengeClears.includes(entry.id) ? " // CLEARED" : ""}`
+            description: `${entry.family}${challengeBadge(entry.id)}`
           }))
         ]
       });

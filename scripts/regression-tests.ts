@@ -140,6 +140,11 @@ async function testProgression(): Promise<void> {
   await progression.completeCampaignSector("map-02");
   assert(!progression.hasCampaignContinue(), "true final sector completion clears Continue state");
   equal(progression.snapshot().campaign.completed, true, "true campaign completion persists");
+
+  equal(await progression.recordChallengeGrade("challenge-01", "great"), true, "a first Challenge grade records");
+  equal(await progression.recordChallengeGrade("challenge-01", "good"), false, "a worse grade never replaces a better one");
+  equal(await progression.recordChallengeGrade("challenge-01", "perfect"), true, "a better grade replaces the old one");
+  equal(progression.snapshot().challengeGrades["challenge-01"], "perfect", "the best Challenge grade persists");
 }
 
 function testSpatialActors(): void {
